@@ -54,7 +54,10 @@ class TicketCategory(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
 class Ticket(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __tablename__ = "tickets"
-    __table_args__ = (Index("tickets_status_updated_idx", "status", "updated_at"),)
+    __table_args__ = (
+        Index("tickets_status_updated_idx", "status", "updated_at"),
+        Index("tickets_assignee_status_idx", "assignee_id", "status"),
+    )
 
     ticket_number: Mapped[str] = mapped_column(String(30), unique=True, index=True, nullable=False)
     subject: Mapped[str] = mapped_column(String(255), nullable=False)

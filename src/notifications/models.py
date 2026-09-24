@@ -9,7 +9,10 @@ from src.models import Base, UUIDPrimaryKeyMixin
 
 class Notification(Base, UUIDPrimaryKeyMixin):
     __tablename__ = "notifications"
-    __table_args__ = (Index("notifications_user_read_idx", "user_id", "is_read"),)
+    __table_args__ = (
+        Index("notifications_user_read_idx", "user_id", "is_read"),
+        Index("notifications_user_read_created_idx", "user_id", "is_read", "created_at"),
+    )
 
     user_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id"), index=True, nullable=False)
     type: Mapped[str] = mapped_column(String(50), nullable=False)
