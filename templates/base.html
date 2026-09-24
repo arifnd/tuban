@@ -48,12 +48,37 @@
   {% block head %}{% endblock %}
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col dark:bg-slate-900 dark:text-slate-100">
+  {% from "partials/icons.html" import icon with context %}
   {% include "partials/sprite.html" %}
-  {% if current_user %}{% include "partials/navbar.html" %}{% endif %}
-  <main class="flex-1 mx-auto w-full max-w-7xl px-4 py-6 pb-8">
-    {% block content %}{% endblock %}
-  </main>
-  {% include "partials/footer.html" %}
+  {% if current_user and is_admin %}
+  <div class="flex min-h-screen w-full" x-data="{ sidebar_open: false }">
+    {% include "partials/sidebar.html" %}
+    <div class="flex min-w-0 flex-1 flex-col">
+      <header class="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-900">
+        <div class="flex items-center gap-2">
+          <button type="button" class="rounded-md p-2 text-slate-500 hover:bg-slate-50 md:hidden dark:text-slate-400 dark:hover:bg-slate-800"
+                  aria-label="{{ t('nav.open_menu') }}" @click="sidebar_open = !sidebar_open">
+            {{ icon("menu", "w-6 h-6") }}
+          </button>
+          <span class="text-sm font-semibold text-slate-900 md:hidden dark:text-white">{{ t("brand.name") }}</span>
+        </div>
+        {% include "partials/topbar_actions.html" %}
+      </header>
+      <main class="flex-1 w-full px-4 py-6 pb-8">
+  {% else %}
+    {% if current_user %}{% include "partials/navbar.html" %}{% endif %}
+    <main class="flex-1 mx-auto w-full max-w-7xl px-4 py-6 pb-8">
+  {% endif %}
+        {% block content %}{% endblock %}
+  {% if current_user and is_admin %}
+      </main>
+      {% include "partials/footer.html" %}
+    </div>
+  </div>
+  {% else %}
+    </main>
+    {% include "partials/footer.html" %}
+  {% endif %}
   <div id="toast-root" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
   <div id="modal-root"></div>
   {% block scripts %}{% endblock %}
