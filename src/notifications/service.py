@@ -66,3 +66,19 @@ async def mark_all_read(db: AsyncSession, user_id: uuid.UUID) -> None:
         notification.is_read = True
         notification.read_at = now
     await db.commit()
+
+
+async def mark_read_many(db: AsyncSession, user_id: uuid.UUID, notification_ids: list[uuid.UUID]) -> int:
+    if not notification_ids:
+        return 0
+    result = await db.execute(
+        select(Notification).where(Notification.user_id == user_id, Notification.id.in_(notification_ids), Notification.is_read.is_(False))
+    )
+    now = datetime.now(UTC)
+    updated = 0
+    for notification in result.scalars():
+        notification.is_read = True
+        notification.read_at = now
+        updated += 1
+    await db.commit()
+    return updated

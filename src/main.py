@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from src.activity import router as activity_router
 from src.auth import router as auth_router
 from src.auth.dependencies import OptionalUser
 from src.auth.exceptions import NotAuthenticated
@@ -14,8 +15,10 @@ from src.config import PROJECT_ROOT, settings
 from src.dashboard import router as dashboard_router
 from src.kb import router as kb_router
 from src.middleware import SecurityHeadersMiddleware
+from src.notifications import router as notifications_router
 from src.storage import router as storage_router
 from src.templating import templates
+from src.tickets import router as tickets_router
 from src.users import router as users_router
 from src.version import __version__
 
@@ -39,6 +42,9 @@ app.include_router(auth_router.router)
 app.include_router(users_router.router)
 app.include_router(dashboard_router.router)
 app.include_router(kb_router.router)
+app.include_router(tickets_router.router)
+app.include_router(notifications_router.router)
+app.include_router(activity_router.router)
 app.include_router(storage_router.router)
 
 

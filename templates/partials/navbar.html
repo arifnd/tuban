@@ -36,13 +36,18 @@
     </div>
 
     <div class="flex items-center gap-3">
-      <a href="/notifications" title="{{ t('nav.notifications') }}" aria-label="{{ t('nav.notifications') }}"
-         class="relative rounded-md p-1 text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
-        {{ icon("bell", "w-5 h-5") }}
-        {% if unread_notifications > 0 %}
-        <span id="notif-badge" class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white">{{ unread_notifications }}</span>
-        {% endif %}
-      </a>
+      <div class="relative" x-data="{ notif_open: false }" @click.outside="notif_open = false">
+        <button type="button" @click="notif_open = !notif_open" title="{{ t('nav.notifications') }}" aria-label="{{ t('nav.notifications') }}"
+                class="relative rounded-md p-1 text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+          {{ icon("bell", "w-5 h-5") }}
+          <span id="notif-badge" class="{% if unread_notifications > 0 %}flex{% else %}hidden{% endif %} absolute -right-0.5 -top-0.5 h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white">{{ unread_notifications }}</span>
+        </button>
+        <div x-show="notif_open" x-cloak x-transition
+             class="absolute right-0 mt-2 w-80 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800"
+             hx-get="/notifications/partial" hx-trigger="load" hx-target="#notif-dropdown" hx-swap="innerHTML">
+          <div id="notif-dropdown"></div>
+        </div>
+      </div>
 
       <div class="relative hidden md:block" @click.outside="user_open = false">
         <button type="button" @click="user_open = !user_open; theme_open = false" aria-label="{{ t('nav.user_menu') }}"

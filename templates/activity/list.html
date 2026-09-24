@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "partials/pagination.html" import pagination with context %}
+{% block title %}{{ t("activity.title") }} · {{ t("brand.name") }}{% endblock %}
+{% block content %}
+<h1 class="mb-4 text-xl font-semibold text-slate-900 dark:text-white">{{ t("activity.title") }}</h1>
+
+<form method="get" action="/activity" class="card mb-4 flex flex-wrap items-end gap-3 p-4">
+  <div>
+    <label for="user_id" class="label">{{ t("activity.actor") }}</label>
+    <select id="user_id" name="user_id" class="input">
+      <option value="">{{ t("activity.all_users") }}</option>
+      {% for user in users %}
+      <option value="{{ user.id }}" {% if filter_user_id == user.id %}selected{% endif %}>{{ user.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label for="entity_type" class="label">{{ t("activity.entity") }}</label>
+    <select id="entity_type" name="entity_type" class="input">
+      <option value="">{{ t("activity.all_entities") }}</option>
+      {% for entity in entity_types %}
+      <option value="{{ entity }}" {% if filter_entity_type == entity %}selected{% endif %}>{{ entity }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label for="action" class="label">{{ t("activity.action") }}</label>
+    <input type="text" id="action" name="action" value="{{ filter_action }}" class="input">
+  </div>
+  <button type="submit" class="btn btn-primary">{{ t("activity.filter") }}</button>
+</form>
+
+<div class="card overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="table-head">
+      <tr>
+        <th class="px-3 py-2">{{ t("activity.when") }}</th>
+        <th class="px-3 py-2">{{ t("activity.actor") }}</th>
+        <th class="px-3 py-2">{{ t("activity.action") }}</th>
+        <th class="px-3 py-2">{{ t("activity.entity") }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in logs %}
+      <tr class="border-t border-slate-100 dark:border-slate-700">
+        <td class="px-3 py-2 text-slate-500 dark:text-slate-400">{{ row.entry.created_at | dtf }}</td>
+        <td class="px-3 py-2 text-slate-900 dark:text-white">{{ row.actor or "—" }}</td>
+        <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ row.entry.action }}</td>
+        <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ row.entry.entity_type }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="px-3 py-10 text-center text-slate-500 dark:text-slate-400">{{ t("activity.empty") }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ pagination(page, total_pages, "/activity", total=total, per_page=per_page, filters={"user_id": filter_user_id, "entity_type": filter_entity_type, "action": filter_action}) }}
+{% endblock %}
