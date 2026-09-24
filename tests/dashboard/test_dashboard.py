@@ -22,14 +22,14 @@ async def test_dashboard_renders_for_user(client: AsyncClient) -> None:
     await _login(client, "member@example.com")
     resp = await client.get("/dashboard")
     assert resp.status_code == 200
-    assert "Dashboard" in resp.text
+    assert "/tickets/new" in resp.text
 
 
 async def test_dashboard_renders_for_staff(client: AsyncClient) -> None:
     await _login(client, "admin@example.com")
     resp = await client.get("/dashboard")
     assert resp.status_code == 200
-    assert "Unassigned" in resp.text
+    assert "Belum ditugaskan" in resp.text
 
 
 async def test_stats_partial(client: AsyncClient) -> None:

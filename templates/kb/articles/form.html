@@ -40,8 +40,8 @@
 
     <div x-data="{ tab: 'write', body: {{ (article.body if is_edit else '') | tojson }} }">
       <div class="mb-2 flex gap-1 rounded-md bg-slate-100 p-1 text-sm dark:bg-slate-700">
-        <button type="button" class="rounded px-3 py-1" :class="tab === 'write' ? 'bg-white shadow dark:bg-slate-800' : ''" @click="tab = 'write'">Write</button>
-        <button type="button" class="rounded px-3 py-1" :class="tab === 'preview' ? 'bg-white shadow dark:bg-slate-800' : ''" @click="tab = 'preview'">Preview</button>
+        <button type="button" class="rounded px-3 py-1" :class="tab === 'write' ? 'bg-white shadow dark:bg-slate-800' : ''" @click="tab = 'write'">{{ t("kb.write") }}</button>
+        <button type="button" class="rounded px-3 py-1" :class="tab === 'preview' ? 'bg-white shadow dark:bg-slate-800' : ''" @click="tab = 'preview'">{{ t("kb.preview") }}</button>
       </div>
       <textarea name="body" x-model="body" rows="16" class="input font-mono text-xs" placeholder="# Heading"></textarea>
       <div x-show="tab === 'preview'" x-cloak class="prose mt-3 rounded-md border border-slate-200 p-4 dark:border-slate-700" x-html="window.renderMarkdown(body)"></div>

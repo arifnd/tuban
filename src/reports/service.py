@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.activity.models import ActivityLog
 from src.kb.models import KbArticle, KbArticleFeedback, KbArticleStatus, KbCategory
+from src.templating import t
 from src.tickets.models import Ticket, TicketStatus
 from src.users.models import User, UserRole
 
@@ -160,42 +161,42 @@ REPORT_KEYS = ("ticket-volume", "status", "priority", "sla", "agents", "kb")
 async def build_report(db: AsyncSession, report: str, start: date, end: date) -> tuple[str, list[str], list[list]]:
     if report == "ticket-volume":
         series = await ticket_volume(db, start, end)
-        return "Ticket volume", ["Date", "Created"], [[label, str(count)] for label, count in series]
+        return t("reports.ticket_volume"), [t("reports.col_date"), t("reports.col_created")], [[label, str(count)] for label, count in series]
     if report == "status":
         rows = await status_breakdown(db, start, end)
-        return "Status breakdown", ["Status", "Count"], [[key, str(value)] for key, value in rows]
+        return t("reports.status"), [t("reports.col_status"), t("reports.col_count")], [[t("tickets.status_" + key), str(value)] for key, value in rows]
     if report == "priority":
         rows = await priority_breakdown(db, start, end)
-        return "Priority breakdown", ["Priority", "Count"], [[key, str(value)] for key, value in rows]
+        return t("reports.priority"), [t("reports.col_priority"), t("reports.col_count")], [[t("tickets.priority_" + key), str(value)] for key, value in rows]
     if report == "sla":
         metrics = await sla_compliance(db, start, end)
         return (
-            "SLA compliance",
-            ["Metric", "Value"],
+            t("reports.sla"),
+            [t("reports.col_metric"), t("reports.col_value")],
             [
-                ["Within SLA", str(metrics["within_sla"])],
-                ["Breached", str(metrics["breached"])],
-                ["Overdue (active)", str(metrics["overdue_active"])],
-                ["Compliance %", str(metrics["compliance"])],
+                [t("reports.within_sla"), str(metrics["within_sla"])],
+                [t("reports.breached"), str(metrics["breached"])],
+                [t("reports.overdue_active"), str(metrics["overdue_active"])],
+                [t("reports.compliance"), str(metrics["compliance"])],
             ],
         )
     if report == "agents":
         rows = await agent_workload(db)
         return (
-            "Agent workload",
-            ["Agent", "Open", "Total", "Resolved"],
+            t("reports.agents"),
+            [t("reports.col_agent"), t("reports.col_open"), t("reports.col_total"), t("reports.col_resolved")],
             [[name, str(open_count), str(total), str(resolved)] for name, open_count, total, resolved in rows],
         )
     if report == "kb":
         metrics = await kb_metrics(db)
         return (
-            "Knowledge base",
-            ["Metric", "Value"],
+            t("reports.kb"),
+            [t("reports.col_metric"), t("reports.col_value")],
             [
-                ["Published articles", str(metrics["published"])],
-                ["Total views", str(metrics["views"])],
-                ["Helpful ratio %", str(metrics["helpful_ratio"])],
-                *[["Category: " + name, str(count)] for name, count in metrics["top_categories"]],
+                [t("reports.published"), str(metrics["published"])],
+                [t("reports.views"), str(metrics["views"])],
+                [t("reports.helpful_ratio"), str(metrics["helpful_ratio"])],
+                *[[f"{t('reports.category_prefix')}: {name}", str(count)] for name, count in metrics["top_categories"]],
             ],
         )
     raise ValueError(f"Unknown report: {report}")

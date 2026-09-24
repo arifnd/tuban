@@ -13,7 +13,7 @@ from src.kb.markdown import render_markdown as _render_markdown
 
 TEMPLATES_DIR = PROJECT_ROOT / "templates"
 I18N_DIR = PROJECT_ROOT / "static" / "i18n"
-DEFAULT_LANG = "en"
+DEFAULT_LANG = "id"
 
 
 @lru_cache
