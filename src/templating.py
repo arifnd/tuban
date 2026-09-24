@@ -9,6 +9,7 @@ from markupsafe import Markup, escape
 from starlette.requests import Request
 
 from src.config import PROJECT_ROOT, settings
+from src.kb.markdown import render_markdown as _render_markdown
 
 TEMPLATES_DIR = PROJECT_ROOT / "templates"
 I18N_DIR = PROJECT_ROOT / "static" / "i18n"
@@ -90,3 +91,10 @@ def highlight(text: Any, query: str | None) -> Markup:
 
 
 templates.env.filters["highlight"] = highlight
+
+
+def _markdown_filter(text: Any) -> Markup:
+    return Markup(_render_markdown(text))
+
+
+templates.env.filters["md"] = _markdown_filter

@@ -1,0 +1,25 @@
+{% from "partials/macros.html" import csrf_input with context %}
+<div class="card p-4 {% if comment.is_internal %}border-l-4 border-amber-400 bg-amber-50 dark:bg-amber-900/20{% endif %}">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <div class="flex items-center gap-2">
+      <span class="font-medium text-slate-900 dark:text-white">{{ comment.author.name if comment.author else "—" }}</span>
+      {% if comment.is_internal %}<span class="badge badge-amber">{{ t("tickets.internal") }}</span>{% endif %}
+      <span class="text-xs text-slate-400">{{ comment.created_at | dtf }}</span>
+    </div>
+    {% if is_editor or comment.author_id == current_user.id %}
+    <form method="post" action="/tickets/{{ ticket.id }}/comments/{{ comment.id }}/delete" data-confirm="{{ t('tickets.confirm_delete') }}">
+      {{ csrf_input() }}
+      <button type="submit" class="text-xs text-red-600 hover:text-red-700 dark:text-red-400">{{ t("tickets.delete") }}</button>
+    </form>
+    {% endif %}
+  </div>
+  <div class="prose mt-2 max-w-none text-sm">{{ comment.body | md }}</div>
+  {% set comment_attachments = ticket.attachments | selectattr("comment_id", "equalto", comment.id) | list %}
+  {% if comment_attachments %}
+  <ul class="mt-2 space-y-1">
+    {% for attachment in comment_attachments %}
+    <li><a href="/media/{{ attachment.file_path }}" target="_blank" rel="noopener" class="text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400">{{ attachment.file_name }}</a></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>

@@ -1,0 +1,20 @@
+{% from "partials/macros.html" import csrf_input with context %}
+<form method="post" action="/tickets/{{ ticket.id }}/comments" enctype="multipart/form-data"
+      hx-post="/tickets/{{ ticket.id }}/comments" hx-target="#timeline" hx-swap="outerHTML"
+      hx-on::after-request="if(event.detail.successful) this.reset()" class="card mt-4 space-y-3 p-4">
+  {{ csrf_input() }}
+  <div>
+    <label class="label" for="body">{{ t("tickets.reply") }}</label>
+    <textarea id="body" name="body" rows="4" required class="input" placeholder="{{ t('tickets.comment_placeholder') }}"></textarea>
+  </div>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <input type="file" name="file" class="input mt-0 w-auto">
+    {% if is_editor %}
+    <label class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+      <input type="checkbox" name="is_internal" value="1" class="h-4 w-4">
+      {{ t("tickets.internal_note") }}
+    </label>
+    {% endif %}
+    <button type="submit" class="btn btn-primary">{{ t("tickets.send") }}</button>
+  </div>
+</form>

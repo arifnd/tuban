@@ -1,0 +1,13 @@
+<div id="timeline" class="mt-4 space-y-3">
+  {% for event in timeline %}
+    {% if event.kind == "comment" %}
+      {% set comment = event.comment %}
+      {% include "tickets/partials/comment.html" %}
+    {% else %}
+      <div class="flex items-center gap-2 px-1 text-xs text-slate-400 dark:text-slate-500">
+        <span>{{ event.actor }} · {{ event.entry.action }} {{ event.entry.entity_type }}</span>
+        <span>{{ event.entry.created_at | dtf }}</span>
+      </div>
+    {% endif %}
+  {% endfor %}
+</div>

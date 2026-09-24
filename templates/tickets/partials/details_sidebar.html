@@ -1,0 +1,46 @@
+{% from "partials/macros.html" import csrf_input with context %}
+<div class="space-y-4">
+  <div class="card space-y-4 p-4">
+    {% include "tickets/partials/status_control.html" %}
+    {% if is_editor %}
+    <form method="post" action="/tickets/{{ ticket.id }}/priority" class="space-y-2">
+      {{ csrf_input() }}
+      <span class="label">{{ t("tickets.priority") }}</span>
+      <select name="priority" class="input">
+        {% for p in priorities %}
+        <option value="{{ p.value }}" {% if ticket.priority == p %}selected{% endif %}>{{ t("tickets.priority_" ~ p.value) }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-secondary w-full justify-center">{{ t("tickets.save") }}</button>
+    </form>
+    {% include "tickets/partials/assignee_control.html" %}
+    {% if ticket.assignee_id != current_user.id %}
+    <form method="post" action="/tickets/{{ ticket.id }}/claim">
+      {{ csrf_input() }}
+      <button type="submit" class="btn btn-primary w-full justify-center">{{ t("tickets.claim") }}</button>
+    </form>
+    {% endif %}
+    {% endif %}
+  </div>
+
+  <div class="card space-y-2 p-4 text-sm">
+    <div class="flex justify-between gap-3"><span class="text-slate-500 dark:text-slate-400">{{ t("tickets.category") }}</span><span class="text-slate-900 dark:text-white">{{ ticket.category.name if ticket.category else "—" }}</span></div>
+    <div class="flex justify-between gap-3"><span class="text-slate-500 dark:text-slate-400">{{ t("tickets.requester") }}</span><span class="text-slate-900 dark:text-white">{{ ticket.requester.name if ticket.requester else "—" }}</span></div>
+    <div class="flex justify-between gap-3"><span class="text-slate-500 dark:text-slate-400">{{ t("tickets.created") }}</span><span class="text-slate-900 dark:text-white">{{ ticket.created_at | dtf }}</span></div>
+    {% if ticket.sla_due_at %}<div class="flex justify-between gap-3"><span class="text-slate-500 dark:text-slate-400">{{ t("tickets.sla_due") }}</span><span class="text-slate-900 dark:text-white">{{ ticket.sla_due_at | dtf }}</span></div>{% endif %}
+    {% if ticket.resolved_at %}<div class="flex justify-between gap-3"><span class="text-slate-500 dark:text-slate-400">{{ t("tickets.resolved") }}</span><span class="text-slate-900 dark:text-white">{{ ticket.resolved_at | dtf }}</span></div>{% endif %}
+  </div>
+
+  {% if related %}
+  <div class="card p-4">
+    <h2 class="mb-2 text-sm font-semibold text-slate-900 dark:text-white">{{ t("tickets.related") }}</h2>
+    <ul class="space-y-1 text-sm">
+      {% for article in related %}
+      <li><a href="/kb/articles/{{ article.slug }}" class="text-brand-600 hover:text-brand-700 dark:text-brand-400">{{ article.title }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% include "tickets/partials/attachments.html" %}
+</div>
