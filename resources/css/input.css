@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html {
+    /* Paint the overscroll areas (drag past top/bottom) in the same color as
+       the sticky navbar and footer so there is no white flash. */
+    background-color: theme("colors.white");
+    overscroll-behavior-y: none;
+  }
+  html.dark {
+    background-color: theme("colors.slate.900");
+  }
+}
+
 @layer components {
   .badge {
     @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;

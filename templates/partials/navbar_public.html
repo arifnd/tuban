@@ -1,0 +1,19 @@
+{% from "partials/icons.html" import icon with context %}
+<nav class="sticky top-0 z-40 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+  <div class="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4">
+    <a href="/" class="flex items-center gap-2 text-brand-900 dark:text-white">
+      <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
+        {{ icon("book-open", "w-5 h-5") }}
+      </span>
+      <span class="text-base font-bold tracking-tight">{{ t("brand.name") }}</span>
+    </a>
+
+    <div class="flex items-center gap-2">
+      <a href="/kb" class="hidden rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-brand-700 sm:inline-flex dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+        {{ t("nav.kb") }}
+      </a>
+      <a href="/tickets/new" class="btn btn-secondary">{{ t("landing.create_ticket") }}</a>
+      <a href="/auth/login" class="btn btn-primary">{{ t("auth.signin") }}</a>
+    </div>
+  </div>
+</nav>

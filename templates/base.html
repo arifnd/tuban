@@ -72,8 +72,8 @@
       <main class="flex flex-1 w-full flex-col overflow-y-auto">
         <div class="flex-1 px-4 pt-10 pb-8">
   {% else %}
-    {% if current_user %}{% include "partials/navbar.html" %}{% endif %}
-    <main class="flex-1 mx-auto w-full max-w-7xl px-4 py-6 pb-8">
+    {% if current_user %}{% include "partials/navbar.html" %}{% else %}{% include "partials/navbar_public.html" %}{% endif %}
+    <main class="flex-1 mx-auto w-full max-w-5xl px-4 py-6 pb-8">
   {% endif %}
         {% block content %}{% endblock %}
   {% if current_user and is_admin %}
