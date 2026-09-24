@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean,
@@ -17,6 +18,9 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models import Base, TimestampMixin, UUIDPrimaryKeyMixin, enum_col
+
+if TYPE_CHECKING:
+    from src.users.models import User
 
 
 class KbArticleStatus(StrEnum):
@@ -60,11 +64,12 @@ class KbArticle(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     view_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    category: Mapped["KbCategory | None"] = relationship(back_populates="articles")
-    revisions: Mapped[list["KbArticleRevision"]] = relationship(back_populates="article", cascade="all, delete-orphan")
-    attachments: Mapped[list["KbAttachment"]] = relationship(back_populates="article", cascade="all, delete-orphan")
-    feedback: Mapped[list["KbArticleFeedback"]] = relationship(back_populates="article", cascade="all, delete-orphan")
-    tags: Mapped[list["KbTag"]] = relationship(secondary="kb_article_tags", back_populates="articles")
+    category: Mapped["KbCategory | None"] = relationship(back_populates="articles", lazy="selectin")
+    revisions: Mapped[list["KbArticleRevision"]] = relationship(back_populates="article", cascade="all, delete-orphan", lazy="selectin")
+    attachments: Mapped[list["KbAttachment"]] = relationship(back_populates="article", cascade="all, delete-orphan", lazy="selectin")
+    feedback: Mapped[list["KbArticleFeedback"]] = relationship(back_populates="article", cascade="all, delete-orphan", lazy="selectin")
+    tags: Mapped[list["KbTag"]] = relationship(secondary="kb_article_tags", back_populates="articles", lazy="selectin")
+    author: Mapped["User"] = relationship(foreign_keys=[author_id], lazy="selectin")
 
 
 class KbArticleRevision(Base, UUIDPrimaryKeyMixin):
@@ -79,6 +84,7 @@ class KbArticleRevision(Base, UUIDPrimaryKeyMixin):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     article: Mapped["KbArticle"] = relationship(back_populates="revisions")
+    editor: Mapped["User"] = relationship(foreign_keys=[editor_id], lazy="selectin")
 
 
 class KbTag(Base, UUIDPrimaryKeyMixin):
@@ -109,6 +115,7 @@ class KbAttachment(Base, UUIDPrimaryKeyMixin):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     article: Mapped["KbArticle"] = relationship(back_populates="attachments")
+    uploader: Mapped["User"] = relationship(foreign_keys=[uploaded_by], lazy="selectin")
 
 
 class KbArticleFeedback(Base, UUIDPrimaryKeyMixin):
@@ -122,3 +129,4 @@ class KbArticleFeedback(Base, UUIDPrimaryKeyMixin):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     article: Mapped["KbArticle"] = relationship(back_populates="feedback")
+    user: Mapped["User"] = relationship(foreign_keys=[user_id], lazy="selectin")

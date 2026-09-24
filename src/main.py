@@ -12,7 +12,9 @@ from src.auth.dependencies import OptionalUser
 from src.auth.exceptions import NotAuthenticated
 from src.config import PROJECT_ROOT, settings
 from src.dashboard import router as dashboard_router
+from src.kb import router as kb_router
 from src.middleware import SecurityHeadersMiddleware
+from src.storage import router as storage_router
 from src.templating import templates
 from src.users import router as users_router
 from src.version import __version__
@@ -36,6 +38,8 @@ app.mount("/static", StaticFiles(directory=str(PROJECT_ROOT / "static")), name="
 app.include_router(auth_router.router)
 app.include_router(users_router.router)
 app.include_router(dashboard_router.router)
+app.include_router(kb_router.router)
+app.include_router(storage_router.router)
 
 
 def _wants_html(request: Request) -> bool:

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf_input with context %}
+{% block title %}{{ t("kb.categories") }} · {{ t("brand.name") }}{% endblock %}
+{% block content %}
+<div class="mb-4 flex items-center justify-between">
+  <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ t("kb.categories") }}</h1>
+  <a href="/kb" class="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400">{{ t("kb.back_to_kb") }}</a>
+</div>
+
+<div class="grid gap-4 lg:grid-cols-3">
+  <div class="card overflow-hidden lg:col-span-2">
+    <table class="w-full text-sm">
+      <thead class="table-head">
+        <tr>
+          <th class="px-3 py-2">{{ t("kb.category_name") }}</th>
+          <th class="px-3 py-2">{{ t("kb.article_count") }}</th>
+          <th class="px-3 py-2">{{ t("kb.position") }}</th>
+          <th class="px-3 py-2 text-right">{{ t("kb.edit") }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for category in categories %}
+        <tr class="border-t border-slate-100 dark:border-slate-700">
+          <td class="px-3 py-2">
+            <form method="post" action="/kb/categories/{{ category.id }}" class="flex items-center gap-2">
+              {{ csrf_input() }}
+              <input type="text" name="name" value="{{ category.name }}" class="input mt-0">
+              <input type="text" name="description" value="{{ category.description or '' }}" placeholder="{{ t('kb.category_description') }}" class="input mt-0">
+              <input type="number" name="position" value="{{ category.position }}" class="input mt-0 w-20">
+              <button type="submit" class="btn btn-secondary">{{ t("kb.save") }}</button>
+            </form>
+          </td>
+          <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ category.article_count }}</td>
+          <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ category.position }}</td>
+          <td class="px-3 py-2 text-right">
+            <form method="post" action="/kb/categories/{{ category.id }}/delete" data-confirm="{{ t('kb.confirm_delete_category') }}">
+              {{ csrf_input() }}
+              <button type="submit" class="text-red-600 hover:text-red-700 dark:text-red-400">{{ t("kb.delete") }}</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="px-3 py-10 text-center text-slate-500 dark:text-slate-400">{{ t("kb.categories_empty") }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card p-4">
+    <h2 class="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{{ t("kb.create_category") }}</h2>
+    <form method="post" action="/kb/categories" class="space-y-3">
+      {{ csrf_input() }}
+      <div>
+        <label class="label" for="name">{{ t("kb.category_name") }}</label>
+        <input type="text" id="name" name="name" required class="input">
+      </div>
+      <div>
+        <label class="label" for="description">{{ t("kb.category_description") }}</label>
+        <input type="text" id="description" name="description" class="input">
+      </div>
+      <div>
+        <label class="label" for="position">{{ t("kb.position") }}</label>
+        <input type="number" id="position" name="position" value="0" class="input">
+      </div>
+      <button type="submit" class="btn btn-primary w-full justify-center">{{ t("kb.create") }}</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
