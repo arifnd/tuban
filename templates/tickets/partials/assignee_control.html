@@ -1,0 +1,12 @@
+{% from "partials/macros.html" import csrf_input with context %}
+<form method="post" action="/tickets/{{ ticket.id }}/assign" class="space-y-2">
+  {{ csrf_input() }}
+  <span class="label">{{ t("tickets.assignee") }}</span>
+  <select name="assignee_id" class="input">
+    <option value="">{{ t("tickets.unassigned") }}</option>
+    {% for agent in agents %}
+    <option value="{{ agent.id }}" {% if ticket.assignee_id == agent.id %}selected{% endif %}>{{ agent.name }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-secondary w-full justify-center">{{ t("tickets.save") }}</button>
+</form>

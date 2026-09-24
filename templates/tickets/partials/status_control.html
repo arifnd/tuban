@@ -1,0 +1,12 @@
+{% from "partials/macros.html" import csrf_input with context %}
+{% if allowed_statuses %}
+<form method="post" action="/tickets/{{ ticket.id }}/status" class="space-y-2">
+  {{ csrf_input() }}
+  <span class="label">{{ t("tickets.status") }}</span>
+  <div class="flex flex-wrap gap-2">
+    {% for target in allowed_statuses %}
+    <button type="submit" name="status" value="{{ target.value }}" class="btn btn-secondary">{{ t("tickets.status_" ~ target.value) }}</button>
+    {% endfor %}
+  </div>
+</form>
+{% endif %}
