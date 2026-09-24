@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf or '' }}">
+  <title>{% block title %}{{ t("brand.name") }}{% endblock %}</title>
+  <script>
+    (function () {
+      var KEY = "batik-theme";
+      function read() {
+        try { return localStorage.getItem(KEY) || "system"; } catch (e) { return "system"; }
+      }
+      function apply(mode) {
+        var dark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.classList.toggle("dark", dark);
+      }
+      window.APP_THEME = read();
+      apply(window.APP_THEME);
+      window.setTheme = function (next) {
+        try { localStorage.setItem(KEY, next); } catch (e) {}
+        window.APP_THEME = next;
+        apply(next);
+      };
+      window.getTheme = function () { return window.APP_THEME || "system"; };
+      var mql = window.matchMedia("(prefers-color-scheme: dark)");
+      var onChange = function () { if (window.getTheme() === "system") apply("system"); };
+      if (mql.addEventListener) { mql.addEventListener("change", onChange); }
+      else if (mql.addListener) { mql.addListener(onChange); }
+    })();
+  </script>
+  <link rel="stylesheet" href="/static/css/app.css">
+  <script>
+    window.APP_LABELS = {
+      confirm: {{ t("dialog.confirm")|tojson }},
+      cancel: {{ t("dialog.cancel")|tojson }},
+      close: {{ t("modal.close")|tojson }}
+    };
+    window.csrfToken = function () {
+      var meta = document.querySelector('meta[name="csrf-token"]');
+      return meta ? meta.getAttribute("content") : "";
+    };
+  </script>
+  <script defer src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
+  <script defer src="/static/js/app.min.js"></script>
+  <style>[x-cloak]{display:none!important}</style>
+  {% block head %}{% endblock %}
+</head>
+<body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col dark:bg-slate-900 dark:text-slate-100">
+  {% include "partials/sprite.html" %}
+  {% if current_user %}{% include "partials/navbar.html" %}{% endif %}
+  <main class="flex-1 mx-auto w-full max-w-7xl px-4 py-6 pb-8">
+    {% block content %}{% endblock %}
+  </main>
+  {% include "partials/footer.html" %}
+  <div id="toast-root" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+  <div id="modal-root"></div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

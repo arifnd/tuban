@@ -1,0 +1,17 @@
+{
+  "name": "batik",
+  "private": true,
+  "scripts": {
+    "build:icons": "node scripts/build-icons.mjs",
+    "build:css": "tailwindcss -i ./resources/css/input.css -o ./static/css/app.css --minify",
+    "watch:css": "tailwindcss -i ./resources/css/input.css -o ./static/css/app.css --watch",
+    "build:js": "esbuild resources/js/main.js --bundle --minify --outfile=static/js/app.min.js",
+    "watch:js": "esbuild resources/js/main.js --bundle --minify --outfile=static/js/app.min.js --watch",
+    "build:assets": "npm run build:icons && npm run build:css && npm run build:js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "lucide-static": "^1.46.0",
+    "tailwindcss": "^3.4.17"
+  }
+}

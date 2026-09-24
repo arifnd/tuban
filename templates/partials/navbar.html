@@ -1,0 +1,140 @@
+{% from "partials/icons.html" import icon with context %}
+{% from "partials/macros.html" import csrf_input with context %}
+{% set path = request.url.path %}
+{% set is_admin = current_user.role == "admin" %}
+{% set is_agent = current_user.role in ("admin", "agent") %}
+{% set nav_links = [
+  ("/dashboard", t("nav.dashboard"), "home", True),
+  ("/kb", t("nav.kb"), "book-open", True),
+  ("/tickets", t("nav.tickets"), "ticket", True),
+  ("/users", t("nav.users"), "users", is_admin),
+  ("/activity", t("nav.activity"), "activity", is_admin),
+] %}
+{% macro nav_link_classes(href) %}
+  {% set is_active = (href == "/dashboard" and (path == "/" or path.startswith("/dashboard"))) or (href != "/dashboard" and path.startswith(href)) %}
+  {% if is_active %}bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-white{% else %}text-slate-600 hover:bg-slate-50 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white{% endif %}
+{% endmacro %}
+<nav class="sticky top-0 z-40 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+     x-data="{ open: false, user_open: false, theme_open: false, theme: (typeof window !== 'undefined' && window.APP_THEME) || 'system' }">
+  <div class="relative mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-4 px-4">
+    <a href="/" class="flex items-center gap-2 text-brand-900 dark:text-white">
+      <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
+        {{ icon("book-open", "w-5 h-5") }}
+      </span>
+      <span class="text-base font-bold tracking-tight">{{ t("brand.name") }}</span>
+    </a>
+
+    <div class="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
+      {% for href, label, icon_name, show in nav_links %}
+      {% if show %}
+      <a href="{{ href }}" class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition {{ nav_link_classes(href) }}">
+        {{ icon(icon_name, "w-4 h-4") }}
+        {{ label }}
+      </a>
+      {% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="flex items-center gap-3">
+      <a href="/notifications" title="{{ t('nav.notifications') }}" aria-label="{{ t('nav.notifications') }}"
+         class="relative rounded-md p-1 text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+        {{ icon("bell", "w-5 h-5") }}
+        {% if unread_notifications > 0 %}
+        <span id="notif-badge" class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white">{{ unread_notifications }}</span>
+        {% endif %}
+      </a>
+
+      <div class="relative hidden md:block" @click.outside="user_open = false">
+        <button type="button" @click="user_open = !user_open; theme_open = false" aria-label="{{ t('nav.user_menu') }}"
+                class="flex items-center gap-1.5 rounded-md p-1 text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+          {% if current_user.avatar %}
+          <img src="{{ current_user.avatar }}" class="h-8 w-8 rounded-full" alt="">
+          {% else %}
+          <span class="avatar h-8 w-8 text-sm">{{ current_user.name[0]|upper }}</span>
+          {% endif %}
+          <span class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ current_user.name }}</span>
+          {{ icon("chevron-down", "w-4 h-4") }}
+        </button>
+
+        <div x-show="user_open" x-cloak x-transition
+             class="absolute right-0 mt-2 w-52 rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800">
+          <div class="border-b border-slate-100 px-3 py-2 dark:border-slate-700">
+            <p class="truncate text-sm font-medium text-slate-900 dark:text-white">{{ current_user.name }}</p>
+            <p class="truncate text-xs text-slate-500 dark:text-slate-400">{{ current_user.email }}</p>
+          </div>
+          <div class="relative" @click.outside="theme_open = false">
+            <button type="button" @click="theme_open = !theme_open" title="{{ t('nav.theme') }}"
+                    class="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700">
+              {{ icon("monitor", "w-5 h-5") }} {{ t("nav.theme") }}
+              <span class="ml-auto text-slate-400">{{ icon("chevron-right", "w-4 h-4") }}</span>
+            </button>
+            <div x-show="theme_open" x-cloak x-transition
+                 class="absolute right-full top-0 z-10 mr-2 w-44 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800">
+              <button type="button" @click="theme = 'system'; window.setTheme('system'); theme_open = false"
+                      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700">
+                {{ icon("monitor", "w-4 h-4") }} {{ t("nav.theme_system") }}
+                <span x-show="theme === 'system'" class="ml-auto text-brand-600 dark:text-white">{{ icon("check", "w-4 h-4") }}</span>
+              </button>
+              <button type="button" @click="theme = 'light'; window.setTheme('light'); theme_open = false"
+                      class="flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700">
+                {{ icon("sun", "w-4 h-4") }} {{ t("nav.theme_light") }}
+                <span x-show="theme === 'light'" class="ml-auto text-brand-600 dark:text-white">{{ icon("check", "w-4 h-4") }}</span>
+              </button>
+              <button type="button" @click="theme = 'dark'; window.setTheme('dark'); theme_open = false"
+                      class="flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700">
+                {{ icon("moon", "w-4 h-4") }} {{ t("nav.theme_dark") }}
+                <span x-show="theme === 'dark'" class="ml-auto text-brand-600 dark:text-white">{{ icon("check", "w-4 h-4") }}</span>
+              </button>
+            </div>
+          </div>
+          <div class="border-t border-slate-100 dark:border-slate-700">
+            <form method="post" action="/auth/logout" data-confirm="{{ t('nav.confirm_sign_out') }}">
+              {{ csrf_input() }}
+              <button type="submit" @click="user_open = false"
+                      class="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40">
+                {{ icon("logout", "w-5 h-5") }} {{ t("nav.sign_out") }}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="rounded-md p-2 text-slate-500 hover:bg-slate-50 md:hidden dark:text-slate-400 dark:hover:bg-slate-800"
+              aria-label="{{ t('nav.open_menu') }}" @click="open = !open">
+        {{ icon("menu", "w-6 h-6") }}
+      </button>
+    </div>
+  </div>
+
+  <div x-show="open" x-cloak @click="open = false" class="fixed inset-0 z-30 bg-slate-900/40 md:hidden dark:bg-slate-950/60"></div>
+
+  <div x-show="open" x-cloak x-transition class="relative z-40 border-t border-slate-200 bg-white pb-4 pt-2 shadow-lg md:hidden dark:border-slate-800 dark:bg-slate-900">
+    <div class="flex flex-col">
+      <div class="mb-2 flex items-center gap-3 border-b border-slate-100 px-4 pb-3 dark:border-slate-800">
+        {% if current_user.avatar %}
+        <img src="{{ current_user.avatar }}" class="h-8 w-8 rounded-full" alt="">
+        {% else %}
+        <span class="avatar h-8 w-8 text-sm">{{ current_user.name[0]|upper }}</span>
+        {% endif %}
+        <div class="min-w-0">
+          <p class="truncate text-sm font-semibold text-slate-900 dark:text-white">{{ current_user.name }}</p>
+          <p class="truncate text-xs text-slate-500 dark:text-slate-400">{{ current_user.email }}</p>
+        </div>
+      </div>
+      {% for href, label, icon_name, show in nav_links %}
+      {% if show %}
+      <a href="{{ href }}" @click="open = false"
+         class="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-medium {{ nav_link_classes(href) }}">
+        {{ icon(icon_name, "w-5 h-5") }} {{ label }}
+      </a>
+      {% endif %}
+      {% endfor %}
+      <form method="post" action="/auth/logout" data-confirm="{{ t('nav.confirm_sign_out') }}" class="mt-2 border-t border-slate-100 pt-2 dark:border-slate-800">
+        {{ csrf_input() }}
+        <button type="submit" class="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40">
+          {{ icon("logout", "w-5 h-5") }} {{ t("nav.sign_out") }}
+        </button>
+      </form>
+    </div>
+  </div>
+</nav>
