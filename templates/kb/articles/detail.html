@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf_input with context %}
+{% from "partials/icons.html" import icon with context %}
+{% block title %}{{ article.title }} · {{ t("brand.name") }}{% endblock %}
+{% block content %}
+{% set can_edit = current_user.role in ("admin", "agent") %}
+<div class="mx-auto w-full max-w-3xl">
+  <a href="/kb" class="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400">&larr; {{ t("kb.back_to_kb") }}</a>
+
+  <article class="card mt-3 p-6">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-white">{{ article.title }}</h1>
+      {% if can_edit %}
+      <div class="flex items-center gap-2">
+        <a href="/kb/articles/{{ article.slug }}/edit" class="btn btn-secondary">{{ icon("pencil", "w-4 h-4") }} {{ t("kb.edit") }}</a>
+        <button type="button" class="btn btn-secondary" hx-get="/kb/articles/{{ article.slug }}/history" hx-target="#history-panel" hx-swap="innerHTML">{{ t("kb.history") }}</button>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+      <span class="badge badge-slate">{{ t("kb.status_" ~ article.status.value) }}</span>
+      <span class="badge {% if article.visibility.value == 'public' %}badge-emerald{% else %}badge-amber{% endif %}">{{ t("kb.visibility_" ~ article.visibility.value) }}</span>
+      {% if article.category %}<a href="/kb/categories/{{ article.category.slug }}" class="hover:text-brand-600">{{ article.category.name }}</a>{% endif %}
+      <span>{{ t("kb.author") }} {{ article.author.name if article.author else "—" }}</span>
+      <span>{{ t("kb.updated") }} {{ article.updated_at | dtf }}</span>
+      <span>{{ article.view_count }} {{ t("kb.views") }}</span>
+    </div>
+
+    {% if article.tags %}
+    <div class="mt-3 flex flex-wrap gap-1.5">
+      {% for tag in article.tags %}
+      <a href="/kb/tags/{{ tag.slug }}" class="badge badge-slate">#{{ tag.name }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if can_edit %}
+    <div class="mt-4 flex flex-wrap gap-2 border-y border-slate-100 py-3 dark:border-slate-700">
+      {% if article.status.value == "draft" %}
+      <form method="post" action="/kb/articles/{{ article.slug }}/status">{{ csrf_input() }}<input type="hidden" name="status" value="published"><button class="btn btn-success" type="submit">{{ t("kb.publish") }}</button></form>
+      {% elif article.status.value == "published" %}
+      <form method="post" action="/kb/articles/{{ article.slug }}/status">{{ csrf_input() }}<input type="hidden" name="status" value="archived"><button class="btn btn-secondary" type="submit">{{ t("kb.archive") }}</button></form>
+      <form method="post" action="/kb/articles/{{ article.slug }}/status">{{ csrf_input() }}<input type="hidden" name="status" value="draft"><button class="btn btn-secondary" type="submit">{{ t("kb.unpublish") }}</button></form>
+      {% elif article.status.value == "archived" %}
+      <form method="post" action="/kb/articles/{{ article.slug }}/status">{{ csrf_input() }}<input type="hidden" name="status" value="published"><button class="btn btn-success" type="submit">{{ t("kb.publish") }}</button></form>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="prose mt-5 max-w-none">{{ body_html | safe }}</div>
+  </article>
+
+  <div id="history-panel" class="mt-4"></div>
+
+  {% include "kb/articles/partials/attachments.html" %}
+  {% include "kb/articles/partials/feedback.html" %}
+</div>
+{% endblock %}

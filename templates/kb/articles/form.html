@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf_input with context %}
+{% block title %}{{ t("kb.edit_article") if article else t("kb.new_article") }} · {{ t("brand.name") }}{% endblock %}
+{% block content %}
+{% set is_edit = article is not none %}
+<div class="mx-auto w-full max-w-3xl">
+  <h1 class="mb-4 text-xl font-semibold text-slate-900 dark:text-white">{{ t("kb.edit_article") if is_edit else t("kb.new_article") }}</h1>
+  <form method="post" action="{{ '/kb/articles/' ~ article.slug if is_edit else '/kb/articles' }}" class="card space-y-4 p-6">
+    {{ csrf_input() }}
+    <div>
+      <label class="label" for="title">{{ t("kb.title_label") }}</label>
+      <input type="text" id="title" name="title" required value="{{ article.title if is_edit else '' }}" class="input">
+    </div>
+    <div>
+      <label class="label" for="summary">{{ t("kb.summary") }}</label>
+      <input type="text" id="summary" name="summary" value="{{ article.summary or '' if is_edit else '' }}" class="input">
+    </div>
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div>
+        <label class="label" for="category_id">{{ t("kb.category") }}</label>
+        <select id="category_id" name="category_id" class="input">
+          <option value="">{{ t("kb.all_categories") }}</option>
+          {% for category in categories %}
+          <option value="{{ category.id }}" {% if is_edit and article.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="label" for="visibility">{{ t("kb.visibility") }}</label>
+        <select id="visibility" name="visibility" class="input">
+          <option value="internal" {% if not is_edit or article.visibility.value == "internal" %}selected{% endif %}>{{ t("kb.visibility_internal") }}</option>
+          <option value="public" {% if is_edit and article.visibility.value == "public" %}selected{% endif %}>{{ t("kb.visibility_public") }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="tags">{{ t("kb.tags_label") }}</label>
+        <input type="text" id="tags" name="tags" value="{{ selected_tags | join(', ') }}" placeholder="{{ t('kb.tags_hint') }}" class="input">
+      </div>
+    </div>
+
+    <div x-data="{ tab: 'write', body: {{ (article.body if is_edit else '') | tojson }} }">
+      <div class="mb-2 flex gap-1 rounded-md bg-slate-100 p-1 text-sm dark:bg-slate-700">
+        <button type="button" class="rounded px-3 py-1" :class="tab === 'write' ? 'bg-white shadow dark:bg-slate-800' : ''" @click="tab = 'write'">Write</button>
+        <button type="button" class="rounded px-3 py-1" :class="tab === 'preview' ? 'bg-white shadow dark:bg-slate-800' : ''" @click="tab = 'preview'">Preview</button>
+      </div>
+      <textarea name="body" x-model="body" rows="16" class="input font-mono text-xs" placeholder="# Heading"></textarea>
+      <div x-show="tab === 'preview'" x-cloak class="prose mt-3 rounded-md border border-slate-200 p-4 dark:border-slate-700" x-html="window.renderMarkdown(body)"></div>
+    </div>
+
+    <div class="flex items-center justify-end gap-2">
+      <a href="{{ '/kb/articles/' ~ article.slug if is_edit else '/kb' }}" class="btn btn-secondary">{{ t("kb.cancel") }}</a>
+      {% if is_edit %}
+      <button type="submit" class="btn btn-primary">{{ t("kb.save") }}</button>
+      {% else %}
+      <button type="submit" name="action" value="draft" class="btn btn-secondary">{{ t("kb.save_draft") }}</button>
+      <button type="submit" name="action" value="publish" class="btn btn-primary">{{ t("kb.publish") }}</button>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script>
+  window.renderMarkdown = function (text) {
+    if (typeof marked === "undefined" || typeof DOMPurify === "undefined") return "";
+    return DOMPurify.sanitize(marked.parse(text || ""));
+  };
+</script>
+{% endblock %}

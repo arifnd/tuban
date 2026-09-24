@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon with context %}
+{% block title %}{{ t("kb.articles") }} · {{ t("brand.name") }}{% endblock %}
+{% block content %}
+{% set can_edit = current_user.role in ("admin", "agent") %}
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ heading or t("kb.articles") }}</h1>
+  {% if can_edit %}
+  <a href="/kb/articles/new" class="btn btn-primary">{{ icon("plus", "w-4 h-4") }} {{ t("kb.new_article") }}</a>
+  {% endif %}
+</div>
+
+<form class="card mb-4 flex flex-wrap items-end gap-3 p-4"
+      hx-get="/kb/articles" hx-target="#article-list" hx-swap="outerHTML"
+      hx-trigger="submit, change from:select, keyup changed delay:300ms from:input[name='q']">
+  <div class="min-w-[14rem] flex-1">
+    <label for="q" class="label">{{ t("kb.search") }}</label>
+    <input type="search" id="q" name="q" value="{{ search }}" placeholder="{{ t('kb.search_placeholder') }}" class="input">
+  </div>
+  {% if can_edit %}
+  <div>
+    <label for="article_status" class="label">{{ t("kb.status") }}</label>
+    <select id="article_status" name="article_status" class="input">
+      <option value="">{{ t("kb.all_statuses") }}</option>
+      <option value="draft" {% if status_filter == "draft" %}selected{% endif %}>{{ t("kb.status_draft") }}</option>
+      <option value="published" {% if status_filter == "published" %}selected{% endif %}>{{ t("kb.status_published") }}</option>
+      <option value="archived" {% if status_filter == "archived" %}selected{% endif %}>{{ t("kb.status_archived") }}</option>
+    </select>
+  </div>
+  {% endif %}
+</form>
+
+<div class="card overflow-hidden">
+  {% set search = search %}
+  {% set category_slug = category_slug %}
+  {% set tag_slug = tag_slug %}
+  {% set status_filter = status_filter %}
+  {% include "kb/articles/partials/article_table.html" %}
+</div>
+{% endblock %}

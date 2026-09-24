@@ -1,0 +1,7 @@
+<li class="flex items-center justify-between gap-3 py-2.5">
+  <a href="/kb/articles/{{ article.slug }}" class="min-w-0 flex-1 text-sm font-medium text-slate-900 hover:text-brand-700 dark:text-slate-100 dark:hover:text-white">
+    <span class="line-clamp-1">{{ article.title }}</span>
+    {% if article.category %}<span class="mt-0.5 block text-xs text-slate-400">{{ article.category.name }}</span>{% endif %}
+  </a>
+  <span class="shrink-0 text-xs text-slate-400">{{ article.view_count }} {{ t("kb.views") }}</span>
+</li>

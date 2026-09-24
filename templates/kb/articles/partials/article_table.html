@@ -1,0 +1,38 @@
+{% from "partials/pagination.html" import pagination with context %}
+{% set can_edit = current_user.role in ("admin", "agent") %}
+<div id="article-list">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="table-head">
+        <tr>
+          <th class="px-3 py-2">{{ t("kb.title_label") }}</th>
+          <th class="px-3 py-2">{{ t("kb.category") }}</th>
+          {% if can_edit %}<th class="px-3 py-2">{{ t("kb.status") }}</th>{% endif %}
+          <th class="px-3 py-2">{{ t("kb.updated") }}</th>
+          <th class="px-3 py-2 text-right">{{ t("kb.views") }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for article in articles %}
+        <tr class="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/40">
+          <td class="px-3 py-2">
+            <a href="/kb/articles/{{ article.slug }}" class="font-medium text-slate-900 hover:text-brand-700 dark:text-slate-100 dark:hover:text-white">{{ article.title }}</a>
+            {% if article.tags %}
+            <span class="ml-1 text-xs text-slate-400">{% for tag in article.tags %}#{{ tag.name }}{% if not loop.last %} {% endif %}{% endfor %}</span>
+            {% endif %}
+          </td>
+          <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ article.category.name if article.category else "—" }}</td>
+          {% if can_edit %}
+          <td class="px-3 py-2"><span class="badge badge-slate">{{ t("kb.status_" ~ article.status.value) }}</span></td>
+          {% endif %}
+          <td class="px-3 py-2 text-slate-500 dark:text-slate-400">{{ article.updated_at | dtf }}</td>
+          <td class="px-3 py-2 text-right text-slate-500 dark:text-slate-400">{{ article.view_count }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="px-3 py-10 text-center text-slate-500 dark:text-slate-400">{{ t("kb.no_articles") }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ pagination(page, total_pages, request.url.path, query=search, target="#article-list", total=total, filters={"category": category_slug, "tag": tag_slug, "article_status": status_filter}) }}
+</div>

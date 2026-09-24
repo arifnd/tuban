@@ -1,0 +1,20 @@
+{% from "partials/macros.html" import csrf_input with context %}
+<div class="card p-4">
+  <h2 class="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{{ t("kb.revisions") }}</h2>
+  <ul class="divide-y divide-slate-100 text-sm dark:divide-slate-700">
+    {% for revision in revisions %}
+    <li class="flex items-center justify-between gap-3 py-2">
+      <div>
+        <span class="font-medium text-slate-900 dark:text-white">{{ t("kb.revision") }} {{ revision.revision_no }}</span>
+        <span class="text-slate-500 dark:text-slate-400">· {{ revision.editor.name if revision.editor else "—" }} · {{ revision.created_at | dtf }}</span>
+      </div>
+      <form method="post" action="/kb/articles/{{ article.slug }}/restore/{{ revision.id }}" data-confirm="{{ t('kb.restore') }}?">
+        {{ csrf_input() }}
+        <button type="submit" class="text-brand-600 hover:text-brand-700 dark:text-brand-400">{{ t("kb.restore") }}</button>
+      </form>
+    </li>
+    {% else %}
+    <li class="py-3 text-slate-500 dark:text-slate-400">{{ t("kb.no_articles") }}</li>
+    {% endfor %}
+  </ul>
+</div>
