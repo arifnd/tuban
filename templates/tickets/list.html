@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon with context %}
+{% block title %}{{ t("tickets.title") }} · {{ t("brand.name") }}{% endblock %}
+{% block content %}
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ t("tickets.title") }}</h1>
+  <div class="flex items-center gap-2">
+    {% if is_editor %}<a href="/tickets/categories" class="btn btn-secondary">{{ t("tickets.categories") }}</a>{% endif %}
+    <a href="/tickets/new" class="btn btn-primary">{{ icon("plus", "w-4 h-4") }} {{ t("tickets.new") }}</a>
+  </div>
+</div>
+
+<form class="card mb-4 flex flex-wrap items-end gap-3 p-4"
+      hx-get="/tickets/partials/list" hx-target="#ticket-list" hx-swap="outerHTML"
+      hx-trigger="submit, change from:select, keyup changed delay:300ms from:input[name='q']">
+  <div class="min-w-[14rem] flex-1">
+    <label for="q" class="label">{{ t("tickets.search") }}</label>
+    <input type="search" id="q" name="q" value="{{ search }}" placeholder="{{ t('tickets.search_placeholder') }}" class="input">
+  </div>
+  <div>
+    <label for="ticket_status" class="label">{{ t("tickets.status") }}</label>
+    <select id="ticket_status" name="ticket_status" class="input">
+      <option value="">{{ t("tickets.all_statuses") }}</option>
+      {% for s in ["open", "pending", "in_progress", "resolved", "closed"] %}
+      <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ t("tickets.status_" ~ s) }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label for="priority" class="label">{{ t("tickets.priority") }}</label>
+    <select id="priority" name="priority" class="input">
+      <option value="">{{ t("tickets.all_priorities") }}</option>
+      {% for p in ["low", "normal", "high", "urgent"] %}
+      <option value="{{ p }}" {% if priority_filter == p %}selected{% endif %}>{{ t("tickets.priority_" ~ p) }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label for="category" class="label">{{ t("tickets.category") }}</label>
+    <select id="category" name="category" class="input">
+      <option value="">{{ t("tickets.all_categories") }}</option>
+      {% for c in categories %}
+      <option value="{{ c.id }}" {% if category_filter == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label for="sort" class="label">{{ t("tickets.sort") }}</label>
+    <select id="sort" name="sort" class="input">
+      <option value="updated" {% if sort == "updated" %}selected{% endif %}>{{ t("tickets.sort_updated") }}</option>
+      <option value="created" {% if sort == "created" %}selected{% endif %}>{{ t("tickets.sort_created") }}</option>
+      <option value="priority" {% if sort == "priority" %}selected{% endif %}>{{ t("tickets.sort_priority") }}</option>
+      <option value="sla" {% if sort == "sla" %}selected{% endif %}>{{ t("tickets.sort_sla") }}</option>
+    </select>
+  </div>
+  {% if is_editor %}
+  <label class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+    <input type="checkbox" name="mine" value="1" {% if mine %}checked{% endif %} class="h-4 w-4">
+    {{ t("tickets.mine") }}
+  </label>
+  {% endif %}
+</form>
+
+<div class="card overflow-hidden">
+  {% include "tickets/partials/list.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% from "partials/pagination.html" import pagination with context %}
+{% from "tickets/partials/macros.html" import status_badge, priority_badge, sla_badge with context %}
+<div id="ticket-list">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="table-head">
+        <tr>
+          <th class="px-3 py-2">#</th>
+          <th class="px-3 py-2">{{ t("tickets.subject") }}</th>
+          <th class="px-3 py-2">{{ t("tickets.status") }}</th>
+          <th class="px-3 py-2">{{ t("tickets.priority") }}</th>
+          <th class="px-3 py-2">{{ t("tickets.requester") }}</th>
+          <th class="px-3 py-2">{{ t("tickets.assignee") }}</th>
+          <th class="px-3 py-2">{{ t("tickets.sla") }}</th>
+          <th class="px-3 py-2">{{ t("tickets.updated") }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ticket in tickets %}
+        <tr class="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/40">
+          <td class="px-3 py-2 font-mono text-xs text-slate-500 dark:text-slate-400">{{ ticket.ticket_number }}</td>
+          <td class="px-3 py-2">
+            <a href="/tickets/{{ ticket.id }}" class="font-medium text-slate-900 hover:text-brand-700 dark:text-slate-100 dark:hover:text-white">{{ ticket.subject }}</a>
+            {% if ticket.category %}<span class="ml-1 text-xs text-slate-400">{{ ticket.category.name }}</span>{% endif %}
+          </td>
+          <td class="px-3 py-2">{{ status_badge(ticket.status) }}</td>
+          <td class="px-3 py-2">{{ priority_badge(ticket.priority) }}</td>
+          <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ ticket.requester.name if ticket.requester else "—" }}</td>
+          <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ ticket.assignee.name if ticket.assignee else t("tickets.unassigned") }}</td>
+          <td class="px-3 py-2">{{ sla_badge(sla_states.get(ticket.id, "ok")) }}</td>
+          <td class="px-3 py-2 text-slate-500 dark:text-slate-400">{{ ticket.updated_at | dtf }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="px-3 py-10 text-center text-slate-500 dark:text-slate-400">{{ t("tickets.empty") }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ pagination(page, total_pages, "/tickets/partials/list", query=search, target="#ticket-list", total=total, filters={"ticket_status": status_filter, "priority": priority_filter, "category": category_filter, "assignee": assignee_filter, "sort": sort, "mine": mine}) }}
+</div>

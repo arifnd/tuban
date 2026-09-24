@@ -1,0 +1,14 @@
+{% macro status_badge(status) -%}
+{% set tone = {"open": "badge-blue", "pending": "badge-amber", "in_progress": "badge-slate", "resolved": "badge-emerald", "closed": "badge-slate"}.get(status.value, "badge-slate") %}
+<span class="badge {{ tone }}">{{ t("tickets.status_" ~ status.value) }}</span>
+{%- endmacro %}
+
+{% macro priority_badge(priority) -%}
+{% set tone = {"urgent": "badge-red", "high": "badge-amber", "normal": "badge-blue", "low": "badge-slate"}.get(priority.value, "badge-slate") %}
+<span class="badge {{ tone }}">{{ t("tickets.priority_" ~ priority.value) }}</span>
+{%- endmacro %}
+
+{% macro sla_badge(state) -%}
+{% set tone = {"breached": "badge-red", "due_soon": "badge-amber", "met": "badge-emerald", "ok": "badge-slate"}.get(state, "badge-slate") %}
+<span class="badge {{ tone }}">{{ t("tickets.sla_" ~ state) }}</span>
+{%- endmacro %}

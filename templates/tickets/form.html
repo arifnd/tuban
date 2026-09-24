@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf_input with context %}
+{% block title %}{{ t("tickets.new") }} · {{ t("brand.name") }}{% endblock %}
+{% block content %}
+<div class="mx-auto w-full max-w-2xl">
+  <h1 class="mb-4 text-xl font-semibold text-slate-900 dark:text-white">{{ t("tickets.new") }}</h1>
+  <form method="post" action="/tickets" class="card space-y-4 p-6">
+    {{ csrf_input() }}
+    <div>
+      <label class="label" for="subject">{{ t("tickets.subject") }}</label>
+      <input type="text" id="subject" name="subject" required minlength="3" class="input">
+    </div>
+    <div>
+      <label class="label" for="description">{{ t("tickets.description") }}</label>
+      <textarea id="description" name="description" rows="6" class="input"></textarea>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label class="label" for="category_id">{{ t("tickets.category") }}</label>
+        <select id="category_id" name="category_id" class="input">
+          <option value="">{{ t("tickets.all_categories") }}</option>
+          {% for category in categories %}
+          <option value="{{ category.id }}">{{ category.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="label" for="priority">{{ t("tickets.priority") }}</label>
+        <select id="priority" name="priority" class="input">
+          {% for p in priorities %}
+          <option value="{{ p.value }}" {% if p.value == "normal" %}selected{% endif %}>{{ t("tickets.priority_" ~ p.value) }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2">
+      <a href="/tickets" class="btn btn-secondary">{{ t("tickets.cancel") }}</a>
+      <button type="submit" class="btn btn-primary">{{ t("tickets.create") }}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
