@@ -17,6 +17,7 @@ from src.database import SessionFactory
 from src.kb import service as kb_service
 from src.kb.models import KbArticle, KbArticleFeedback, KbArticleRevision, KbArticleStatus, KbArticleTag, KbArticleVisibility, KbAttachment, KbCategory, KbTag
 from src.notifications.models import Notification
+from src.settings import service as settings_service
 from src.tickets import service as ticket_service
 from src.tickets.models import Ticket, TicketAttachment, TicketCategory, TicketComment, TicketNumberSeq, TicketPriority, TicketStatus
 from src.users.models import User, UserRole
@@ -35,6 +36,38 @@ ARTICLES = [
     ("Resetting your password", "Steps to regain access.", "Use the password reset link. If it fails, open a ticket."),
     ("Printer troubleshooting", "Common printer fixes.", "- Check cables\n- Restart the printer\n- Reinstall the driver"),
 ]
+
+# (title, summary, body, visibility, status)
+EXTRA_ARTICLES = [
+    (
+        "Internal escalation runbook",
+        "Agent-only steps for escalating incidents.",
+        "This runbook is for agents only and must not appear on the public landing page.",
+        KbArticleVisibility.INTERNAL,
+        KbArticleStatus.PUBLISHED,
+    ),
+    (
+        "Upcoming billing changes (draft)",
+        "Draft notes pending review.",
+        "This draft is not published yet.",
+        KbArticleVisibility.PUBLIC,
+        KbArticleStatus.DRAFT,
+    ),
+]
+
+SETTINGS = {
+    "contact_email": "support@example.com",
+    "contact_phone": "+62 21 555 0100",
+    "contact_address": "Jl. Merdeka No. 1, Jakarta",
+    "social_facebook": "https://facebook.com/batikhelpdesk",
+    "social_instagram": "https://instagram.com/batikhelpdesk",
+    "social_x": "https://x.com/batikhelpdesk",
+    "social_linkedin": "https://linkedin.com/company/batikhelpdesk",
+    "social_youtube": "https://youtube.com/@batikhelpdesk",
+    "carousel_image_1": "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80",
+    "carousel_image_2": "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=80",
+    "carousel_image_3": "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1600&q=80",
+}
 
 
 async def _reset(db) -> None:
@@ -71,7 +104,13 @@ async def _user(db, email: str, role: UserRole, name: str) -> User:
 async def seed() -> None:
     async with SessionFactory() as db:
         users = {email: await _user(db, email, role, name) for email, role, name in USERS}
-        admin, ada, grace, uma, bob = users["admin@example.com"], users["ada@example.com"], users["grace@example.com"], users["user@example.com"], users["bob@example.com"]
+        admin, ada, grace, uma, bob = (
+            users["admin@example.com"],
+            users["ada@example.com"],
+            users["grace@example.com"],
+            users["user@example.com"],
+            users["bob@example.com"],
+        )
 
         categories = {}
         for index, name in enumerate(("Getting Started", "Billing", "Troubleshooting")):
@@ -80,9 +119,23 @@ async def seed() -> None:
         for title, summary, body in ARTICLES:
             category = categories["Billing" if "Refund" in title else "Troubleshooting" if "Printer" in title else "Getting Started"]
             article = await kb_service.create_article(
-                db, admin, title=title, summary=summary, body=body, category_id=category.id, visibility=KbArticleVisibility.PUBLIC, status=KbArticleStatus.PUBLISHED
+                db,
+                admin,
+                title=title,
+                summary=summary,
+                body=body,
+                category_id=category.id,
+                visibility=KbArticleVisibility.PUBLIC,
+                status=KbArticleStatus.PUBLISHED,
             )
             await kb_service.set_article_tags(db, admin, article, ["basics", "how-to"])
+
+        for title, summary, body, visibility, status in EXTRA_ARTICLES:
+            await kb_service.create_article(
+                db, admin, title=title, summary=summary, body=body, category_id=categories["Getting Started"].id, visibility=visibility, status=status
+            )
+
+        await settings_service.update(db, admin, SETTINGS)
 
         ticket_category = await ticket_service.create_category(db, admin, name="General")
         tickets = []

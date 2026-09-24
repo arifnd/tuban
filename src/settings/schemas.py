@@ -23,6 +23,9 @@ class SettingsUpdate(BaseModel):
     social_x: str = Field(default="", max_length=300)
     social_linkedin: str = Field(default="", max_length=300)
     social_youtube: str = Field(default="", max_length=300)
+    carousel_image_1: str = Field(default="", max_length=500)
+    carousel_image_2: str = Field(default="", max_length=500)
+    carousel_image_3: str = Field(default="", max_length=500)
 
     @field_validator("theme_color")
     @classmethod

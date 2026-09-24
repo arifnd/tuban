@@ -10,12 +10,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.activity import router as activity_router
 from src.auth import router as auth_router
-from src.auth.dependencies import OptionalUser
+from src.auth.dependencies import DbDep, OptionalUser
 from src.auth.exceptions import NotAuthenticated
 from src.config import PROJECT_ROOT, settings
 from src.dashboard import router as dashboard_router
 from src.database import SessionFactory
 from src.kb import router as kb_router
+from src.kb import service as kb_service
 from src.logging_filters import RedactSensitiveQueryFilter
 from src.middleware import SecurityHeadersMiddleware
 from src.notifications import router as notifications_router
@@ -104,7 +105,15 @@ async def health() -> dict[str, str]:
 
 
 @app.get("/")
-async def index(request: Request, user: OptionalUser):
+async def index(request: Request, user: OptionalUser, db: DbDep):
     if user:
         return RedirectResponse("/dashboard", status_code=303)
-    return templates.TemplateResponse(request, "index.html")
+    return templates.TemplateResponse(
+        request,
+        "index.html",
+        {
+            "categories": await kb_service.list_categories(db, viewer=None),
+            "recent": await kb_service.recent_articles(db, None, 5),
+            "popular": await kb_service.popular_articles(db, None, 5),
+        },
+    )

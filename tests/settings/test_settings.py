@@ -1,8 +1,10 @@
 from httpx2 import AsyncClient
 from sqlalchemy import select
 
+from src.kb.models import KbArticleStatus, KbArticleVisibility
 from src.settings import service as settings_service
 from src.users.models import User, UserRole
+from tests.kb.helpers import make_article, make_editor
 from tests.tickets.helpers import csrf, login, make_user
 
 BASE_FORM = {
@@ -107,6 +109,54 @@ async def test_contact_info_saved_and_shown_on_landing(client: AsyncClient, db) 
     assert "https://instagram.com/batik" in resp.text
     assert "text-[#1877F2]" in resp.text
     assert "text-[#E4405F]" in resp.text
+
+
+async def test_carousel_images_shown_on_landing(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(
+        BASE_FORM,
+        _csrf=csrf(client.cookies),
+        carousel_image_1="https://cdn.example.com/one.jpg",
+        carousel_image_2="https://cdn.example.com/two.jpg",
+    )
+    assert (await client.post("/settings", data=form)).status_code == 303
+    assert settings_service.get("carousel_image_1") == "https://cdn.example.com/one.jpg"
+
+    client.cookies.clear()
+    resp = await client.get("/")
+    assert resp.status_code == 200
+    assert "https://cdn.example.com/one.jpg" in resp.text
+    assert "https://cdn.example.com/two.jpg" in resp.text
+
+
+async def test_landing_shows_only_public_articles(client: AsyncClient, db) -> None:
+    editor = await make_editor(db, "editor@example.com")
+    await make_article(db, editor, title="Public Guide", status=KbArticleStatus.PUBLISHED, visibility=KbArticleVisibility.PUBLIC)
+    await make_article(db, editor, title="Internal Runbook", status=KbArticleStatus.PUBLISHED, visibility=KbArticleVisibility.INTERNAL)
+    await make_article(db, editor, title="Draft Notes", status=KbArticleStatus.DRAFT, visibility=KbArticleVisibility.PUBLIC)
+
+    resp = await client.get("/")
+    assert resp.status_code == 200
+    assert "Public Guide" in resp.text
+    assert "Internal Runbook" not in resp.text
+    assert "Draft Notes" not in resp.text
+
+
+async def test_landing_category_counts_exclude_non_public(db) -> None:
+    from src.kb import service as kb_service
+
+    editor = await make_editor(db, "editor@example.com")
+    category = await kb_service.create_category(db, editor, name="Guides")
+    await make_article(db, editor, title="Pub", category_id=category.id, status=KbArticleStatus.PUBLISHED, visibility=KbArticleVisibility.PUBLIC)
+    await make_article(db, editor, title="Int", category_id=category.id, status=KbArticleStatus.PUBLISHED, visibility=KbArticleVisibility.INTERNAL)
+
+    public_categories = await kb_service.list_categories(db, viewer=None)
+    assert next(c for c in public_categories if c.name == "Guides").article_count == 1
+
+    editor_categories = await kb_service.list_categories(db, viewer=editor)
+    assert next(c for c in editor_categories if c.name == "Guides").article_count == 2
 
 
 async def test_invalid_contact_email_rejected(client: AsyncClient, db) -> None:

@@ -32,6 +32,9 @@ def defaults() -> dict[str, Any]:
         "social_x": "",
         "social_linkedin": "",
         "social_youtube": "",
+        "carousel_image_1": "",
+        "carousel_image_2": "",
+        "carousel_image_3": "",
     }
 
 
