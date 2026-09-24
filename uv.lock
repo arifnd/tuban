@@ -110,7 +110,7 @@ wheels = [
 ]
 
 [[package]]
-name = "batik"
+name = "tuban"
 source = { editable = "." }
 dependencies = [
     { name = "aiosqlite" },

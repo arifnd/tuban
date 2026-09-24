@@ -1,6 +1,6 @@
 # Architecture
 
-Batik Helpdesk is a knowledge base and ticketing application. It is server-rendered
+Tuban Helpdesk is a knowledge base and ticketing application. It is server-rendered
 (FastAPI + Jinja2 + HTMX + Alpine) with an async SQLAlchemy 2.0 data layer that runs on
 SQLite or PostgreSQL unchanged.
 

@@ -27,9 +27,9 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: batik
-          POSTGRES_PASSWORD: batik
-          POSTGRES_DB: batik
+          POSTGRES_USER: tuban
+          POSTGRES_PASSWORD: tuban
+          POSTGRES_DB: tuban
         ports:
           - 5432:5432
         options: >-
@@ -38,7 +38,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
-      DATABASE_URL: postgresql+asyncpg://batik:batik@localhost:5432/batik
+      DATABASE_URL: postgresql+asyncpg://tuban:tuban@localhost:5432/tuban
     steps:
       - uses: actions/checkout@v4
       - name: Install uv

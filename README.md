@@ -1,4 +1,4 @@
-# Batik Helpdesk
+# Tuban
 
 A knowledge base + ticketing application: **FastAPI + SQLAlchemy 2.0 async + Jinja2 /
 HTMX / Alpine**, with Alembic migrations, Google (Gmail) OAuth2 SSO, and a pluggable
@@ -45,7 +45,7 @@ Local environments show an email dev-login on `/auth/login`. Production uses Goo
 
 ## Database
 
-- **Dev default**: `sqlite+aiosqlite:///./instance/batik.db`
+- **Dev default**: `sqlite+aiosqlite:///./instance/tuban.db`
 - **Production**: SQLite (mounted `instance/` volume) **or** PostgreSQL
   (`postgresql+asyncpg://…`) — set `DATABASE_URL`. The schema uses portable types
   (`native_enum=False`, `Uuid`, `JSON`) and migrations run in batch mode on SQLite.
@@ -57,7 +57,7 @@ Local environments show an email dev-login on `/auth/login`. Production uses Goo
 docker compose -f docker/docker-compose.yml up -d
 
 # PostgreSQL
-DATABASE_URL=postgresql+asyncpg://batik:batik@db:5432/batik \
+DATABASE_URL=postgresql+asyncpg://tuban:tuban@db:5432/tuban \
   docker compose -f docker/docker-compose.yml --profile postgres up -d
 ```
 

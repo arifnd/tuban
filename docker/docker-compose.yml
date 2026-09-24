@@ -3,15 +3,15 @@ services:
     image: postgres:16-alpine
     profiles: ["postgres"]
     environment:
-      POSTGRES_USER: batik
-      POSTGRES_PASSWORD: batik
-      POSTGRES_DB: batik
+      POSTGRES_USER: tuban
+      POSTGRES_PASSWORD: tuban
+      POSTGRES_DB: tuban
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U batik -d batik"]
+      test: ["CMD-SHELL", "pg_isready -U tuban -d tuban"]
       interval: 5s
       timeout: 5s
       retries: 10

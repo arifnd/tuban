@@ -1,1 +1,1 @@
-"""Batik Helpdesk — knowledge base + ticketing application."""
+"""Tuban Helpdesk — knowledge base + ticketing application."""

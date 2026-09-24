@@ -3,7 +3,7 @@
 Domain-based layout: one `src/{domain}/` package per bounded context.
 
 ```
-batik/
+tuban/
 ├── pyproject.toml            # deps + ruff/pytest/coverage config
 ├── uv.lock                   # lockfile (uv)
 ├── package.json              # Tailwind + esbuild + icon sprite scripts

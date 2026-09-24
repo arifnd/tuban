@@ -1,5 +1,5 @@
 {
-  "name": "batik",
+  "name": "tuban",
   "private": true,
   "scripts": {
     "build:icons": "node scripts/build-icons.mjs",

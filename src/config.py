@@ -14,10 +14,10 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    APP_NAME: str = "Batik Helpdesk"
+    APP_NAME: str = "Tuban Helpdesk"
     ENVIRONMENT: str = "local"
 
-    DATABASE_URL: str = "sqlite+aiosqlite:///./instance/batik.db"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./instance/tuban.db"
 
     INITIAL_ADMIN_EMAIL: str = ""
 

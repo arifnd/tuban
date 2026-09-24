@@ -6,7 +6,7 @@ os.environ.setdefault(
     (
         f"sqlite+aiosqlite:///./instance/test_{os.environ.get('PYTEST_XDIST_WORKER', '')}.db"
         if os.environ.get("PYTEST_XDIST_WORKER")
-        else "sqlite+aiosqlite:///./instance/test_batik.db"
+        else "sqlite+aiosqlite:///./instance/test_tuban.db"
     ),
 )
 os.environ.setdefault("AUTH_SESSION_SECRET", "test-secret-that-is-longer-than-32-bytes-for-hmac")

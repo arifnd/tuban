@@ -1,7 +1,7 @@
 [project]
-name = "batik"
+name = "tuban"
 dynamic = ["version"]
-description = "Batik Helpdesk — knowledge base + ticketing"
+description = "Tuban — knowledge base + ticketing"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
