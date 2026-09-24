@@ -1,5 +1,6 @@
 import logging
 import logging.config
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -13,12 +14,15 @@ from src.auth.dependencies import OptionalUser
 from src.auth.exceptions import NotAuthenticated
 from src.config import PROJECT_ROOT, settings
 from src.dashboard import router as dashboard_router
+from src.database import SessionFactory
 from src.kb import router as kb_router
 from src.logging_filters import RedactSensitiveQueryFilter
 from src.middleware import SecurityHeadersMiddleware
 from src.notifications import router as notifications_router
 from src.reports import router as reports_router
 from src.search import router as search_router
+from src.settings import router as settings_router
+from src.settings import service as settings_service
 from src.storage import router as storage_router
 from src.templating import templates
 from src.tickets import router as tickets_router
@@ -39,7 +43,18 @@ app_kwargs: dict = {"title": settings.APP_NAME, "version": __version__}
 if settings.ENVIRONMENT not in SHOW_DOCS_IN:
     app_kwargs["openapi_url"] = None
 
-app = FastAPI(**app_kwargs)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        async with SessionFactory() as db:
+            await settings_service.load(db)
+    except Exception:  # pragma: no cover - startup is best-effort
+        logger.exception("Could not load runtime settings; using defaults")
+    yield
+
+
+app = FastAPI(**app_kwargs, lifespan=lifespan)
 app.add_middleware(SecurityHeadersMiddleware)
 
 app.mount("/static", StaticFiles(directory=str(PROJECT_ROOT / "static")), name="static")
@@ -53,6 +68,7 @@ app.include_router(notifications_router.router)
 app.include_router(activity_router.router)
 app.include_router(search_router.router)
 app.include_router(reports_router.router)
+app.include_router(settings_router.router)
 app.include_router(storage_router.router)
 
 

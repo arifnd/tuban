@@ -18,6 +18,7 @@ from src.auth.utils import (
     set_session_cookie,
 )
 from src.templating import templates
+from src.users.exceptions import RegistrationClosedError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -71,7 +72,7 @@ async def callback(request: Request, db: DbDep):
             authorization_response=str(request.url),
             expected_state=expected_state,
         )
-    except (OAuthFailed, UserDeactivated) as exc:
+    except (OAuthFailed, UserDeactivated, RegistrationClosedError) as exc:
         return RedirectResponse(
             f"{LOGIN_URL}?error={quote(str(exc.detail))}",
             status_code=status.HTTP_303_SEE_OTHER,

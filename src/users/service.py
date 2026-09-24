@@ -7,8 +7,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.exceptions import UserDeactivated
-from src.config import settings
-from src.users.exceptions import CannotDeactivateLastAdminError, UserNotFoundError
+from src.settings import service as settings_service
+from src.users.exceptions import CannotDeactivateLastAdminError, RegistrationClosedError, UserNotFoundError
 from src.users.models import User, UserRole
 
 logger = logging.getLogger(__name__)
@@ -26,13 +26,17 @@ async def ensure_user(
     INITIAL_ADMIN_EMAIL account is granted admin on first login."""
     user = (await db.execute(select(User).where(User.email == email))).scalar_one_or_none()
     if user is None:
-        is_admin = bool(settings.INITIAL_ADMIN_EMAIL) and email.lower() == settings.INITIAL_ADMIN_EMAIL.lower()
+        admin_email = settings_service.get("initial_admin_email") or ""
+        is_admin = bool(admin_email) and email.lower() == admin_email.lower()
+        if not is_admin and not settings_service.get("open_registration"):
+            raise RegistrationClosedError()
+        require_approval = bool(settings_service.get("require_approval"))
         user = User(
             email=email,
             name=name,
             google_id=google_id,
             avatar=avatar,
-            is_active=True,
+            is_active=not require_approval,
             role=UserRole.ADMIN if is_admin else UserRole.USER,
         )
         try:
@@ -44,6 +48,7 @@ async def ensure_user(
         else:
             logger.info("created user %s email=%s role=%s", user.id, email, user.role.value)
     if not user.is_active:
+        await db.commit()
         raise UserDeactivated()
     if google_id and not user.google_id:
         user.google_id = google_id

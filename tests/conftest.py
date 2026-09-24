@@ -23,8 +23,17 @@ from src.kb import models as kb_models  # noqa: F401
 from src.main import app
 from src.models import Base
 from src.notifications import models as notification_models  # noqa: F401
+from src.settings import models as settings_models  # noqa: F401
+from src.settings import service as settings_service
 from src.tickets import models as ticket_models  # noqa: F401
 from src.users import models as user_models  # noqa: F401
+
+
+@pytest.fixture(autouse=True)
+def _reset_settings_cache():
+    settings_service.reset_cache()
+    yield
+    settings_service.reset_cache()
 
 
 @pytest.fixture(autouse=True)

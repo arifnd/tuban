@@ -10,6 +10,7 @@ from starlette.requests import Request
 
 from src.config import PROJECT_ROOT, settings
 from src.kb.markdown import render_markdown as _render_markdown
+from src.settings import service as settings_service
 
 TEMPLATES_DIR = PROJECT_ROOT / "templates"
 I18N_DIR = PROJECT_ROOT / "static" / "i18n"
@@ -30,7 +31,8 @@ def _load_translations(lang: str = DEFAULT_LANG) -> dict[str, str]:
 
 def t(key: str) -> str:
     """Return the localized string for ``key``, falling back to the key itself."""
-    return _load_translations(DEFAULT_LANG).get(key, key)
+    language = settings_service.get("default_language") or DEFAULT_LANG
+    return _load_translations(language).get(key, key)
 
 
 def _context(request: Request) -> dict[str, Any]:
@@ -41,6 +43,7 @@ def _context(request: Request) -> dict[str, Any]:
         "is_admin": bool(getattr(current_user, "role", None) == "admin"),
         "current_year": datetime.now().year,
         "unread_notifications": getattr(request.state, "unread_notifications", 0),
+        "app_name": settings_service.get("app_name") or settings.APP_NAME,
     }
 
 

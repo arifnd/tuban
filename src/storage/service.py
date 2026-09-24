@@ -1,14 +1,9 @@
 from fastapi import UploadFile
 
 from src.exceptions import BadRequestError, PayloadTooLargeError
+from src.settings import service as settings_service
 from src.storage.client import StorageBackend, get_storage, new_key
-from src.storage.config import storage_settings
-
-CHUNK_SIZE = 64 * 1024
-
-IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
-DOCUMENT_EXTENSIONS = {"pdf", "txt", "csv", "md", "json", "log", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "zip"}
-ALLOWED_EXTENSIONS = IMAGE_EXTENSIONS | DOCUMENT_EXTENSIONS
+from src.storage.constants import CHUNK_SIZE
 
 
 def file_extension(filename: str | None) -> str:
@@ -17,21 +12,30 @@ def file_extension(filename: str | None) -> str:
     return filename.rsplit(".", 1)[1].strip().lower()
 
 
+def allowed_extensions() -> set[str]:
+    return set(settings_service.get("allowed_extensions") or [])
+
+
 def validate_extension(filename: str | None) -> str:
     extension = file_extension(filename)
-    if extension not in ALLOWED_EXTENSIONS:
+    if extension not in allowed_extensions():
         raise BadRequestError(detail="Unsupported file type")
     return extension
 
 
+def max_upload_size() -> int:
+    return int(settings_service.get("upload_max_size"))
+
+
 async def read_upload(upload: UploadFile) -> bytes:
     buffer = bytearray()
+    limit = max_upload_size()
     while True:
         chunk = await upload.read(CHUNK_SIZE)
         if not chunk:
             break
         buffer.extend(chunk)
-        if len(buffer) > storage_settings.UPLOAD_MAX_SIZE:
+        if len(buffer) > limit:
             raise PayloadTooLargeError(detail="File exceeds the upload size limit")
     if not buffer:
         raise BadRequestError(detail="Empty file")

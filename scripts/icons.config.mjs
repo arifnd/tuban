@@ -10,6 +10,7 @@ export default {
   clipboard: "clipboard",
   chart: "chart-no-axes-column",
   activity: "activity",
+  settings: "settings",
   logout: "log-out",
   menu: "menu",
   x: "x",

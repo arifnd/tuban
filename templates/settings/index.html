@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf_input with context %}
+{% block title %}{{ t("settings.title") }} · {{ t("brand.name") }}{% endblock %}
+{% block content %}
+<h1 class="mb-4 text-xl font-semibold text-slate-900 dark:text-white">{{ t("settings.title") }}</h1>
+
+<form method="post" action="/settings" class="space-y-4">
+  {{ csrf_input() }}
+
+  <section class="card p-6">
+    <h2 class="mb-4 text-sm font-semibold text-slate-900 dark:text-white">{{ t("settings.general") }}</h2>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label class="label" for="app_name">{{ t("settings.app_name") }}</label>
+        <input type="text" id="app_name" name="app_name" value="{{ values.app_name }}" required class="input">
+      </div>
+      <div>
+        <label class="label" for="default_language">{{ t("settings.default_language") }}</label>
+        <select id="default_language" name="default_language" class="input">
+          {% for code, label in languages %}
+          <option value="{{ code }}" {% if values.default_language == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="card p-6">
+    <h2 class="mb-1 text-sm font-semibold text-slate-900 dark:text-white">{{ t("settings.sla") }}</h2>
+    <p class="mb-4 text-xs text-slate-500 dark:text-slate-400">{{ t("settings.sla_help") }}</p>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {% for field in [("sla_urgent_hours", "settings.sla_urgent"), ("sla_high_hours", "settings.sla_high"), ("sla_normal_hours", "settings.sla_normal"), ("sla_low_hours", "settings.sla_low")] %}
+      <div>
+        <label class="label" for="{{ field[0] }}">{{ t(field[1]) }}</label>
+        <input type="number" id="{{ field[0] }}" name="{{ field[0] }}" min="1" max="1000" value="{{ values[field[0]] }}" class="input">
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card p-6">
+    <h2 class="mb-4 text-sm font-semibold text-slate-900 dark:text-white">{{ t("settings.storage") }}</h2>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label class="label">{{ t("settings.storage_backend") }}</label>
+        <input type="text" value="{{ storage_backend }}" disabled class="input opacity-60">
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t("settings.storage_backend_help") }}</p>
+      </div>
+      <div>
+        <label class="label" for="upload_max_size_mb">{{ t("settings.upload_max_size") }}</label>
+        <input type="number" id="upload_max_size_mb" name="upload_max_size_mb" min="1" max="10240" value="{{ upload_max_size_mb }}" class="input">
+      </div>
+      <div class="sm:col-span-2">
+        <label class="label" for="allowed_extensions">{{ t("settings.allowed_extensions") }}</label>
+        <input type="text" id="allowed_extensions" name="allowed_extensions" value="{{ values.allowed_extensions | join(', ') }}" class="input">
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t("settings.allowed_extensions_help") }}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card p-6">
+    <h2 class="mb-4 text-sm font-semibold text-slate-900 dark:text-white">{{ t("settings.registration") }}</h2>
+    <div class="space-y-4">
+      <label class="flex items-start gap-3">
+        <input type="checkbox" name="open_registration" value="1" {% if values.open_registration %}checked{% endif %} class="mt-1 h-4 w-4">
+        <span>
+          <span class="block text-sm font-medium text-slate-900 dark:text-white">{{ t("settings.open_registration") }}</span>
+          <span class="block text-xs text-slate-500 dark:text-slate-400">{{ t("settings.open_registration_help") }}</span>
+        </span>
+      </label>
+      <label class="flex items-start gap-3">
+        <input type="checkbox" name="require_approval" value="1" {% if values.require_approval %}checked{% endif %} class="mt-1 h-4 w-4">
+        <span>
+          <span class="block text-sm font-medium text-slate-900 dark:text-white">{{ t("settings.require_approval") }}</span>
+          <span class="block text-xs text-slate-500 dark:text-slate-400">{{ t("settings.require_approval_help") }}</span>
+        </span>
+      </label>
+    </div>
+  </section>
+
+  <div class="flex justify-end">
+    <button type="submit" class="btn btn-primary">{{ t("settings.save") }}</button>
+  </div>
+</form>
+{% endblock %}

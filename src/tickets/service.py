@@ -8,9 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.activity import service as activity_service
 from src.kb import service as kb_service
 from src.notifications import service as notification_service
+from src.settings import service as settings_service
 from src.storage import service as storage_service
 from src.tickets.constants import (
-    DEFAULT_SLA_HOURS,
     EDITOR_ROLES,
     PRIORITY_ORDER,
     REQUESTER_TRANSITIONS,
@@ -35,6 +35,18 @@ from src.users.models import User
 
 def is_editor(user: User) -> bool:
     return user.role in EDITOR_ROLES
+
+
+SLA_HOURS_KEYS = {
+    TicketPriority.URGENT: "sla_urgent_hours",
+    TicketPriority.HIGH: "sla_high_hours",
+    TicketPriority.NORMAL: "sla_normal_hours",
+    TicketPriority.LOW: "sla_low_hours",
+}
+
+
+def sla_hours_for(priority: TicketPriority) -> int:
+    return int(settings_service.get(SLA_HOURS_KEYS[priority]))
 
 
 async def _notify(db: AsyncSession, recipients: list[User], *, type: str, title: str, body: str | None, link: str, actor_id: uuid.UUID) -> None:
@@ -123,7 +135,7 @@ async def create_ticket(
         category_id=category_id,
         priority=priority,
         status=TicketStatus.OPEN,
-        sla_due_at=business_hours_add(now, DEFAULT_SLA_HOURS[priority]),
+        sla_due_at=business_hours_add(now, sla_hours_for(priority)),
     )
     db.add(ticket)
     await db.flush()
@@ -307,7 +319,7 @@ async def set_priority(db: AsyncSession, actor: User, ticket: Ticket, priority: 
     old = ticket.priority.value
     ticket.priority = priority
     if ticket.status not in (TicketStatus.RESOLVED, TicketStatus.CLOSED):
-        ticket.sla_due_at = business_hours_add(datetime.now(UTC), DEFAULT_SLA_HOURS[priority])
+        ticket.sla_due_at = business_hours_add(datetime.now(UTC), sla_hours_for(priority))
     await activity_service.log(
         db,
         user_id=actor.id,
