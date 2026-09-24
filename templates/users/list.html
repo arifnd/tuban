@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ t("users.title") }} · {{ t("brand.name") }}{% endblock %}
+{% block content %}
+<div class="mb-4 flex items-center justify-between">
+  <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ t("users.title") }}</h1>
+</div>
+
+<form class="card mb-4 flex flex-wrap items-end gap-3 p-4"
+      hx-get="/users" hx-target="#user-table" hx-swap="outerHTML" hx-trigger="submit, change from:select, keyup changed delay:300ms from:input[name='q']">
+  <div class="min-w-[16rem] flex-1">
+    <label for="q" class="label">{{ t("users.search_placeholder") }}</label>
+    <input type="search" id="q" name="q" value="{{ search }}" placeholder="{{ t('users.search_placeholder') }}" class="input">
+  </div>
+  <div>
+    <label for="role" class="label">{{ t("users.role") }}</label>
+    <select id="role" name="role" class="input">
+      <option value="">{{ t("users.all_roles") }}</option>
+      {% for r in roles %}
+      <option value="{{ r.value }}" {% if role_filter == r.value %}selected{% endif %}>{{ t("users.role_" ~ r.value) }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label for="active" class="label">{{ t("users.status") }}</label>
+    <select id="active" name="active" class="input">
+      <option value="">{{ t("users.all_status") }}</option>
+      <option value="1" {% if active_filter == "1" %}selected{% endif %}>{{ t("users.active") }}</option>
+      <option value="0" {% if active_filter == "0" %}selected{% endif %}>{{ t("users.inactive") }}</option>
+    </select>
+  </div>
+</form>
+
+<div class="card overflow-hidden">
+  {% include "users/partials/user_table.html" %}
+</div>
+{% endblock %}

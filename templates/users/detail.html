@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf_input with context %}
+{% block title %}{{ user.name }} · {{ t("brand.name") }}{% endblock %}
+{% block content %}
+<div class="mx-auto w-full max-w-2xl">
+  <a href="/users" class="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400">&larr; {{ t("users.back_to_list") }}</a>
+
+  <div class="card mt-3 p-6">
+    <div class="flex items-center gap-4">
+      {% if user.avatar %}
+      <img src="{{ user.avatar }}" class="h-14 w-14 rounded-full" alt="">
+      {% else %}
+      <span class="avatar h-14 w-14 text-xl">{{ user.name[0]|upper }}</span>
+      {% endif %}
+      <div>
+        <h1 class="text-lg font-semibold text-slate-900 dark:text-white">{{ user.name }}</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">{{ user.email }}</p>
+      </div>
+      <span class="ml-auto badge {% if user.is_active %}badge-emerald{% else %}badge-red{% endif %}">
+        {{ t("users.active") if user.is_active else t("users.inactive") }}
+      </span>
+    </div>
+
+    <dl class="mt-6 grid grid-cols-2 gap-3 text-sm">
+      <div>
+        <dt class="text-slate-500 dark:text-slate-400">{{ t("users.joined") }}</dt>
+        <dd class="text-slate-900 dark:text-white">{{ user.created_at | dtf }}</dd>
+      </div>
+      <div>
+        <dt class="text-slate-500 dark:text-slate-400">{{ t("users.last_login") }}</dt>
+        <dd class="text-slate-900 dark:text-white">{{ user.last_login | dtf }}</dd>
+      </div>
+    </dl>
+
+    <div class="mt-6 grid gap-4 sm:grid-cols-2">
+      <form method="post" action="/users/{{ user.id }}/role" class="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+        {{ csrf_input() }}
+        <label for="role" class="label">{{ t("users.role") }}</label>
+        <select id="role" name="role" class="input">
+          {% for r in roles %}
+          <option value="{{ r.value }}" {% if user.role == r %}selected{% endif %}>{{ t("users.role_" ~ r.value) }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary mt-3">{{ t("users.save") }}</button>
+      </form>
+
+      <form method="post" action="/users/{{ user.id }}/active" class="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+        {{ csrf_input() }}
+        <span class="label">{{ t("users.status") }}</span>
+        <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+          {{ t("users.active") if user.is_active else t("users.inactive") }}
+        </p>
+        <button type="submit" class="btn mt-3 {% if user.is_active %}btn-outline-danger{% else %}btn-success{% endif %}">
+          {{ t("users.deactivate") if user.is_active else t("users.activate") }}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

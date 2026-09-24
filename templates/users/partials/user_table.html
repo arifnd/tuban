@@ -1,0 +1,51 @@
+{% from "partials/pagination.html" import pagination with context %}
+<div id="user-table">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="table-head">
+        <tr>
+          <th class="px-3 py-2">{{ t("users.name") }}</th>
+          <th class="px-3 py-2">{{ t("users.email") }}</th>
+          <th class="px-3 py-2">{{ t("users.role") }}</th>
+          <th class="px-3 py-2">{{ t("users.status") }}</th>
+          <th class="px-3 py-2 text-right">{{ t("users.actions") }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in users %}
+        <tr class="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/40">
+          <td class="px-3 py-2">
+            <div class="flex items-center gap-2">
+              {% if item.avatar %}
+              <img src="{{ item.avatar }}" class="h-7 w-7 rounded-full" alt="">
+              {% else %}
+              <span class="avatar h-7 w-7 text-xs">{{ item.name[0]|upper }}</span>
+              {% endif %}
+              <span class="font-medium text-slate-900 dark:text-white">{{ item.name }}</span>
+            </div>
+          </td>
+          <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ item.email }}</td>
+          <td class="px-3 py-2">
+            <span class="badge badge-slate">{{ t("users.role_" ~ item.role.value) }}</span>
+          </td>
+          <td class="px-3 py-2">
+            {% if item.is_active %}
+            <span class="badge badge-emerald">{{ t("users.active") }}</span>
+            {% else %}
+            <span class="badge badge-red">{{ t("users.inactive") }}</span>
+            {% endif %}
+          </td>
+          <td class="px-3 py-2 text-right">
+            <a href="/users/{{ item.id }}" class="text-brand-600 hover:text-brand-700 dark:text-brand-400">{{ t("users.view") }}</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" class="px-3 py-10 text-center text-slate-500 dark:text-slate-400">{{ t("users.empty") }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ pagination(page, total_pages, "/users", query=search, target="#user-table", total=total, filters={"role": role_filter, "active": active_filter}) }}
+</div>

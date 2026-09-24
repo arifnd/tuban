@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf_input with context %}
+{% block title %}{{ t("profile.title") }} · {{ t("brand.name") }}{% endblock %}
+{% block content %}
+<div class="mx-auto w-full max-w-lg">
+  <h1 class="mb-4 text-xl font-semibold text-slate-900 dark:text-white">{{ t("profile.title") }}</h1>
+  <div class="card p-6">
+    {% if error %}
+    <div class="alert alert-error mb-4">{{ error }}</div>
+    {% endif %}
+    <form method="post" action="/profile">
+      {{ csrf_input() }}
+      <label class="label">{{ t("profile.email") }}</label>
+      <input type="email" value="{{ current_user.email }}" disabled class="input opacity-60">
+      <label for="name" class="label mt-4">{{ t("profile.name") }}</label>
+      <input type="text" id="name" name="name" value="{{ current_user.name }}" required class="input">
+      <button type="submit" class="btn btn-primary mt-4">{{ t("profile.save") }}</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
