@@ -1,0 +1,12 @@
+{% set ticket_attachments = ticket.attachments | rejectattr("comment_id") | list %}
+<section class="card p-4">
+  <h2 class="mb-2 text-sm font-semibold text-slate-900 dark:text-white">{{ t("tickets.attachments") }}</h2>
+  <ul class="divide-y divide-slate-100 text-sm dark:divide-slate-700">
+    {% for attachment in ticket_attachments %}
+    {% include "tickets/partials/attachment_item.html" %}
+    {% else %}
+    <li class="py-2 text-slate-500 dark:text-slate-400">{{ t("tickets.no_attachments") }}</li>
+    {% endfor %}
+  </ul>
+  {% include "tickets/partials/upload_form.html" %}
+</section>

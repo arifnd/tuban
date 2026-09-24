@@ -1,0 +1,13 @@
+{% from "partials/macros.html" import csrf_input with context %}
+<li class="flex items-center justify-between gap-3 py-1.5">
+  <a href="/media/{{ attachment.file_path }}" target="_blank" rel="noopener" class="text-brand-600 hover:text-brand-700 dark:text-brand-400">{{ attachment.file_name }}</a>
+  <div class="flex items-center gap-3">
+    {% if attachment.size_bytes %}<span class="text-xs text-slate-400">{{ (attachment.size_bytes / 1024) | round(1) }} KB</span>{% endif %}
+    {% if is_editor or attachment.uploaded_by == current_user.id %}
+    <form method="post" action="/tickets/{{ ticket.id }}/attachments/{{ attachment.id }}/delete" data-confirm="{{ t('tickets.confirm_delete') }}">
+      {{ csrf_input() }}
+      <button type="submit" class="text-xs text-red-600 hover:text-red-700 dark:text-red-400">{{ t("tickets.delete") }}</button>
+    </form>
+    {% endif %}
+  </div>
+</li>

@@ -9,6 +9,7 @@ from src.auth.dependencies import CurrentUser, DbDep
 from src.exceptions import NotFoundError
 from src.storage.client import MEDIA_DIR
 from src.storage.config import storage_settings
+from src.tickets.models import Ticket
 
 router = APIRouter(tags=["storage"])
 
@@ -19,17 +20,25 @@ def _media_root() -> Path:
 
 @router.get("/media/{path:path}")
 async def serve_media(path: str, user: CurrentUser, db: DbDep):
-    from src.kb import service as kb_service
-
     parts = path.split("/")
-    if len(parts) < 3 or parts[0] != "kb":
+    if len(parts) < 3 or parts[0] not in {"kb", "tickets"}:
         raise NotFoundError()
     try:
-        article_id = uuid.UUID(parts[1])
+        owner_id = uuid.UUID(parts[1])
     except ValueError:
         raise NotFoundError() from None
-    if await kb_service.get_article_by_id(db, article_id, viewer=user) is None:
-        raise NotFoundError()
+
+    if parts[0] == "kb":
+        from src.kb import service as kb_service
+
+        if await kb_service.get_article_by_id(db, owner_id, viewer=user) is None:
+            raise NotFoundError()
+    else:
+        from src.tickets import service as ticket_service
+
+        ticket = await db.get(Ticket, owner_id)
+        if ticket is None or not ticket_service.user_can_access_ticket(ticket, user):
+            raise NotFoundError()
 
     root = _media_root().resolve()
     target = (root / path).resolve()

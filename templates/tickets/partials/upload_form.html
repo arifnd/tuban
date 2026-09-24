@@ -1,0 +1,6 @@
+{% from "partials/macros.html" import csrf_input with context %}
+<form method="post" action="/tickets/{{ ticket.id }}/attachments" enctype="multipart/form-data" class="mt-2 flex items-center gap-2">
+  {{ csrf_input() }}
+  <input type="file" name="file" required class="input mt-0">
+  <button type="submit" class="btn btn-secondary shrink-0">{{ t("tickets.upload") }}</button>
+</form>
