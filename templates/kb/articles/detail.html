@@ -3,9 +3,8 @@
 {% from "partials/icons.html" import icon with context %}
 {% block title %}{{ article.title }} · {{ t("brand.name") }}{% endblock %}
 {% block content %}
-{% set can_edit = current_user.role in ("admin", "agent") %}
-<div class="mx-auto w-full max-w-3xl">
-  <a href="/kb" class="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400">&larr; {{ t("kb.back_to_kb") }}</a>
+<div class="mx-auto w-full max-w-5xl">
+  <a href="/kb" class="inline-flex items-center gap-1 text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400">{{ icon("chevron-left", "w-4 h-4") }} {{ t("kb.back_to_kb") }}</a>
 
   <article class="card mt-3 p-6">
     <div class="flex flex-wrap items-start justify-between gap-3">
@@ -21,7 +20,7 @@
     <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
       <span class="badge badge-slate">{{ t("kb.status_" ~ article.status.value) }}</span>
       <span class="badge {% if article.visibility.value == 'public' %}badge-emerald{% else %}badge-amber{% endif %}">{{ t("kb.visibility_" ~ article.visibility.value) }}</span>
-      {% if article.category %}<a href="/kb/categories/{{ article.category.slug }}" class="hover:text-brand-600">{{ article.category.name }}</a>{% endif %}
+      {% if article.category %}<span>{{ article.category.name }}</span>{% endif %}
       <span>{{ t("kb.author") }} {{ article.author.name if article.author else "—" }}</span>
       <span>{{ t("kb.updated") }} {{ article.updated_at | dtf }}</span>
       <span>{{ article.view_count }} {{ t("kb.views") }}</span>

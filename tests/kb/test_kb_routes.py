@@ -5,7 +5,7 @@ from src.kb.models import KbArticleStatus, KbArticleVisibility
 from tests.kb.helpers import csrf, login, make_article, make_editor
 
 
-async def test_kb_home_and_category_page(client: AsyncClient, db) -> None:
+async def test_kb_home(client: AsyncClient, db) -> None:
     editor = await make_editor(db, "editor@example.com")
     category = await kb_service.create_category(db, editor, name="Guides")
     await make_article(db, editor, title="Guide one", status=KbArticleStatus.PUBLISHED, visibility=KbArticleVisibility.PUBLIC, category_id=category.id)
@@ -13,7 +13,6 @@ async def test_kb_home_and_category_page(client: AsyncClient, db) -> None:
     await login(client, "editor@example.com")
     assert (await client.get("/kb")).status_code == 200
     assert (await client.get("/kb/categories")).status_code == 200
-    assert (await client.get(f"/kb/categories/{category.slug}")).status_code == 200
 
 
 async def test_article_list_filters(client: AsyncClient, db) -> None:

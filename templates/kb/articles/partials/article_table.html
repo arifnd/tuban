@@ -1,5 +1,5 @@
 {% from "partials/pagination.html" import pagination with context %}
-{% set can_edit = current_user.role in ("admin", "agent") %}
+{% set can_edit = current_user and current_user.role in ("admin", "agent") %}
 <div id="article-list">
   <div class="overflow-x-auto">
     <table class="w-full text-sm">

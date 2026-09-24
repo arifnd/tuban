@@ -2,7 +2,7 @@
 {% from "partials/icons.html" import icon with context %}
 {% block title %}{{ t("kb.title") }} · {{ t("brand.name") }}{% endblock %}
 {% block content %}
-{% set can_edit = current_user.role in ("admin", "agent") %}
+{% set can_edit = current_user and current_user.role in ("admin", "agent") %}
 <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
   <div>
     <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ t("kb.title") }}</h1>
@@ -20,22 +20,7 @@
   </div>
 </div>
 
-<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-  {% for category in categories %}
-  <a href="/kb/categories/{{ category.slug }}" class="card p-4 transition hover:shadow-md">
-    <div class="flex items-center gap-2">
-      <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-white">{{ icon("folder", "w-5 h-5") }}</span>
-      <span class="font-medium text-slate-900 dark:text-white">{{ category.name }}</span>
-      <span class="ml-auto text-xs text-slate-400">{{ category.article_count }}</span>
-    </div>
-    {% if category.description %}<p class="mt-2 line-clamp-2 text-sm text-slate-500 dark:text-slate-400">{{ category.description }}</p>{% endif %}
-  </a>
-  {% else %}
-  <p class="text-sm text-slate-500 dark:text-slate-400">{{ t("kb.categories_empty") }}</p>
-  {% endfor %}
-</div>
-
-<div class="mt-6 grid gap-4 lg:grid-cols-2">
+<div class="grid gap-4 lg:grid-cols-2">
   <section class="card p-4">
     <h2 class="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{{ t("kb.recent") }}</h2>
     <ul class="divide-y divide-slate-100 dark:divide-slate-700">
@@ -57,4 +42,22 @@
     </ul>
   </section>
 </div>
+
+{% if category_sections %}
+<section class="mt-6">
+  <h2 class="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{{ t("kb.articles_by_category") }}</h2>
+  <div class="grid gap-4 lg:grid-cols-2">
+    {% for section in category_sections %}
+    <div class="card p-4">
+      <h3 class="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{{ section.category.name }}</h3>
+      <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+        {% for article in section.articles %}
+        {% include "kb/articles/partials/article_card.html" %}
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 {% endblock %}

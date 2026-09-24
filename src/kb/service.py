@@ -63,14 +63,13 @@ async def _unique_slug(db: AsyncSession, model, base: str, exclude_id: uuid.UUID
 # --------------------------------------------------------------------------- #
 # Categories
 # --------------------------------------------------------------------------- #
-async def list_categories(db: AsyncSession, *, include_counts: bool = True) -> list[KbCategory]:
+async def list_categories(db: AsyncSession, *, include_counts: bool = True, viewer: User | None = None) -> list[KbCategory]:
     categories = list((await db.execute(select(KbCategory).order_by(KbCategory.position, KbCategory.name))).scalars())
     if include_counts:
-        rows = (
-            await db.execute(
-                select(KbArticle.category_id, func.count(KbArticle.id)).where(KbArticle.status == KbArticleStatus.PUBLISHED).group_by(KbArticle.category_id)
-            )
-        ).all()
+        count_stmt = select(KbArticle.category_id, func.count(KbArticle.id)).where(KbArticle.status == KbArticleStatus.PUBLISHED)
+        if not is_editor(viewer):
+            count_stmt = count_stmt.where(KbArticle.visibility == KbArticleVisibility.PUBLIC)
+        rows = (await db.execute(count_stmt.group_by(KbArticle.category_id))).all()
         counts = {category_id: count for category_id, count in rows}
         for category in categories:
             category.article_count = counts.get(category.id, 0)

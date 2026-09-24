@@ -2,7 +2,7 @@
 {% from "partials/icons.html" import icon with context %}
 {% block title %}{{ t("kb.articles") }} · {{ t("brand.name") }}{% endblock %}
 {% block content %}
-{% set can_edit = current_user.role in ("admin", "agent") %}
+{% set can_edit = current_user and current_user.role in ("admin", "agent") %}
 <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
   <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ heading or t("kb.articles") }}</h1>
   {% if can_edit %}

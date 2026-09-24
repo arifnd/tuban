@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request, status
 from fastapi.responses import RedirectResponse
 from starlette.datastructures import UploadFile
 
-from src.auth.dependencies import CsrfDep, CurrentUser, DbDep
+from src.auth.dependencies import CsrfDep, CurrentUser, DbDep, OptionalUser
 from src.exceptions import BadRequestError
 from src.kb import markdown as markdown_utils
 from src.kb import service as kb_service
@@ -82,14 +82,20 @@ def _list_context(articles, total, page, per_page, filters: dict) -> dict:
 # Home
 # --------------------------------------------------------------------------- #
 @router.get("")
-async def home(request: Request, db: DbDep, user: CurrentUser):
+async def home(request: Request, db: DbDep, user: OptionalUser):
+    categories = await kb_service.list_categories(db, viewer=user)
+    category_sections = []
+    for category in categories:
+        articles, _ = await kb_service.list_articles(db, user, category_id=category.id, per_page=5)
+        if articles:
+            category_sections.append({"category": category, "articles": articles})
     return templates.TemplateResponse(
         request,
         "kb/home.html",
         {
-            "categories": await kb_service.list_categories(db),
             "recent": await kb_service.recent_articles(db, user, 5),
             "popular": await kb_service.popular_articles(db, user, 5),
+            "category_sections": category_sections,
         },
     )
 
@@ -132,15 +138,6 @@ async def delete_category(request: Request, db: DbDep, editor: KbEditor, _: Csrf
     return RedirectResponse("/kb/categories", status_code=status.HTTP_303_SEE_OTHER)
 
 
-@router.get("/categories/{slug}")
-async def category_articles(request: Request, db: DbDep, user: CurrentUser, slug: str, page: int = 1):
-    category = await kb_service.get_category_by_slug(db, slug)
-    per_page = clamp_per_page(PAGE_SIZE)
-    articles, total = await kb_service.list_articles(db, user, category_id=category.id, page=page, per_page=per_page)
-    context = _list_context(articles, total, page, per_page, {"heading": category.name, "category": category})
-    return templates.TemplateResponse(request, "kb/articles/list.html", context)
-
-
 # --------------------------------------------------------------------------- #
 # Articles
 # --------------------------------------------------------------------------- #
@@ -148,7 +145,7 @@ async def category_articles(request: Request, db: DbDep, user: CurrentUser, slug
 async def article_list(
     request: Request,
     db: DbDep,
-    user: CurrentUser,
+    user: OptionalUser,
     q: str = "",
     category: str = "",
     tag: str = "",
@@ -311,7 +308,7 @@ async def article_update(request: Request, db: DbDep, editor: KbEditor, _: CsrfD
 
 
 @router.get("/articles/{slug}")
-async def article_detail(request: Request, db: DbDep, user: CurrentUser, slug: str):
+async def article_detail(request: Request, db: DbDep, user: OptionalUser, slug: str):
     article = await kb_service.get_article_by_slug(db, slug, user)
     await kb_service.increment_view(db, article, user)
     return templates.TemplateResponse(
@@ -321,7 +318,7 @@ async def article_detail(request: Request, db: DbDep, user: CurrentUser, slug: s
             "article": article,
             "body_html": markdown_utils.render_markdown(article.body),
             "feedback": await kb_service.feedback_summary(db, article.id),
-            "my_feedback": await kb_service.get_user_feedback(db, article.id, user.id),
+            "my_feedback": await kb_service.get_user_feedback(db, article.id, user.id) if user else None,
             "can_edit": kb_service.is_editor(user),
         },
     )
@@ -343,7 +340,7 @@ async def tag_delete(request: Request, db: DbDep, editor: KbEditor, _: CsrfDep, 
 
 
 @router.get("/tags/{slug}")
-async def tag_articles(request: Request, db: DbDep, user: CurrentUser, slug: str, page: int = 1):
+async def tag_articles(request: Request, db: DbDep, user: OptionalUser, slug: str, page: int = 1):
     tag = await kb_service.get_tag_by_slug(db, slug)
     per_page = clamp_per_page(PAGE_SIZE)
     articles, total = await kb_service.list_articles(db, user, tag_id=tag.id, page=page, per_page=per_page)
@@ -358,7 +355,7 @@ async def tag_articles(request: Request, db: DbDep, user: CurrentUser, slug: str
 async def search(
     request: Request,
     db: DbDep,
-    user: CurrentUser,
+    user: OptionalUser,
     q: str = "",
     category: str = "",
     tag: str = "",
@@ -387,7 +384,7 @@ async def search(
 
 
 @router.get("/partials/search")
-async def search_partial(request: Request, db: DbDep, user: CurrentUser, q: str = ""):
+async def search_partial(request: Request, db: DbDep, user: OptionalUser, q: str = ""):
     query = q.strip()
     results: list = []
     total = 0

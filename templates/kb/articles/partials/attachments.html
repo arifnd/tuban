@@ -1,6 +1,6 @@
 {% from "partials/macros.html" import csrf_input with context %}
 {% from "partials/icons.html" import icon with context %}
-{% set can_edit = current_user.role in ("admin", "agent") %}
+{% set can_edit = current_user and current_user.role in ("admin", "agent") %}
 <section class="card mt-4 p-4">
   <h2 class="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{{ t("kb.attachments") }}</h2>
   <ul class="divide-y divide-slate-100 text-sm dark:divide-slate-700">
