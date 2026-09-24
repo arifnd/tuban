@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean,
@@ -16,6 +17,9 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models import Base, TimestampMixin, UUIDPrimaryKeyMixin, enum_col
+
+if TYPE_CHECKING:
+    from src.users.models import User
 
 
 class TicketStatus(StrEnum):
@@ -65,9 +69,11 @@ class Ticket(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    category: Mapped["TicketCategory | None"] = relationship(back_populates="tickets")
-    comments: Mapped[list["TicketComment"]] = relationship(back_populates="ticket", cascade="all, delete-orphan")
-    attachments: Mapped[list["TicketAttachment"]] = relationship(back_populates="ticket", cascade="all, delete-orphan")
+    category: Mapped["TicketCategory | None"] = relationship(back_populates="tickets", lazy="selectin")
+    requester: Mapped["User"] = relationship(foreign_keys=[requester_id], lazy="selectin")
+    assignee: Mapped["User | None"] = relationship(foreign_keys=[assignee_id], lazy="selectin")
+    comments: Mapped[list["TicketComment"]] = relationship(back_populates="ticket", cascade="all, delete-orphan", lazy="selectin")
+    attachments: Mapped[list["TicketAttachment"]] = relationship(back_populates="ticket", cascade="all, delete-orphan", lazy="selectin")
 
 
 class TicketComment(Base, UUIDPrimaryKeyMixin, TimestampMixin):
@@ -79,6 +85,7 @@ class TicketComment(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     is_internal: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     ticket: Mapped["Ticket"] = relationship(back_populates="comments")
+    author: Mapped["User"] = relationship(foreign_keys=[author_id], lazy="selectin")
 
 
 class TicketAttachment(Base, UUIDPrimaryKeyMixin):
@@ -94,3 +101,13 @@ class TicketAttachment(Base, UUIDPrimaryKeyMixin):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     ticket: Mapped["Ticket"] = relationship(back_populates="attachments")
+    uploader: Mapped["User"] = relationship(foreign_keys=[uploaded_by], lazy="selectin")
+
+
+class TicketNumberSeq(Base):
+    """Single-row counter backing collision-free ticket numbers."""
+
+    __tablename__ = "ticket_number_seq"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    value: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
