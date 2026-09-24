@@ -1,14 +1,13 @@
 import os
 
 os.environ.setdefault("ENVIRONMENT", "local")
-os.environ.setdefault(
-    "DATABASE_URL",
-    (
-        f"sqlite+aiosqlite:///./instance/test_{os.environ.get('PYTEST_XDIST_WORKER', '')}.db"
-        if os.environ.get("PYTEST_XDIST_WORKER")
-        else "sqlite+aiosqlite:///./instance/test_tuban.db"
-    ),
-)
+
+# Each xdist worker needs its own SQLite file: the controller process imports
+# this module first and sets DATABASE_URL, and the workers inherit that value
+# via execnet. Assign the per-worker path explicitly instead of relying on
+# setdefault, while preserving a user-provided non-test DATABASE_URL.
+if not os.environ.get("DATABASE_URL") or "instance/test" in os.environ.get("DATABASE_URL", ""):
+    os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///./instance/test_{os.environ.get('PYTEST_XDIST_WORKER', 'main')}.db"
 os.environ.setdefault("AUTH_SESSION_SECRET", "test-secret-that-is-longer-than-32-bytes-for-hmac")
 os.environ.setdefault("INITIAL_ADMIN_EMAIL", "admin@example.com")
 os.environ.setdefault("STORAGE_BACKEND", "local")
