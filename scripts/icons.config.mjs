@@ -44,4 +44,7 @@ export default {
   "chevron-down": "chevron-down",
   "chevron-left": "chevron-left",
   "chevron-right": "chevron-right",
+  mail: "mail",
+  phone: "phone",
+  "map-pin": "map-pin",
 };

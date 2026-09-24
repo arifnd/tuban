@@ -1,8 +1,16 @@
 {% extends "base.html" %}
 {% from "partials/macros.html" import csrf_input with context %}
+{% from "partials/icons.html" import icon with context %}
 {% block title %}{{ t("settings.title") }} · {{ t("brand.name") }}{% endblock %}
 {% block content %}
 <h1 class="mb-4 text-xl font-semibold text-slate-900 dark:text-white">{{ t("settings.title") }}</h1>
+
+{% if saved %}
+<div class="alert alert-success mb-4 flex items-center gap-2" role="status">
+  {{ icon("check-circle", "w-4 h-4") }}
+  <span>{{ t("settings.saved") }}</span>
+</div>
+{% endif %}
 
 <form method="post" action="/settings" class="space-y-4">
   {{ csrf_input() }}
@@ -21,6 +29,19 @@
           <option value="{{ code }}" {% if values.default_language == code %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
         </select>
+      </div>
+      <div class="sm:col-span-2">
+        <span class="label">{{ t("settings.theme_color") }}</span>
+        <div class="mt-2 flex flex-wrap gap-3">
+          {% for color in brand_colors %}
+          <label class="cursor-pointer" title="{{ color.name }}">
+            <input type="radio" name="theme_color" value="{{ color.name }}" class="peer sr-only" {% if values.theme_color == color.name %}checked{% endif %}>
+            <span class="block h-9 w-9 rounded-lg ring-2 ring-transparent ring-offset-2 transition peer-checked:ring-slate-900 peer-focus-visible:ring-slate-400 dark:ring-offset-slate-800 dark:peer-checked:ring-white"
+                  style="background-color: {{ color.hex }}"></span>
+          </label>
+          {% endfor %}
+        </div>
+        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ t("settings.theme_color_help") }}</p>
       </div>
     </div>
   </section>
@@ -75,6 +96,38 @@
           <span class="block text-xs text-slate-500 dark:text-slate-400">{{ t("settings.require_approval_help") }}</span>
         </span>
       </label>
+    </div>
+  </section>
+
+  <section class="card p-6">
+    <h2 class="mb-1 text-sm font-semibold text-slate-900 dark:text-white">{{ t("settings.contact") }}</h2>
+    <p class="mb-4 text-xs text-slate-500 dark:text-slate-400">{{ t("settings.contact_help") }}</p>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label class="label" for="contact_email">{{ t("settings.contact_email") }}</label>
+        <input type="email" id="contact_email" name="contact_email" value="{{ values.contact_email }}" class="input">
+      </div>
+      <div>
+        <label class="label" for="contact_phone">{{ t("settings.contact_phone") }}</label>
+        <input type="text" id="contact_phone" name="contact_phone" value="{{ values.contact_phone }}" class="input">
+      </div>
+      <div class="sm:col-span-2">
+        <label class="label" for="contact_address">{{ t("settings.contact_address") }}</label>
+        <textarea id="contact_address" name="contact_address" rows="2" class="input">{{ values.contact_address }}</textarea>
+      </div>
+    </div>
+  </section>
+
+  <section class="card p-6">
+    <h2 class="mb-1 text-sm font-semibold text-slate-900 dark:text-white">{{ t("settings.social") }}</h2>
+    <p class="mb-4 text-xs text-slate-500 dark:text-slate-400">{{ t("settings.social_help") }}</p>
+    <div class="grid gap-4 sm:grid-cols-2">
+      {% for field in [("social_facebook", "settings.social_facebook"), ("social_instagram", "settings.social_instagram"), ("social_x", "settings.social_x"), ("social_linkedin", "settings.social_linkedin"), ("social_youtube", "settings.social_youtube")] %}
+      <div>
+        <label class="label" for="{{ field[0] }}">{{ t(field[1]) }}</label>
+        <input type="url" id="{{ field[0] }}" name="{{ field[0] }}" value="{{ values[field[0]] }}" placeholder="https://" class="input">
+      </div>
+      {% endfor %}
     </div>
   </section>
 

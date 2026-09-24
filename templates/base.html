@@ -30,6 +30,11 @@
     })();
   </script>
   <link rel="stylesheet" href="/static/css/app.css">
+  <style>:root{
+    {%- for shade, rgb in brand_shades.items() %}
+    --brand-{{ shade }}: {{ rgb }};
+    {%- endfor %}
+  }</style>
   <script>
     window.APP_LABELS = {
       confirm: {{ t("dialog.confirm")|tojson }},
@@ -73,13 +78,13 @@
         {% block content %}{% endblock %}
   {% if current_user and is_admin %}
         </div>
-        {% include "partials/footer.html" %}
+        {% include "partials/footer_app.html" %}
       </main>
     </div>
   </div>
   {% else %}
     </main>
-    {% include "partials/footer.html" %}
+    {% if current_user %}{% include "partials/footer_app.html" %}{% else %}{% include "partials/footer_public.html" %}{% endif %}
   {% endif %}
   <div id="toast-root" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
   <div id="modal-root"></div>

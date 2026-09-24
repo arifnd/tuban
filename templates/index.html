@@ -27,5 +27,47 @@
   </div>
 
   <a href="/auth/login" class="btn btn-primary mt-8">{{ t("landing.signin") }}</a>
+
+  {% if contact_email or contact_phone or contact_address %}
+  <section class="mt-10 border-t border-slate-200 pt-8 text-left dark:border-slate-800">
+    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">{{ t("landing.contact_title") }}</h2>
+    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">{{ t("landing.contact_desc") }}</p>
+    <div class="mt-4 grid gap-4 sm:grid-cols-3">
+      {% if contact_email %}
+      <div class="flex items-start gap-3">
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-white">
+          {{ icon("mail", "w-4 h-4") }}
+        </span>
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t("landing.contact_email") }}</p>
+          <a href="mailto:{{ contact_email }}" class="text-sm text-slate-900 hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300">{{ contact_email }}</a>
+        </div>
+      </div>
+      {% endif %}
+      {% if contact_phone %}
+      <div class="flex items-start gap-3">
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-white">
+          {{ icon("phone", "w-4 h-4") }}
+        </span>
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t("landing.contact_phone") }}</p>
+          <a href="tel:{{ contact_phone }}" class="text-sm text-slate-900 hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300">{{ contact_phone }}</a>
+        </div>
+      </div>
+      {% endif %}
+      {% if contact_address %}
+      <div class="flex items-start gap-3">
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-white">
+          {{ icon("map-pin", "w-4 h-4") }}
+        </span>
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t("landing.contact_address") }}</p>
+          <p class="text-sm text-slate-900 dark:text-slate-100">{{ contact_address }}</p>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
 </div>
 {% endblock %}

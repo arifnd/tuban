@@ -11,10 +11,20 @@ from starlette.requests import Request
 from src.config import PROJECT_ROOT, settings
 from src.kb.markdown import render_markdown as _render_markdown
 from src.settings import service as settings_service
+from src.settings import theme as theme_palettes
+from src.version import __version__
 
 TEMPLATES_DIR = PROJECT_ROOT / "templates"
 I18N_DIR = PROJECT_ROOT / "static" / "i18n"
 DEFAULT_LANG = "id"
+
+SOCIAL_PLATFORMS = (
+    ("facebook", "Facebook"),
+    ("instagram", "Instagram"),
+    ("x", "X"),
+    ("linkedin", "LinkedIn"),
+    ("youtube", "YouTube"),
+)
 
 
 @lru_cache
@@ -39,6 +49,7 @@ def t(key: str) -> str:
 
 def _context(request: Request) -> dict[str, Any]:
     current_user = getattr(request.state, "current_user", None)
+    theme_color = settings_service.get("theme_color") or theme_palettes.DEFAULT_COLOR
     return {
         "current_user": current_user,
         "csrf": getattr(request.state, "csrf", None),
@@ -46,6 +57,17 @@ def _context(request: Request) -> dict[str, Any]:
         "current_year": datetime.now().year,
         "unread_notifications": getattr(request.state, "unread_notifications", 0),
         "app_name": settings_service.get("app_name") or settings.APP_NAME,
+        "theme_color": theme_color,
+        "brand_shades": theme_palettes.css_variables(theme_color),
+        "contact_email": settings_service.get("contact_email") or "",
+        "contact_phone": settings_service.get("contact_phone") or "",
+        "contact_address": settings_service.get("contact_address") or "",
+        "social_links": [
+            {"name": name, "label": label, "url": settings_service.get(f"social_{name}")}
+            for name, label in SOCIAL_PLATFORMS
+            if settings_service.get(f"social_{name}")
+        ],
+        "app_version": __version__,
     }
 
 

@@ -31,7 +31,10 @@ async def test_settings_requires_admin(client: AsyncClient, db) -> None:
 async def test_admin_can_view_and_update_settings(client: AsyncClient, db) -> None:
     await make_user(db, "admin@example.com", UserRole.ADMIN)
     await login(client, "admin@example.com")
-    assert (await client.get("/settings")).status_code == 200
+    page = await client.get("/settings")
+    assert page.status_code == 200
+    assert 'name="theme_color"' in page.text
+    assert 'value="green"' in page.text
 
     form = dict(BASE_FORM)
     form.update(
@@ -53,6 +56,10 @@ async def test_admin_can_view_and_update_settings(client: AsyncClient, db) -> No
     assert settings_service.get("allowed_extensions") == ["png", "pdf"]
     assert settings_service.get("require_approval") is True
 
+    page = await client.get("/settings?saved=1")
+    assert page.status_code == 200
+    assert "Settings saved." in page.text
+
     from src.templating import t
 
     assert t("nav.dashboard") == "Dashboard"
@@ -71,6 +78,73 @@ async def test_invalid_settings_rejected(client: AsyncClient, db) -> None:
 
     bad_extensions = dict(BASE_FORM, _csrf=token, allowed_extensions="")
     assert (await client.post("/settings", data=bad_extensions)).status_code == 400
+
+
+async def test_contact_info_saved_and_shown_on_landing(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(
+        BASE_FORM,
+        _csrf=csrf(client.cookies),
+        contact_email="support@example.com",
+        contact_phone="+62 812 0000",
+        contact_address="Jl. Merdeka 1",
+        social_facebook="https://facebook.com/batik",
+        social_instagram="https://instagram.com/batik",
+    )
+    assert (await client.post("/settings", data=form)).status_code == 303
+    assert settings_service.get("contact_email") == "support@example.com"
+    assert settings_service.get("social_facebook") == "https://facebook.com/batik"
+
+    client.cookies.clear()
+    resp = await client.get("/")
+    assert resp.status_code == 200
+    assert "support@example.com" in resp.text
+    assert "+62 812 0000" in resp.text
+    assert "Jl. Merdeka 1" in resp.text
+    assert "https://facebook.com/batik" in resp.text
+    assert "https://instagram.com/batik" in resp.text
+    assert "text-[#1877F2]" in resp.text
+    assert "text-[#E4405F]" in resp.text
+
+
+async def test_invalid_contact_email_rejected(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(BASE_FORM, _csrf=csrf(client.cookies), contact_email="not-an-email")
+    assert (await client.post("/settings", data=form)).status_code == 400
+
+
+async def test_invalid_social_url_rejected(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(BASE_FORM, _csrf=csrf(client.cookies), social_facebook="facebook.com/batik")
+    assert (await client.post("/settings", data=form)).status_code == 400
+
+
+async def test_theme_color_saved_and_applied(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(BASE_FORM, _csrf=csrf(client.cookies), theme_color="blue")
+    assert (await client.post("/settings", data=form)).status_code == 303
+    assert settings_service.get("theme_color") == "blue"
+
+    client.cookies.clear()
+    resp = await client.get("/")
+    assert resp.status_code == 200
+    assert "--brand-600: 37 99 235" in resp.text
+
+
+async def test_invalid_theme_color_rejected(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(BASE_FORM, _csrf=csrf(client.cookies), theme_color="magenta")
+    assert (await client.post("/settings", data=form)).status_code == 400
 
 
 async def test_open_registration_can_be_disabled(client: AsyncClient, db) -> None:

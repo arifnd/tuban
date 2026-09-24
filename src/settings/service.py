@@ -14,6 +14,7 @@ def defaults() -> dict[str, Any]:
     return {
         "app_name": config_settings.APP_NAME,
         "default_language": "id",
+        "theme_color": "green",
         "initial_admin_email": config_settings.INITIAL_ADMIN_EMAIL,
         "sla_urgent_hours": 4,
         "sla_high_hours": 8,
@@ -23,6 +24,14 @@ def defaults() -> dict[str, Any]:
         "allowed_extensions": sorted(ALLOWED_EXTENSIONS),
         "open_registration": True,
         "require_approval": False,
+        "contact_email": "",
+        "contact_phone": "",
+        "contact_address": "",
+        "social_facebook": "",
+        "social_instagram": "",
+        "social_x": "",
+        "social_linkedin": "",
+        "social_youtube": "",
     }
 
 

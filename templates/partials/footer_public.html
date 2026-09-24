@@ -1,0 +1,23 @@
+{% from "partials/social_icons.html" import social with context %}
+{% set social_colors = {
+  "facebook": "text-[#1877F2] hover:text-[#0f5fc4] dark:text-[#4293ff] dark:hover:text-[#7ab0ff]",
+  "instagram": "text-[#E4405F] hover:text-[#c13584] dark:text-[#f472b6] dark:hover:text-[#f9a8d4]",
+  "x": "text-slate-900 hover:text-slate-600 dark:text-white dark:hover:text-slate-300",
+  "linkedin": "text-[#0A66C2] hover:text-[#084b8f] dark:text-[#5c9ee0] dark:hover:text-[#93c5fd]",
+  "youtube": "text-[#FF0000] hover:text-[#cc0000] dark:text-[#ff4d4d] dark:hover:text-[#ff8080]"
+} %}
+<footer class="mt-auto border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+  <div class="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 text-xs text-slate-500 dark:text-slate-400">
+    <span>&copy; {{ current_year }} {{ app_name }}</span>
+    {% if social_links %}
+    <nav class="flex items-center gap-3" aria-label="{{ t('footer.social') }}">
+      {% for link in social_links %}
+      <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" title="{{ link.label }}" aria-label="{{ link.label }}"
+         class="transition-colors {{ social_colors.get(link.name, 'text-slate-400 hover:text-brand-600 dark:text-slate-500 dark:hover:text-brand-300') }}">
+        {{ social(link.name, "w-4 h-4") }}
+      </a>
+      {% endfor %}
+    </nav>
+    {% endif %}
+  </div>
+</footer>
