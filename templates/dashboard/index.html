@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "partials/icons.html" import icon with context %}
 {% block title %}{{ t("dashboard.title") }} · {{ t("brand.name") }}{% endblock %}
 {% block content %}
 <div class="mb-4 flex items-center justify-between">
@@ -10,6 +11,21 @@
 </div>
 
 <div class="space-y-4">
+  {% if not is_admin %}
+  <div class="card p-4" x-data="{ q_open: false }" @click.outside="q_open = false">
+    <form action="/search" method="get" class="relative">
+      <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">{{ icon("search", "w-4 h-4") }}</span>
+      <input type="search" name="q" placeholder="{{ t('nav.search_placeholder') }}" autocomplete="off"
+             class="input mt-0 pl-9"
+             hx-get="/search/partials/dropdown" hx-trigger="keyup changed delay:300ms" hx-target="#dashboard-search-results" hx-swap="innerHTML"
+             @focus="q_open = true" @keyup="q_open = true">
+    </form>
+    <div x-show="q_open" x-cloak x-transition class="mt-2 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
+      <div id="dashboard-search-results"></div>
+    </div>
+  </div>
+  {% endif %}
+
   {% include "partials/dashboard/stats.html" %}
 
   <div class="card p-4">

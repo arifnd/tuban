@@ -1,6 +1,7 @@
 {% from "partials/icons.html" import icon with context %}
 {% from "partials/macros.html" import csrf_input with context %}
 <div class="flex items-center gap-3" x-data="{ user_open: false, theme_open: false, theme: (typeof window !== 'undefined' && window.APP_THEME) || 'system' }">
+{% if is_admin %}
   <div class="relative hidden md:block" x-data="{ q_open: false }" @click.outside="q_open = false">
     <form action="/search" method="get" class="relative">
       <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">{{ icon("search", "w-4 h-4") }}</span>
@@ -13,6 +14,7 @@
       <div id="search-dropdown"></div>
     </div>
   </div>
+{% endif %}
 
   <div class="relative" x-data="{ notif_open: false }" @click.outside="notif_open = false">
     <button type="button" @click="notif_open = !notif_open" title="{{ t('nav.notifications') }}" aria-label="{{ t('nav.notifications') }}"
