@@ -1,10 +1,11 @@
 import json
+import re
 from datetime import datetime
 from functools import lru_cache
 from typing import Any
 
 from fastapi.templating import Jinja2Templates
-from markupsafe import Markup
+from markupsafe import Markup, escape
 from starlette.requests import Request
 
 from src.config import PROJECT_ROOT, settings
@@ -69,3 +70,23 @@ def fmt_datetime(value: Any) -> str:
 
 
 templates.env.filters["dtf"] = fmt_datetime
+
+
+def highlight(text: Any, query: str | None) -> Markup:
+    """Escape ``text`` and wrap case-insensitive matches of ``query`` in <mark>."""
+    if text is None:
+        return Markup("")
+    if not query:
+        return escape(text)
+    pattern = re.compile("(" + re.escape(str(query)) + ")", re.IGNORECASE)
+    parts = pattern.split(str(text))
+    out = []
+    for index, part in enumerate(parts):
+        if index % 2 == 1:
+            out.append(f"<mark>{escape(part)}</mark>")
+        else:
+            out.append(str(escape(part)))
+    return Markup("".join(out))
+
+
+templates.env.filters["highlight"] = highlight

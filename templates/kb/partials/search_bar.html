@@ -1,0 +1,22 @@
+{% from "partials/icons.html" import icon with context %}
+<form class="card mb-4 flex flex-wrap items-end gap-3 p-4"
+      action="/kb/search" method="get"
+      hx-get="/kb/search" hx-target="#search-results" hx-swap="outerHTML"
+      hx-trigger="submit, keyup changed delay:300ms from:input[name='q'], change from:select">
+  <div class="min-w-[16rem] flex-1">
+    <label for="q" class="label">{{ t("kb.search") }}</label>
+    <input type="search" id="q" name="q" value="{{ search }}" placeholder="{{ t('kb.search_placeholder') }}" class="input">
+  </div>
+  {% if categories %}
+  <div>
+    <label for="category" class="label">{{ t("kb.category") }}</label>
+    <select id="category" name="category" class="input">
+      <option value="">{{ t("kb.all_categories") }}</option>
+      {% for category in categories %}
+      <option value="{{ category.slug }}" {% if category_slug == category.slug %}selected{% endif %}>{{ category.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% endif %}
+  <button type="submit" class="btn btn-primary">{{ icon("search", "w-4 h-4") }} {{ t("kb.search") }}</button>
+</form>

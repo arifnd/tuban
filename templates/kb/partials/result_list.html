@@ -1,0 +1,24 @@
+{% from "partials/pagination.html" import pagination with context %}
+{% set page = page | default(1) %}
+{% set total_pages = total_pages | default(1) %}
+{% set category_slug = category_slug | default('') %}
+{% set tag_slug = tag_slug | default('') %}
+{% set total = total | default(0) %}
+<div id="search-results">
+  <p class="mb-3 text-sm text-slate-500 dark:text-slate-400">{{ total }} · {{ t("kb.search") }}{% if search %}: "{{ search }}"{% endif %}</p>
+  <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+    {% for article in articles %}
+    <li class="py-3">
+      <a href="/kb/articles/{{ article.slug }}" class="font-medium text-slate-900 hover:text-brand-700 dark:text-slate-100 dark:hover:text-white">{{ article.title | highlight(search) }}</a>
+      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ (article.summary or article.body | striptags) | truncate(200) | highlight(search) }}</p>
+      <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+        {% if article.category %}<span>{{ article.category.name }}</span>{% endif %}
+        {% for tag in article.tags %}<span>#{{ tag.name }}</span>{% endfor %}
+      </div>
+    </li>
+    {% else %}
+    <li class="py-10 text-center text-slate-500 dark:text-slate-400">{{ t("kb.search_hint") if (search | length) < 2 else t("kb.no_results") }}</li>
+    {% endfor %}
+  </ul>
+  {{ pagination(page, total_pages, "/kb/search", query=search, target="#search-results", total=total, filters={"category": category_slug, "tag": tag_slug}) }}
+</div>

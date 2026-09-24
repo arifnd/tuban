@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ t("kb.search") }} · {{ t("brand.name") }}{% endblock %}
+{% block content %}
+<div class="mx-auto w-full max-w-3xl">
+  <h1 class="mb-4 text-xl font-semibold text-slate-900 dark:text-white">{{ t("kb.search") }}</h1>
+  {% include "kb/partials/search_bar.html" %}
+  {% include "kb/partials/result_list.html" %}
+</div>
+{% endblock %}
