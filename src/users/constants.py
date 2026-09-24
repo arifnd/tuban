@@ -1,2 +1,2 @@
-USERS_PER_PAGE = 25
+USERS_PER_PAGE = 10
 ASSIGNABLE_ROLES = ("user", "agent", "admin")

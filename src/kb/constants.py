@@ -1,2 +1,2 @@
-PAGE_SIZE = 25
+PAGE_SIZE = 10
 DEFAULT_CATEGORY_NAMES = ("Getting Started", "Billing", "Troubleshooting")

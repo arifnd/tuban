@@ -1,7 +1,7 @@
 from src.tickets.models import TicketPriority, TicketSource, TicketStatus
 from src.users.models import UserRole
 
-PAGE_SIZE = 25
+PAGE_SIZE = 10
 
 EDITOR_ROLES = (UserRole.ADMIN, UserRole.AGENT)
 

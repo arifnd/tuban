@@ -10,7 +10,7 @@ from src.users.dependencies import AdminUser
 
 router = APIRouter(prefix="/activity", tags=["activity"])
 
-ACTIVITY_PER_PAGE = 25
+ACTIVITY_PER_PAGE = 10
 
 
 @router.get("")
