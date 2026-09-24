@@ -14,8 +14,11 @@ from src.auth.exceptions import NotAuthenticated
 from src.config import PROJECT_ROOT, settings
 from src.dashboard import router as dashboard_router
 from src.kb import router as kb_router
+from src.logging_filters import RedactSensitiveQueryFilter
 from src.middleware import SecurityHeadersMiddleware
 from src.notifications import router as notifications_router
+from src.reports import router as reports_router
+from src.search import router as search_router
 from src.storage import router as storage_router
 from src.templating import templates
 from src.tickets import router as tickets_router
@@ -27,6 +30,9 @@ if logging_file.exists():
     logging.config.fileConfig(logging_file, disable_existing_loggers=False)
 
 logger = logging.getLogger(__name__)
+
+# fileConfig ignores filters, so attach OAuth query redaction programmatically.
+logging.getLogger("uvicorn.access").addFilter(RedactSensitiveQueryFilter())
 
 SHOW_DOCS_IN = {"local", "staging"}
 app_kwargs: dict = {"title": settings.APP_NAME, "version": __version__}
@@ -45,6 +51,8 @@ app.include_router(kb_router.router)
 app.include_router(tickets_router.router)
 app.include_router(notifications_router.router)
 app.include_router(activity_router.router)
+app.include_router(search_router.router)
+app.include_router(reports_router.router)
 app.include_router(storage_router.router)
 
 

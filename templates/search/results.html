@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon with context %}
+{% block title %}{{ t("search.title") }} · {{ t("brand.name") }}{% endblock %}
+{% block content %}
+<div class="mx-auto w-full max-w-3xl">
+  <h1 class="mb-4 text-xl font-semibold text-slate-900 dark:text-white">{{ t("search.title") }}</h1>
+
+  <form action="/search" method="get" class="card mb-4 flex items-end gap-3 p-4">
+    <div class="flex-1">
+      <label for="q" class="label">{{ t("search.label") }}</label>
+      <input type="search" id="q" name="q" value="{{ query }}" placeholder="{{ t('nav.search_placeholder') }}" class="input" autofocus>
+    </div>
+    <button type="submit" class="btn btn-primary">{{ icon("search", "w-4 h-4") }} {{ t("search.submit") }}</button>
+  </form>
+
+  {% if type_filter or query %}
+  <div class="mb-3 flex gap-2 text-sm">
+    <a href="/search?q={{ query | urlencode }}" class="badge {% if not type_filter %}badge-emerald{% else %}badge-slate{% endif %}">{{ t("search.all") }}</a>
+    <a href="/search?q={{ query | urlencode }}&type=kb" class="badge {% if type_filter == 'kb' %}badge-emerald{% else %}badge-slate{% endif %}">{{ t("kb.title") }}</a>
+    <a href="/search?q={{ query | urlencode }}&type=ticket" class="badge {% if type_filter == 'ticket' %}badge-emerald{% else %}badge-slate{% endif %}">{{ t("tickets.title") }}</a>
+  </div>
+  {% endif %}
+
+  {% if (query | length) < 2 %}
+  <p class="text-sm text-slate-500 dark:text-slate-400">{{ t("search.hint") }}</p>
+  {% elif not hits %}
+  <p class="text-sm text-slate-500 dark:text-slate-400">{{ t("search.no_results") }}</p>
+  {% else %}
+  <p class="mb-3 text-sm text-slate-500 dark:text-slate-400">{{ total }} · "{{ query }}"</p>
+  <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+    {% for hit in hits %}
+    <li class="py-3">
+      <span class="badge badge-slate">{{ t("kb.title") if hit.kind == "kb" else t("tickets.title") }}</span>
+      <a href="{{ hit.url }}" class="ml-2 font-medium text-slate-900 hover:text-brand-700 dark:text-slate-100 dark:hover:text-white">{{ hit.title | highlight(query) }}</a>
+      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ hit.snippet | highlight(query) }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endblock %}

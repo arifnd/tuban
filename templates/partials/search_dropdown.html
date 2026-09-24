@@ -1,0 +1,33 @@
+{% if (query | length) >= 2 %}
+  {% if total %}
+  <div class="max-h-96 overflow-y-auto">
+    {% if kb %}
+    <p class="px-3 pt-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t("kb.title") }}</p>
+    <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+      {% for hit in kb %}
+      <li><a href="{{ hit.url }}" class="block px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+        <span class="block truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{ hit.title | highlight(query) }}</span>
+        <span class="block truncate text-xs text-slate-400">{{ hit.snippet | highlight(query) }}</span>
+      </a></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% if tickets %}
+    <p class="px-3 pt-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t("tickets.title") }}</p>
+    <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+      {% for hit in tickets %}
+      <li><a href="{{ hit.url }}" class="block px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+        <span class="block truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{ hit.title | highlight(query) }}</span>
+        <span class="block truncate text-xs text-slate-400">{{ hit.snippet | highlight(query) }}</span>
+      </a></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  <a href="/search?q={{ query | urlencode }}" class="block border-t border-slate-100 px-3 py-2 text-center text-xs font-medium text-brand-600 dark:border-slate-700 dark:text-brand-400">{{ t("search.view_all") }}</a>
+  {% else %}
+  <p class="px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">{{ t("search.no_results") }}</p>
+  {% endif %}
+{% else %}
+<p class="px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">{{ t("search.hint") }}</p>
+{% endif %}

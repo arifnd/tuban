@@ -7,6 +7,7 @@
   ("/dashboard", t("nav.dashboard"), "home", True),
   ("/kb", t("nav.kb"), "book-open", True),
   ("/tickets", t("nav.tickets"), "ticket", True),
+  ("/reports", t("nav.reports"), "chart", is_agent),
   ("/users", t("nav.users"), "users", is_admin),
   ("/activity", t("nav.activity"), "activity", is_admin),
 ] %}
@@ -36,6 +37,18 @@
     </div>
 
     <div class="flex items-center gap-3">
+      <div class="relative hidden md:block" x-data="{ q_open: false }" @click.outside="q_open = false">
+        <form action="/search" method="get" class="relative">
+          <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">{{ icon("search", "w-4 h-4") }}</span>
+          <input type="search" name="q" placeholder="{{ t('nav.search_placeholder') }}" autocomplete="off"
+                 class="mt-0 w-56 rounded-md border border-slate-300 bg-white py-1.5 pl-9 pr-3 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                 hx-get="/search/partials/dropdown" hx-trigger="keyup changed delay:300ms" hx-target="#search-dropdown" hx-swap="innerHTML"
+                 @focus="q_open = true" @keyup="q_open = true">
+        </form>
+        <div x-show="q_open" x-cloak x-transition class="absolute right-0 mt-2 w-80 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800">
+          <div id="search-dropdown"></div>
+        </div>
+      </div>
       <div class="relative" x-data="{ notif_open: false }" @click.outside="notif_open = false">
         <button type="button" @click="notif_open = !notif_open" title="{{ t('nav.notifications') }}" aria-label="{{ t('nav.notifications') }}"
                 class="relative rounded-md p-1 text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
