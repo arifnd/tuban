@@ -31,6 +31,8 @@ def _load_translations(lang: str = DEFAULT_LANG) -> dict[str, str]:
 
 def t(key: str) -> str:
     """Return the localized string for ``key``, falling back to the key itself."""
+    if key == "brand.name":
+        return settings_service.get("app_name") or settings.APP_NAME
     language = settings_service.get("default_language") or DEFAULT_LANG
     return _load_translations(language).get(key, key)
 

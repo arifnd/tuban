@@ -6,7 +6,10 @@
 <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
   <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ heading or t("kb.articles") }}</h1>
   {% if can_edit %}
-  <a href="/kb/articles/new" class="btn btn-primary">{{ icon("plus", "w-4 h-4") }} {{ t("kb.new_article") }}</a>
+  <div class="flex items-center gap-2">
+    <a href="/kb/categories" class="btn btn-secondary">{{ t("kb.categories") }}</a>
+    <a href="/kb/articles/new" class="btn btn-primary">{{ icon("plus", "w-4 h-4") }} {{ t("kb.new_article") }}</a>
+  </div>
   {% endif %}
 </div>
 

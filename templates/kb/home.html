@@ -14,6 +14,7 @@
       <input type="search" name="q" placeholder="{{ t('kb.search_placeholder') }}" class="input mt-0 w-64 pl-9">
     </form>
     {% if can_edit %}
+    <a href="/kb/categories" class="btn btn-secondary">{{ t("kb.categories") }}</a>
     <a href="/kb/articles/new" class="btn btn-primary">{{ icon("plus", "w-4 h-4") }} {{ t("kb.new_article") }}</a>
     {% endif %}
   </div>
