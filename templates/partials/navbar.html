@@ -106,7 +106,7 @@
             </div>
           </div>
           <div class="border-t border-slate-100 dark:border-slate-700">
-            <form method="post" action="/auth/logout" data-confirm="{{ t('nav.confirm_sign_out') }}">
+            <form method="post" action="/auth/logout" data-confirm="{{ t('nav.confirm_sign_out') }}" data-confirm-label="{{ t('nav.sign_out') }}">
               {{ csrf_input() }}
               <button type="submit" @click="user_open = false"
                       class="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40">
@@ -147,7 +147,7 @@
       </a>
       {% endif %}
       {% endfor %}
-      <form method="post" action="/auth/logout" data-confirm="{{ t('nav.confirm_sign_out') }}" class="mt-2 border-t border-slate-100 pt-2 dark:border-slate-800">
+      <form method="post" action="/auth/logout" data-confirm="{{ t('nav.confirm_sign_out') }}" data-confirm-label="{{ t('nav.sign_out') }}" class="mt-2 border-t border-slate-100 pt-2 dark:border-slate-800">
         {{ csrf_input() }}
         <button type="submit" class="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40">
           {{ icon("logout", "w-5 h-5") }} {{ t("nav.sign_out") }}

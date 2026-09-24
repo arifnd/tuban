@@ -7,7 +7,7 @@
     "watch:css": "tailwindcss -i ./resources/css/input.css -o ./static/css/app.css --watch",
     "build:js": "esbuild resources/js/main.js --bundle --minify --outfile=static/js/app.min.js",
     "watch:js": "esbuild resources/js/main.js --bundle --minify --outfile=static/js/app.min.js --watch",
-    "build:assets": "npm run build:icons && npm run build:css && npm run build:js"
+    "build:assets": "npm run build:icons && npm run build:js && npm run build:css"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",
