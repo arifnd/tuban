@@ -6,6 +6,7 @@ class StorageConfig(BaseSettings):
 
     BACKEND: str = "local"
     UPLOAD_MAX_SIZE: int = 20 * 1024 * 1024
+    LOCAL_DIR: str = ""
 
     AWS_ACCESS_KEY_ID: str = ""
     AWS_SECRET_ACCESS_KEY: str = ""

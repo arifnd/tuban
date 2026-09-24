@@ -1,0 +1,22 @@
+{% from "partials/macros.html" import csrf_input with context %}
+<div id="feedback-panel" class="card mt-4 p-4">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <h2 class="text-sm font-semibold text-slate-900 dark:text-white">{{ t("kb.feedback_question") }}</h2>
+    <span class="text-xs text-slate-500 dark:text-slate-400">{{ feedback.helpful }} / {{ feedback.total }} {{ t("kb.helpful_count") }}</span>
+  </div>
+
+  {% if my_feedback %}
+  <p class="mt-3 text-sm text-emerald-700 dark:text-emerald-400">
+    {{ t("kb.feedback_thanks") }} ({{ t("kb.feedback_yes") if my_feedback.is_helpful else t("kb.feedback_no") }})
+  </p>
+  {% else %}
+  <form method="post" action="/kb/articles/{{ article.slug }}/feedback" hx-post="/kb/articles/{{ article.slug }}/feedback" hx-target="#feedback-panel" hx-swap="outerHTML" class="mt-3 space-y-3">
+    {{ csrf_input() }}
+    <input type="text" name="comment" placeholder="{{ t('kb.feedback_comment') }}" class="input">
+    <div class="flex gap-2">
+      <button type="submit" name="is_helpful" value="1" class="btn btn-success">{{ t("kb.feedback_yes") }}</button>
+      <button type="submit" name="is_helpful" value="0" class="btn btn-secondary">{{ t("kb.feedback_no") }}</button>
+    </div>
+  </form>
+  {% endif %}
+</div>

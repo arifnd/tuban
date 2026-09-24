@@ -8,6 +8,8 @@ os.environ["DATABASE_URL"] = (
 )
 os.environ["AUTH_SESSION_SECRET"] = "test-secret-that-is-longer-than-32-bytes-for-hmac"
 os.environ["INITIAL_ADMIN_EMAIL"] = "admin@example.com"
+os.environ["STORAGE_BACKEND"] = "local"
+os.environ["STORAGE_LOCAL_DIR"] = "./instance/test_media"
 
 import pytest
 from httpx2 import ASGITransport, AsyncClient
