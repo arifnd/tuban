@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ t("dashboard.title") }} · {{ t("brand.name") }}{% endblock %}
+{% block content %}
+<div class="mb-4 flex items-center justify-between">
+  <div>
+    <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ t("dashboard.title") }}</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400">{{ t("dashboard.welcome") }}, {{ current_user.name }}</p>
+  </div>
+  <a href="/tickets/new" class="btn btn-primary">{{ t("dashboard.new_ticket") }}</a>
+</div>
+
+<div class="space-y-4">
+  {% include "partials/dashboard/stats.html" %}
+
+  <div class="card p-4">
+    <h2 class="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{{ t("dashboard.ticket_trend") }}</h2>
+    <canvas data-chart="line" data-label="{{ t('dashboard.ticket_trend') }}"
+            data-labels="{{ trend_labels | attrjson }}" data-values="{{ trend_values | attrjson }}" height="90"></canvas>
+  </div>
+
+  {% include "partials/dashboard/activity.html" %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+{% endblock %}

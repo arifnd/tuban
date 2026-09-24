@@ -1,0 +1,40 @@
+{% from "partials/icons.html" import icon with context %}
+{% set s = stats %}
+<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+  {% if is_staff %}
+  <div class="card p-4">
+    <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t("dashboard.total") }}</p>
+    <p class="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{{ s.total }}</p>
+  </div>
+  <div class="card p-4">
+    <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t("dashboard.open") }}</p>
+    <p class="mt-1 text-2xl font-bold text-brand-600">{{ s.open }}</p>
+  </div>
+  <div class="card p-4">
+    <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t("dashboard.unassigned") }}</p>
+    <p class="mt-1 text-2xl font-bold text-amber-600">{{ s.unassigned }}</p>
+  </div>
+  <div class="card p-4">
+    <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t("dashboard.sla_breaches") }}</p>
+    <p class="mt-1 text-2xl font-bold text-red-600">{{ s.sla_breaches }}</p>
+  </div>
+  {% else %}
+  <div class="card p-4">
+    <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t("dashboard.my_tickets") }}</p>
+    <p class="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{{ s.total }}</p>
+  </div>
+  <div class="card p-4">
+    <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t("dashboard.active") }}</p>
+    <p class="mt-1 text-2xl font-bold text-brand-600">{{ s.open }}</p>
+  </div>
+  <div class="card p-4">
+    <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t("dashboard.resolved") }}</p>
+    <p class="mt-1 text-2xl font-bold text-emerald-600">{{ s.resolved }}</p>
+  </div>
+  {% endif %}
+  <div class="card p-4">
+    <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t("dashboard.published") }}</p>
+    <p class="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{{ kb.published }}</p>
+    <p class="text-xs text-slate-400">{{ kb.drafts }} {{ t("dashboard.drafts") }} · {{ kb.views }} {{ t("dashboard.views") }}</p>
+  </div>
+</div>
