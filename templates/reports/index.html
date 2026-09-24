@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ t("reports.title") }} · {{ t("brand.name") }}{% endblock %}
+{% block content %}
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ t("reports.title") }}</h1>
+  <form method="get" action="/reports" class="flex items-end gap-2">
+    <div>
+      <label for="start" class="label">{{ t("reports.from") }}</label>
+      <input type="date" id="start" name="start" value="{{ start }}" class="input mt-0">
+    </div>
+    <div>
+      <label for="end" class="label">{{ t("reports.to") }}</label>
+      <input type="date" id="end" name="end" value="{{ end }}" class="input mt-0">
+    </div>
+    <button type="submit" class="btn btn-primary">{{ t("reports.apply") }}</button>
+  </form>
+</div>
+
+<div class="grid gap-4 lg:grid-cols-2">
+  {% for key, report in reports.items() %}
+  <section class="card overflow-hidden">
+    <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-700">
+      <h2 class="text-sm font-semibold text-slate-900 dark:text-white">{{ report.title }}</h2>
+      <div class="flex gap-2 text-xs">
+        {% for fmt in ["csv", "xlsx", "pdf"] %}
+        <a href="/reports/export?report={{ key }}&format={{ fmt }}&start={{ start }}&end={{ end }}" class="text-brand-600 hover:text-brand-700 dark:text-brand-400">{{ fmt | upper }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      {% set columns = report.columns %}
+      {% set rows = report.rows %}
+      {% include "reports/partials/report_table.html" %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}
