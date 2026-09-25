@@ -23,6 +23,7 @@ async def test_dashboard_renders_for_user(client: AsyncClient) -> None:
     resp = await client.get("/dashboard")
     assert resp.status_code == 200
     assert "/tickets/new" in resp.text
+    assert 'data-chart="line"' not in resp.text
 
 
 async def test_dashboard_renders_for_staff(client: AsyncClient) -> None:
@@ -30,6 +31,7 @@ async def test_dashboard_renders_for_staff(client: AsyncClient) -> None:
     resp = await client.get("/dashboard")
     assert resp.status_code == 200
     assert "Belum ditugaskan" in resp.text
+    assert 'data-chart="line"' in resp.text
 
 
 async def test_stats_partial(client: AsyncClient) -> None:
