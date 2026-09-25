@@ -9,6 +9,7 @@ from src.auth.dependencies import CurrentUser, DbDep
 from src.exceptions import NotFoundError
 from src.storage.client import MEDIA_DIR
 from src.storage.config import storage_settings
+from src.storage.constants import IMAGE_EXTENSIONS
 from src.tickets.models import Ticket
 
 router = APIRouter(tags=["storage"])
@@ -16,6 +17,20 @@ router = APIRouter(tags=["storage"])
 
 def _media_root() -> Path:
     return Path(storage_settings.LOCAL_DIR) if storage_settings.LOCAL_DIR else MEDIA_DIR
+
+
+@router.get("/media/carousel/{filename}")
+async def serve_carousel_media(filename: str):
+    if Path(filename).name != filename or Path(filename).suffix.lstrip(".").lower() not in IMAGE_EXTENSIONS:
+        raise NotFoundError()
+
+    root = _media_root().resolve()
+    target = (root / "carousel" / filename).resolve()
+    if not target.is_relative_to(root) or not target.is_file():
+        raise NotFoundError()
+
+    media_type = mimetypes.guess_type(str(target))[0] or "application/octet-stream"
+    return FileResponse(target, media_type=media_type, headers={"Content-Disposition": "inline", "X-Content-Type-Options": "nosniff"})
 
 
 @router.get("/media/{path:path}")

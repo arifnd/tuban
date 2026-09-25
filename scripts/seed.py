@@ -8,6 +8,8 @@ Usage::
 
 import argparse
 import asyncio
+import struct
+import zlib
 
 from sqlalchemy import delete
 
@@ -18,6 +20,7 @@ from src.kb import service as kb_service
 from src.kb.models import KbArticle, KbArticleFeedback, KbArticleRevision, KbArticleStatus, KbArticleTag, KbArticleVisibility, KbAttachment, KbCategory, KbTag
 from src.notifications.models import Notification
 from src.settings import service as settings_service
+from src.storage.client import get_storage
 from src.tickets import service as ticket_service
 from src.tickets.models import Ticket, TicketAttachment, TicketCategory, TicketComment, TicketNumberSeq, TicketPriority, TicketStatus
 from src.users.models import User, UserRole
@@ -64,10 +67,39 @@ SETTINGS = {
     "social_x": "https://x.com/batikhelpdesk",
     "social_linkedin": "https://linkedin.com/company/batikhelpdesk",
     "social_youtube": "https://youtube.com/@batikhelpdesk",
-    "carousel_image_1": "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80",
-    "carousel_image_2": "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=80",
-    "carousel_image_3": "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1600&q=80",
 }
+
+# (title, subtitle, top_rgb, bottom_rgb)
+CAROUSEL_SLIDES = [
+    ("Dukungan jadi mudah", "Cari di basis pengetahuan atau hubungi kami — kami siap membantu.", (5, 150, 105), (16, 185, 129)),
+    ("Tim yang siap membantu", "Ajukan tiket dan pantau statusnya hingga selesai.", (3, 105, 161), (56, 189, 248)),
+    ("Basis pengetahuan lengkap", "Temukan jawaban atas pertanyaan umum dalam hitungan detik.", (109, 40, 217), (167, 139, 250)),
+]
+
+
+def _png_gradient(width: int, height: int, top: tuple[int, int, int], bottom: tuple[int, int, int]) -> bytes:
+    """Encode a simple vertical-gradient PNG using only the standard library."""
+
+    def chunk(tag: bytes, data: bytes) -> bytes:
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+
+    raw = bytearray()
+    for y in range(height):
+        ratio = y / max(height - 1, 1)
+        color = bytes(round(top[channel] + (bottom[channel] - top[channel]) * ratio) for channel in range(3))
+        raw += b"\x00" + color * width
+    header = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) + chunk(b"IDAT", zlib.compress(bytes(raw), 9)) + chunk(b"IEND", b"")
+
+
+async def _seed_carousel() -> list[dict[str, str]]:
+    backend = get_storage()
+    slides: list[dict[str, str]] = []
+    for index, (title, subtitle, top, bottom) in enumerate(CAROUSEL_SLIDES, start=1):
+        key = f"carousel/seed-{index}.png"
+        url = await backend.save(_png_gradient(1200, 450, top, bottom), key)
+        slides.append({"image": url, "title": title, "subtitle": subtitle})
+    return slides
 
 
 async def _reset(db) -> None:
@@ -135,7 +167,7 @@ async def seed() -> None:
                 db, admin, title=title, summary=summary, body=body, category_id=categories["Getting Started"].id, visibility=visibility, status=status
             )
 
-        await settings_service.update(db, admin, SETTINGS)
+        await settings_service.update(db, admin, {**SETTINGS, "carousel_slides": await _seed_carousel()})
 
         ticket_category = await ticket_service.create_category(db, admin, name="General")
         tickets = []

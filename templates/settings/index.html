@@ -136,19 +136,6 @@
     </div>
   </section>
 
-  <section class="card p-6">
-    <h2 class="mb-1 text-sm font-semibold text-slate-900 dark:text-white">{{ t("settings.carousel") }}</h2>
-    <p class="mb-4 text-xs text-slate-500 dark:text-slate-400">{{ t("settings.carousel_help") }}</p>
-    <div class="grid gap-4 sm:grid-cols-3">
-      {% for field in [("carousel_image_1", "settings.carousel_image_1"), ("carousel_image_2", "settings.carousel_image_2"), ("carousel_image_3", "settings.carousel_image_3")] %}
-      <div>
-        <label class="label" for="{{ field[0] }}">{{ t(field[1]) }}</label>
-        <input type="url" id="{{ field[0] }}" name="{{ field[0] }}" value="{{ values[field[0]] }}" placeholder="https://" class="input">
-      </div>
-      {% endfor %}
-    </div>
-  </section>
-
   <div class="flex justify-end">
     <button type="submit" class="btn btn-primary">{{ t("settings.save") }}</button>
   </div>

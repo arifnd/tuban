@@ -33,9 +33,7 @@ def defaults() -> dict[str, Any]:
         "social_x": "",
         "social_linkedin": "",
         "social_youtube": "",
-        "carousel_image_1": "",
-        "carousel_image_2": "",
-        "carousel_image_3": "",
+        "carousel_slides": [],
     }
 
 
@@ -68,6 +66,24 @@ def get(key: str) -> Any:
     if _cache is None or key not in _cache:
         return base.get(key)
     return _cache[key]
+
+
+def carousel_slides() -> list[dict[str, str]]:
+    slides = get("carousel_slides") or []
+    if not isinstance(slides, list):
+        return []
+    cleaned = []
+    for slide in slides:
+        if not isinstance(slide, dict) or not slide.get("image"):
+            continue
+        cleaned.append(
+            {
+                "image": str(slide.get("image", "")),
+                "title": str(slide.get("title", "")),
+                "subtitle": str(slide.get("subtitle", "")),
+            }
+        )
+    return cleaned
 
 
 async def update(db: AsyncSession, actor, values: dict[str, Any]) -> dict[str, Any]:

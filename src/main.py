@@ -22,6 +22,7 @@ from src.middleware import SecurityHeadersMiddleware
 from src.notifications import router as notifications_router
 from src.reports import router as reports_router
 from src.search import router as search_router
+from src.settings import carousel_router as carousel_router
 from src.settings import router as settings_router
 from src.settings import service as settings_service
 from src.storage import router as storage_router
@@ -70,6 +71,7 @@ app.include_router(activity_router.router)
 app.include_router(search_router.router)
 app.include_router(reports_router.router)
 app.include_router(settings_router.router)
+app.include_router(carousel_router.router)
 app.include_router(storage_router.router)
 
 

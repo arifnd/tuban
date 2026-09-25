@@ -131,24 +131,26 @@ async def test_contact_info_saved_and_shown_on_landing(client: AsyncClient, db) 
     assert "text-[#E4405F]" in resp.text
 
 
-async def test_carousel_images_shown_on_landing(client: AsyncClient, db) -> None:
-    await make_user(db, "admin@example.com", UserRole.ADMIN)
-    await login(client, "admin@example.com")
-
-    form = dict(
-        BASE_FORM,
-        _csrf=csrf(client.cookies),
-        carousel_image_1="https://cdn.example.com/one.jpg",
-        carousel_image_2="https://cdn.example.com/two.jpg",
+async def test_carousel_slides_shown_on_landing(client: AsyncClient, db) -> None:
+    admin = await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await settings_service.update(
+        db,
+        admin,
+        {
+            "carousel_slides": [
+                {"image": "https://cdn.example.com/one.jpg", "title": "Welcome", "subtitle": "Start here"},
+                {"image": "https://cdn.example.com/two.jpg", "title": "Support", "subtitle": "We are here"},
+            ]
+        },
     )
-    assert (await client.post("/settings", data=form)).status_code == 303
-    assert settings_service.get("carousel_image_1") == "https://cdn.example.com/one.jpg"
 
     client.cookies.clear()
     resp = await client.get("/")
     assert resp.status_code == 200
     assert "https://cdn.example.com/one.jpg" in resp.text
     assert "https://cdn.example.com/two.jpg" in resp.text
+    assert "Welcome" in resp.text
+    assert "We are here" in resp.text
 
 
 async def test_landing_shows_only_public_articles(client: AsyncClient, db) -> None:

@@ -97,6 +97,7 @@
             ("/reports", t("nav.reports"), "chart"),
             ("/users", t("nav.users"), "users"),
             ("/activity", t("nav.activity"), "activity"),
+            ("/carousel", t("nav.carousel"), "image"),
             ("/settings", t("nav.settings"), "settings"),
           ] %}
           {% set is_active = (href == "/dashboard" and (path == "/" or path.startswith("/dashboard"))) or (href != "/dashboard" and path.startswith(href)) %}

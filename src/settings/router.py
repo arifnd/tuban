@@ -64,9 +64,6 @@ async def update_settings(request: Request, db: DbDep, admin: AdminUser, _: Csrf
         "social_x": field("social_x"),
         "social_linkedin": field("social_linkedin"),
         "social_youtube": field("social_youtube"),
-        "carousel_image_1": field("carousel_image_1"),
-        "carousel_image_2": field("carousel_image_2"),
-        "carousel_image_3": field("carousel_image_3"),
     }
     try:
         data = SettingsUpdate(**payload)
@@ -97,9 +94,6 @@ async def update_settings(request: Request, db: DbDep, admin: AdminUser, _: Csrf
             "social_x": data.social_x,
             "social_linkedin": data.social_linkedin,
             "social_youtube": data.social_youtube,
-            "carousel_image_1": data.carousel_image_1,
-            "carousel_image_2": data.carousel_image_2,
-            "carousel_image_3": data.carousel_image_3,
         },
     )
     return RedirectResponse("/settings?saved=1", status_code=status.HTTP_303_SEE_OTHER)

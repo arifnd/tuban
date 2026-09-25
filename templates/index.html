@@ -3,7 +3,7 @@
 {% from "partials/macros.html" import csrf_input with context %}
 {% block title %}{{ t("brand.name") }}{% endblock %}
 {% block content %}
-{% set slides = carousel_images | select | list %}
+{% set slides = carousel_slides %}
 <div class="space-y-10">
 
 {% if slides %}
@@ -11,16 +11,18 @@
   <div class="relative overflow-hidden rounded-2xl bg-slate-900" x-data="{ active: 0, total: {{ slides | length }}, next() { this.active = (this.active + 1) % this.total }, prev() { this.active = (this.active - 1 + this.total) % this.total } }"
        x-init="setInterval(() => next(), 5000)">
     <div class="relative aspect-[16/6] w-full">
-      {% for image in slides %}
-      <img src="{{ image }}" alt="" loading="{{ 'eager' if loop.first else 'lazy' }}"
+      {% for slide in slides %}
+      <img src="{{ slide.image }}" alt="" loading="{{ 'eager' if loop.first else 'lazy' }}"
            class="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
            x-show="active === {{ loop.index0 }}" :class="active === {{ loop.index0 }} ? 'opacity-100' : 'opacity-0'">
-      {% endfor %}
-      <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-900/70 to-transparent"></div>
-      <div class="absolute inset-x-0 bottom-0 p-6 text-white">
-        <h2 class="text-2xl font-bold">{{ t("landing.hero_title") }}</h2>
-        <p class="mt-1 max-w-xl text-sm text-slate-200">{{ t("landing.hero_subtitle") }}</p>
+      <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-900/70 to-transparent transition-opacity duration-700"
+           x-show="active === {{ loop.index0 }}" :class="active === {{ loop.index0 }} ? 'opacity-100' : 'opacity-0'">
+        <div class="absolute inset-x-0 bottom-0 p-6 text-white">
+          <h2 class="text-2xl font-bold">{{ slide.title or t("landing.hero_title") }}</h2>
+          <p class="mt-1 max-w-xl text-sm text-slate-200">{{ slide.subtitle or t("landing.hero_subtitle") }}</p>
+        </div>
       </div>
+      {% endfor %}
     </div>
     {% if slides | length > 1 %}
     <button type="button" @click="prev()" aria-label="{{ t('landing.prev') }}"
@@ -32,7 +34,7 @@
       {{ icon("chevron-right", "w-5 h-5") }}
     </button>
     <div class="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2">
-      {% for image in slides %}
+      {% for slide in slides %}
       <button type="button" @click="active = {{ loop.index0 }}" aria-label="{{ t('landing.go_to') }} {{ loop.index }}"
               class="h-2 w-2 rounded-full transition" :class="active === {{ loop.index0 }} ? 'bg-white' : 'bg-white/50'"></button>
       {% endfor %}

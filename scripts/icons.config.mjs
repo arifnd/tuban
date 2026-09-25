@@ -25,6 +25,7 @@ export default {
   warning: "triangle-alert",
   calendar: "calendar",
   clock: "clock",
+  image: "image",
   download: "download",
   folder: "folder",
   tag: "tags",

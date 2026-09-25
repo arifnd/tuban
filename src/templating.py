@@ -67,7 +67,7 @@ def _context(request: Request) -> dict[str, Any]:
             for name, label in SOCIAL_PLATFORMS
             if settings_service.get(f"social_{name}")
         ],
-        "carousel_images": [settings_service.get(f"carousel_image_{index}") for index in range(1, 4)],
+        "carousel_slides": settings_service.carousel_slides(),
         "app_version": __version__,
     }
 
