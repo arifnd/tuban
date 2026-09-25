@@ -1,4 +1,5 @@
 {% from "partials/icons.html" import icon with context %}
+{% from "tickets/partials/macros.html" import status_badge with context %}
 <div class="grid gap-4 lg:grid-cols-2">
   <div class="card overflow-hidden">
     <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-700">
@@ -14,7 +15,7 @@
             <p class="text-xs text-slate-400">{{ ticket.ticket_number }}</p>
           </td>
           <td class="px-4 py-2.5 text-right">
-            <span class="badge badge-slate">{{ t("tickets.status_" ~ ticket.status.value) }}</span>
+            {{ status_badge(ticket.status) }}
           </td>
         </tr>
         {% else %}
