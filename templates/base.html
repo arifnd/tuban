@@ -56,7 +56,7 @@
   {% from "partials/icons.html" import icon with context %}
   {% include "partials/sprite.html" %}
   {% if current_user and is_admin %}
-  <div class="flex h-screen w-full overflow-hidden" x-data="{ sidebar_open: false }">
+  <div class="flex h-screen w-full overflow-hidden" x-data="{ sidebar_open: false }" @click.outside="sidebar_open = false">
     {% include "partials/sidebar.html" %}
     <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
       <header class="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-900">
@@ -75,11 +75,7 @@
             {{ icon("menu", "w-6 h-6") }}
           </button>
         </div>
-      </header>
-
-      <div x-show="sidebar_open" x-cloak @click="sidebar_open = false" class="fixed inset-0 z-30 bg-slate-900/40 md:hidden dark:bg-slate-950/60"></div>
-
-      <div x-show="sidebar_open" x-cloak x-transition class="relative z-40 border-t border-slate-200 bg-white pb-4 pt-2 shadow-lg md:hidden dark:border-slate-800 dark:bg-slate-900">
+      <div x-show="sidebar_open" x-cloak x-transition class="absolute inset-x-0 top-full z-40 border-t border-slate-200 bg-white pb-4 pt-2 shadow-lg md:hidden dark:border-slate-800 dark:bg-slate-900">
         <div class="flex flex-col">
           <div class="mb-2 flex items-center gap-3 border-b border-slate-100 px-4 pb-3 dark:border-slate-800">
             {% if current_user.avatar %}
@@ -117,6 +113,7 @@
           </form>
         </div>
       </div>
+      </header>
 
       <main class="flex flex-1 w-full flex-col overflow-y-auto">
         <div class="flex-1 px-4 pt-10 pb-8">

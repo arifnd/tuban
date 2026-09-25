@@ -1,6 +1,7 @@
 {% from "partials/icons.html" import icon with context %}
-<nav class="sticky top-0 z-40 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-  <div class="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4">
+{% set kb_active = request.url.path.startswith("/kb") %}
+<nav class="sticky top-0 z-40 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900" x-data="{ open: false }" @click.outside="open = false">
+  <div class="relative mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4">
     <a href="/" class="flex items-center gap-2 text-brand-900 dark:text-white">
       <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
         {{ icon("book-open", "w-5 h-5") }}
@@ -8,12 +9,32 @@
       <span class="text-base font-bold tracking-tight">{{ t("brand.name") }}</span>
     </a>
 
+    <a href="/kb" class="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition md:flex {% if kb_active %}bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-white{% else %}text-slate-600 hover:bg-slate-50 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white{% endif %}">
+      {{ icon("book-open", "w-4 h-4") }}
+      {{ t("nav.kb") }}
+    </a>
+
     <div class="flex items-center gap-2">
-      <a href="/kb" class="hidden rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-brand-700 sm:inline-flex dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
-        {{ t("nav.kb") }}
+      <a href="/tickets/new" class="btn btn-primary hidden md:flex">{{ t("landing.create_ticket") }}</a>
+      <a href="/auth/login" class="btn btn-secondary hidden md:flex">{{ t("auth.signin") }}</a>
+      <button type="button" class="rounded-md p-2 text-slate-500 hover:bg-slate-50 md:hidden dark:text-slate-400 dark:hover:bg-slate-800"
+              aria-label="{{ t('nav.open_menu') }}" @click="open = !open">
+        {{ icon("menu", "w-6 h-6") }}
+      </button>
+    </div>
+  </div>
+
+  <div x-show="open" x-cloak x-transition class="absolute inset-x-0 top-full z-40 border-t border-slate-200 bg-white pb-4 pt-2 shadow-lg md:hidden dark:border-slate-800 dark:bg-slate-900">
+    <div class="flex flex-col">
+      <a href="/kb" @click="open = false" class="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-medium {% if kb_active %}bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-white{% else %}text-slate-600 hover:bg-slate-50 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white{% endif %}">
+        {{ icon("book-open", "w-5 h-5") }} {{ t("nav.kb") }}
       </a>
-      <a href="/tickets/new" class="btn btn-primary">{{ t("landing.create_ticket") }}</a>
-      <a href="/auth/login" class="btn btn-secondary">{{ t("auth.signin") }}</a>
+      <a href="/tickets/new" @click="open = false" class="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+        {{ icon("plus", "w-5 h-5") }} {{ t("landing.create_ticket") }}
+      </a>
+      <a href="/auth/login" @click="open = false" class="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+        {{ icon("lock", "w-5 h-5") }} {{ t("auth.signin") }}
+      </a>
     </div>
   </div>
 </nav>
