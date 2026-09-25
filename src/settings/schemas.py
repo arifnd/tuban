@@ -11,6 +11,7 @@ class SettingsUpdate(BaseModel):
     sla_high_hours: int = Field(ge=1, le=1000)
     sla_normal_hours: int = Field(ge=1, le=1000)
     sla_low_hours: int = Field(ge=1, le=1000)
+    ticket_number_prefix: str = Field(default="TKT", min_length=1, max_length=10)
     upload_max_size_mb: int = Field(ge=1, le=10240)
     allowed_extensions: list[str] = Field(min_length=1)
     open_registration: bool = False
@@ -33,6 +34,14 @@ class SettingsUpdate(BaseModel):
         if value not in PALETTES:
             raise ValueError("Unknown theme color")
         return value
+
+    @field_validator("ticket_number_prefix")
+    @classmethod
+    def _validate_ticket_number_prefix(cls, value: str) -> str:
+        prefix = value.strip().strip("-").upper()
+        if not prefix or not prefix.isalnum():
+            raise ValueError("Ticket number prefix may only contain letters and numbers")
+        return prefix
 
     @field_validator("contact_email")
     @classmethod

@@ -336,6 +336,8 @@
   "settings.sla_high": "High (hours)",
   "settings.sla_normal": "Normal (hours)",
   "settings.sla_low": "Low (hours)",
+  "settings.ticket_number_prefix": "Ticket number prefix",
+  "settings.ticket_number_prefix_help": "Letters and numbers used before the ticket number, e.g. TKT produces TKT-000001.",
   "settings.storage": "Storage & uploads",
   "settings.storage_backend": "Storage backend",
   "settings.storage_backend_help": "Configured via the STORAGE_BACKEND environment variable (read-only).",

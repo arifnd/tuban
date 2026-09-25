@@ -20,6 +20,7 @@ def defaults() -> dict[str, Any]:
         "sla_high_hours": 8,
         "sla_normal_hours": 24,
         "sla_low_hours": 72,
+        "ticket_number_prefix": "TKT",
         "upload_max_size": storage_settings.UPLOAD_MAX_SIZE,
         "allowed_extensions": sorted(ALLOWED_EXTENSIONS),
         "open_registration": True,

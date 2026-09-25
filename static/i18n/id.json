@@ -334,6 +334,8 @@
   "settings.sla_high": "Tinggi (jam)",
   "settings.sla_normal": "Normal (jam)",
   "settings.sla_low": "Rendah (jam)",
+  "settings.ticket_number_prefix": "Awalan nomor tiket",
+  "settings.ticket_number_prefix_help": "Huruf dan angka sebelum nomor tiket, misalnya TKT menghasilkan TKT-000001.",
   "settings.storage": "Penyimpanan & unggahan",
   "settings.storage_backend": "Backend penyimpanan",
   "settings.storage_backend_help": "Diatur melalui variabel lingkungan STORAGE_BACKEND (hanya baca).",

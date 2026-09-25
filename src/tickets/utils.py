@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.settings import service as settings_service
 from src.tickets.models import TicketNumberSeq
 
 BUSINESS_START = 9
@@ -42,8 +43,9 @@ def business_hours_add(start: datetime, hours: int) -> datetime:
 
 async def next_ticket_number(db: AsyncSession) -> str:
     """Atomically increment the sequence and return a ``TKT-000123`` style number."""
+    prefix = str(settings_service.get("ticket_number_prefix") or "TKT").strip().strip("-").upper() or "TKT"
     if await db.get(TicketNumberSeq, 1) is None:
         db.add(TicketNumberSeq(id=1, value=0))
         await db.flush()
     value = await db.scalar(update(TicketNumberSeq).where(TicketNumberSeq.id == 1).values(value=TicketNumberSeq.value + 1).returning(TicketNumberSeq.value))
-    return f"TKT-{int(value or 1):06d}"
+    return f"{prefix}-{int(value or 1):06d}"

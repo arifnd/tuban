@@ -82,6 +82,26 @@ async def test_invalid_settings_rejected(client: AsyncClient, db) -> None:
     assert (await client.post("/settings", data=bad_extensions)).status_code == 400
 
 
+async def test_ticket_number_prefix_saved(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    page = await client.get("/settings")
+    assert 'name="ticket_number_prefix"' in page.text
+
+    form = dict(BASE_FORM, _csrf=csrf(client.cookies), ticket_number_prefix="sup-")
+    assert (await client.post("/settings", data=form)).status_code == 303
+    assert settings_service.get("ticket_number_prefix") == "SUP"
+
+
+async def test_invalid_ticket_number_prefix_rejected(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(BASE_FORM, _csrf=csrf(client.cookies), ticket_number_prefix="###")
+    assert (await client.post("/settings", data=form)).status_code == 400
+
+
 async def test_contact_info_saved_and_shown_on_landing(client: AsyncClient, db) -> None:
     await make_user(db, "admin@example.com", UserRole.ADMIN)
     await login(client, "admin@example.com")
