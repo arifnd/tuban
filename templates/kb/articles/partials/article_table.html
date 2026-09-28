@@ -5,11 +5,11 @@
     <table class="w-full text-sm">
       <thead class="table-head">
         <tr>
-          <th class="px-3 py-2">{{ t("kb.title_label") }}</th>
-          <th class="px-3 py-2">{{ t("kb.category") }}</th>
-          {% if can_edit %}<th class="px-3 py-2">{{ t("kb.status") }}</th>{% endif %}
-          <th class="px-3 py-2">{{ t("kb.updated") }}</th>
-          <th class="px-3 py-2 text-right">{{ t("kb.views") }}</th>
+          <th scope="col" class="px-3 py-2">{{ t("kb.title_label") }}</th>
+          <th scope="col" class="px-3 py-2">{{ t("kb.category") }}</th>
+          {% if can_edit %}<th scope="col" class="px-3 py-2">{{ t("kb.status") }}</th>{% endif %}
+          <th scope="col" class="px-3 py-2">{{ t("kb.updated") }}</th>
+          <th scope="col" class="px-3 py-2 text-right">{{ t("kb.views") }}</th>
         </tr>
       </thead>
       <tbody>

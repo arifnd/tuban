@@ -35,7 +35,7 @@
         <div class="mt-2 flex flex-wrap gap-3">
           {% for color in brand_colors %}
           <label class="cursor-pointer" title="{{ color.name }}">
-            <input type="radio" name="theme_color" value="{{ color.name }}" class="peer sr-only" {% if values.theme_color == color.name %}checked{% endif %}>
+            <input type="radio" name="theme_color" value="{{ color.name }}" aria-label="{{ color.name }}" class="peer sr-only" {% if values.theme_color == color.name %}checked{% endif %}>
             <span class="block h-9 w-9 rounded-lg ring-2 ring-transparent ring-offset-2 transition peer-checked:ring-slate-900 peer-focus-visible:ring-slate-400 dark:ring-offset-slate-800 dark:peer-checked:ring-white"
                   style="background-color: {{ color.hex }}"></span>
           </label>
@@ -68,8 +68,8 @@
     <h2 class="mb-4 text-sm font-semibold text-slate-900 dark:text-white">{{ t("settings.storage") }}</h2>
     <div class="grid gap-4 sm:grid-cols-2">
       <div>
-        <label class="label">{{ t("settings.storage_backend") }}</label>
-        <input type="text" value="{{ storage_backend }}" disabled class="input opacity-60">
+        <label class="label" for="storage_backend">{{ t("settings.storage_backend") }}</label>
+        <input type="text" id="storage_backend" value="{{ storage_backend }}" disabled class="input opacity-60">
         <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t("settings.storage_backend_help") }}</p>
       </div>
       <div>
