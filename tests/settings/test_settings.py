@@ -8,7 +8,7 @@ from tests.helpers import csrf, login, make_user
 from tests.kb.helpers import make_article, make_editor
 
 BASE_FORM = {
-    "app_name": "Batik Helpdesk",
+    "app_name": "Tuban Helpdesk",
     "default_language": "id",
     "sla_urgent_hours": "4",
     "sla_high_hours": "8",
@@ -42,7 +42,7 @@ async def test_admin_can_view_and_update_settings(client: AsyncClient, db) -> No
     form.update(
         {
             "_csrf": csrf(client.cookies),
-            "app_name": "Batik Desk",
+            "app_name": "Tuban Desk",
             "default_language": "en",
             "upload_max_size_mb": "5",
             "allowed_extensions": "png, pdf",
@@ -52,7 +52,7 @@ async def test_admin_can_view_and_update_settings(client: AsyncClient, db) -> No
     resp = await client.post("/settings", data=form)
     assert resp.status_code == 303
 
-    assert settings_service.get("app_name") == "Batik Desk"
+    assert settings_service.get("app_name") == "Tuban Desk"
     assert settings_service.get("default_language") == "en"
     assert settings_service.get("upload_max_size") == 5 * 1024 * 1024
     assert settings_service.get("allowed_extensions") == ["png", "pdf"]
@@ -116,12 +116,12 @@ async def test_contact_info_saved_and_shown_on_landing(client: AsyncClient, db) 
         contact_email="support@example.com",
         contact_phone="+62 812 0000",
         contact_address="Jl. Merdeka 1",
-        social_facebook="https://facebook.com/batik",
-        social_instagram="https://instagram.com/batik",
+        social_facebook="https://facebook.com/tuban",
+        social_instagram="https://instagram.com/tuban",
     )
     assert (await client.post("/settings", data=form)).status_code == 303
     assert settings_service.get("contact_email") == "support@example.com"
-    assert settings_service.get("social_facebook") == "https://facebook.com/batik"
+    assert settings_service.get("social_facebook") == "https://facebook.com/tuban"
 
     client.cookies.clear()
     resp = await client.get("/")
@@ -129,8 +129,8 @@ async def test_contact_info_saved_and_shown_on_landing(client: AsyncClient, db) 
     assert "support@example.com" in resp.text
     assert "+62 812 0000" in resp.text
     assert "Jl. Merdeka 1" in resp.text
-    assert "https://facebook.com/batik" in resp.text
-    assert "https://instagram.com/batik" in resp.text
+    assert "https://facebook.com/tuban" in resp.text
+    assert "https://instagram.com/tuban" in resp.text
     assert "text-[#1877F2]" in resp.text
     assert "text-[#E4405F]" in resp.text
 
@@ -240,7 +240,7 @@ async def test_invalid_social_url_rejected(client: AsyncClient, db) -> None:
     await make_user(db, "admin@example.com", UserRole.ADMIN)
     await login(client, "admin@example.com")
 
-    form = dict(BASE_FORM, _csrf=csrf(client.cookies), social_facebook="facebook.com/batik")
+    form = dict(BASE_FORM, _csrf=csrf(client.cookies), social_facebook="facebook.com/tuban")
     assert (await client.post("/settings", data=form)).status_code == 400
 
 

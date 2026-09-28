@@ -59,14 +59,15 @@ EXTRA_ARTICLES = [
 ]
 
 SETTINGS = {
+    "app_name": "Tuban Helpdesk",
     "contact_email": "support@example.com",
     "contact_phone": "+62 21 555 0100",
     "contact_address": "Jl. Merdeka No. 1, Jakarta",
-    "social_facebook": "https://facebook.com/batikhelpdesk",
-    "social_instagram": "https://instagram.com/batikhelpdesk",
-    "social_x": "https://x.com/batikhelpdesk",
-    "social_linkedin": "https://linkedin.com/company/batikhelpdesk",
-    "social_youtube": "https://youtube.com/@batikhelpdesk",
+    "social_facebook": "https://facebook.com/tuban_helpdesk",
+    "social_instagram": "https://instagram.com/tuban_helpdesk",
+    "social_x": "https://x.com/tuban_helpdesk",
+    "social_linkedin": "https://linkedin.com/company/tuban_helpdesk",
+    "social_youtube": "https://youtube.com/@tuban_helpdesk",
 }
 
 # (title, subtitle, top_rgb, bottom_rgb)
@@ -191,6 +192,9 @@ async def seed() -> None:
         second = tickets[1]
         await ticket_service.assign_ticket(db, grace, second, grace)
         await ticket_service.add_comment(db, grace, second, "You can download it from Billing > Invoices.")
+
+        # Services only flush; commit once here so all seeded rows persist.
+        await db.commit()
 
     print("Seed complete.")
 

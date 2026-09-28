@@ -83,5 +83,5 @@ async def export_report(db: DbDep, _: AgentUser, report: str, format: str = "csv
     else:
         raise BadRequestError(detail="Unsupported format")
 
-    filename = f"batik-{report}-{date.today():%Y%m%d}.{extension}"
+    filename = f"tuban-{report}-{date.today():%Y%m%d}.{extension}"
     return Response(content=data, media_type=media_type, headers={"Content-Disposition": f'attachment; filename="{filename}"'})
