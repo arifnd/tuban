@@ -91,6 +91,12 @@
 
   "errors.not_found_title": "Halaman tidak ditemukan",
   "errors.not_found_desc": "Halaman yang Anda cari tidak ada atau telah dipindahkan.",
+  "errors.bad_request_title": "Permintaan tidak valid",
+  "errors.bad_request_desc": "Permintaan tidak dapat diproses.",
+  "errors.forbidden_title": "Akses ditolak",
+  "errors.forbidden_desc": "Anda tidak memiliki izin untuk melihat halaman ini.",
+  "errors.conflict_title": "Konflik",
+  "errors.conflict_desc": "Permintaan bertentangan dengan kondisi saat ini.",
   "errors.server_title": "Terjadi kesalahan",
   "errors.server_desc": "Terjadi kesalahan tak terduga. Silakan coba lagi.",
   "errors.back_home": "Kembali ke beranda",

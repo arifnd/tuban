@@ -29,6 +29,7 @@ from src.storage import router as storage_router
 from src.templating import templates
 from src.tickets import router as tickets_router
 from src.users import router as users_router
+from src.users.models import User
 from src.version import __version__
 
 logging_file = Path(__file__).resolve().parent.parent / "logging.ini"
@@ -82,6 +83,27 @@ def _wants_html(request: Request) -> bool:
     return "text/html" in request.headers.get("accept", "")
 
 
+async def _refresh_current_user(request: Request) -> None:
+    """Re-load the user in a fresh session before rendering the app shell.
+
+    On error the request session has rolled back, which expires and detaches the
+    previously loaded user; the error templates need live attributes.
+    """
+    user = getattr(request.state, "current_user", None)
+    if user is None:
+        return
+    try:
+        async with SessionFactory() as session:
+            request.state.current_user = await session.get(User, user.id)
+    except Exception:  # pragma: no cover - error paths already degraded
+        request.state.current_user = None
+
+
+async def _error_response(request: Request, template: str, status_code: int, context: dict | None = None):
+    await _refresh_current_user(request)
+    return templates.TemplateResponse(request, template, context or {}, status_code=status_code)
+
+
 @app.exception_handler(NotAuthenticated)
 async def not_authenticated_handler(request: Request, exc: NotAuthenticated):
     if _wants_html(request):
@@ -89,10 +111,22 @@ async def not_authenticated_handler(request: Request, exc: NotAuthenticated):
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
+ERROR_TEMPLATES = {
+    400: "errors/400.html",
+    403: "errors/403.html",
+    404: "errors/404.html",
+    409: "errors/409.html",
+}
+
+
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    if exc.status_code == 404 and _wants_html(request):
-        return templates.TemplateResponse(request, "errors/404.html", status_code=404)
+    if _wants_html(request) or request.headers.get("HX-Request") == "true":
+        template = ERROR_TEMPLATES.get(exc.status_code)
+        if template is not None:
+            return await _error_response(request, template, exc.status_code)
+        if 400 <= exc.status_code < 500:
+            return await _error_response(request, "errors/4xx.html", exc.status_code, {"status_code": exc.status_code})
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
@@ -100,7 +134,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 async def unhandled_exception_handler(request: Request, exc: Exception):
     logger.exception("Unhandled error on %s %s", request.method, request.url.path)
     if _wants_html(request):
-        return templates.TemplateResponse(request, "errors/500.html", status_code=500)
+        return await _error_response(request, "errors/500.html", 500)
     return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
 
 

@@ -68,6 +68,12 @@
 
   "errors.not_found_title": "Page not found",
   "errors.not_found_desc": "The page you're looking for doesn't exist or has moved.",
+  "errors.bad_request_title": "Bad request",
+  "errors.bad_request_desc": "The request could not be processed.",
+  "errors.forbidden_title": "Access denied",
+  "errors.forbidden_desc": "You don't have permission to view this page.",
+  "errors.conflict_title": "Conflict",
+  "errors.conflict_desc": "The request conflicts with the current state.",
   "errors.server_title": "Something went wrong",
   "errors.server_desc": "An unexpected error occurred. Please try again.",
   "errors.back_home": "Back to home",

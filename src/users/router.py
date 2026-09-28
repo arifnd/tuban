@@ -148,11 +148,6 @@ async def profile_update(
 ):
     name = name.strip()
     if not name:
-        return templates.TemplateResponse(
-            request,
-            "users/profile.html",
-            {"error": "Name is required"},
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
+        raise BadRequestError(detail="Name is required")
     await users_service.update_profile(db, user, name)
     return RedirectResponse("/profile", status_code=status.HTTP_303_SEE_OTHER)
