@@ -6,13 +6,9 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-from src.activity import models as activity_models  # noqa: F401
+from src import models_registry  # noqa: F401  (imports every model module)
 from src.config import settings
-from src.kb import models as kb_models  # noqa: F401
 from src.models import Base
-from src.notifications import models as notification_models  # noqa: F401
-from src.tickets import models as ticket_models  # noqa: F401
-from src.users import models as user_models  # noqa: F401
 
 config = context.config
 

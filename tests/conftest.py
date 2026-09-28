@@ -17,16 +17,11 @@ os.environ.setdefault("STORAGE_LOCAL_DIR", "./instance/test_media")
 import pytest
 from httpx2 import ASGITransport, AsyncClient
 
-from src.activity import models as activity_models  # noqa: F401
+from src import models_registry  # noqa: F401  (registers every model on Base.metadata)
 from src.database import SessionFactory, engine
-from src.kb import models as kb_models  # noqa: F401
 from src.main import app
 from src.models import Base
-from src.notifications import models as notification_models  # noqa: F401
-from src.settings import models as settings_models  # noqa: F401
 from src.settings import service as settings_service
-from src.tickets import models as ticket_models  # noqa: F401
-from src.users import models as user_models  # noqa: F401
 
 
 @pytest.fixture(autouse=True)
