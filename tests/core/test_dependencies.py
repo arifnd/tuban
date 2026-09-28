@@ -5,7 +5,7 @@ import jwt
 import pytest
 from starlette.requests import Request
 
-from src.auth.config import auth_settings
+from src.auth.config import get_auth_settings
 from src.auth.dependencies import get_current_user, optional_user
 from src.auth.exceptions import NotAuthenticated
 from src.auth.utils import create_session_token
@@ -44,7 +44,7 @@ def test_require_role() -> None:
 
 async def test_get_current_user_rejects_malformed_sub(db) -> None:
     payload = {"sub": "not-a-uuid", "csrf": "x", "iat": datetime.now(UTC), "exp": datetime.now(UTC) + timedelta(minutes=5)}
-    token = jwt.encode(payload, auth_settings.SESSION_SECRET, algorithm="HS256")
+    token = jwt.encode(payload, get_auth_settings().SESSION_SECRET, algorithm="HS256")
     request = _request([(b"cookie", f"app_session={token}".encode())])
     with pytest.raises(NotAuthenticated):
         await get_current_user(request, db)

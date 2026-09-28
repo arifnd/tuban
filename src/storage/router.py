@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from src.auth.dependencies import CurrentUser, DbDep
 from src.exceptions import NotFoundError
 from src.storage.client import MEDIA_DIR
-from src.storage.config import storage_settings
+from src.storage.config import get_storage_settings
 from src.storage.constants import IMAGE_EXTENSIONS
 from src.tickets.models import Ticket
 
@@ -16,7 +16,8 @@ router = APIRouter(tags=["storage"])
 
 
 def _media_root() -> Path:
-    return Path(storage_settings.LOCAL_DIR) if storage_settings.LOCAL_DIR else MEDIA_DIR
+    local_dir = get_storage_settings().LOCAL_DIR
+    return Path(local_dir) if local_dir else MEDIA_DIR
 
 
 def _media_response(target: Path) -> FileResponse:

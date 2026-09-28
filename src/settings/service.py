@@ -7,7 +7,7 @@ from src.activity import service as activity_service
 from src.config import settings as config_settings
 from src.settings.models import AppSetting
 from src.settings.theme import DEFAULT_COLOR
-from src.storage.config import storage_settings
+from src.storage.config import get_storage_settings
 from src.storage.constants import ALLOWED_EXTENSIONS
 
 # Single source of truth for runtime setting defaults. Routers, schemas and
@@ -33,7 +33,7 @@ def defaults() -> dict[str, Any]:
         "ticket_number_prefix": DEFAULT_TICKET_NUMBER_PREFIX,
         # Authoritative upload limit lives in StorageConfig; the DB-backed setting
         # overrides it at runtime once an admin saves a value.
-        "upload_max_size": storage_settings.UPLOAD_MAX_SIZE,
+        "upload_max_size": get_storage_settings().UPLOAD_MAX_SIZE,
         "allowed_extensions": sorted(ALLOWED_EXTENSIONS),
         "open_registration": True,
         "require_approval": False,

@@ -5,7 +5,7 @@ from fastapi.responses import RedirectResponse
 from pydantic import ValidationError
 
 from src.auth import service as auth_service
-from src.auth.config import auth_settings
+from src.auth.config import get_auth_settings
 from src.auth.constants import LOGIN_URL, OAUTH_STATE_COOKIE_NAME, OAUTH_STATE_MAX_AGE
 from src.auth.dependencies import DbDep, OptionalUser
 from src.auth.exceptions import OAuthFailed, UserDeactivated
@@ -44,7 +44,7 @@ async def login(request: Request, user: OptionalUser):
             max_age=OAUTH_STATE_MAX_AGE,
             httponly=True,
             samesite="lax",
-            secure=auth_settings.SECURE_COOKIES,
+            secure=get_auth_settings().SECURE_COOKIES,
             path="/",
         )
         return response
@@ -52,7 +52,7 @@ async def login(request: Request, user: OptionalUser):
         request,
         "auth/login.html",
         {
-            "dev_login_enabled": auth_settings.dev_login_enabled,
+            "dev_login_enabled": get_auth_settings().dev_login_enabled,
             "error": request.query_params.get("error"),
         },
     )
@@ -94,7 +94,7 @@ async def callback(request: Request, db: DbDep):
 
 @router.post("/dev-login")
 async def dev_login(request: Request, db: DbDep):
-    if not auth_settings.dev_login_enabled:
+    if not get_auth_settings().dev_login_enabled:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
     content_type = request.headers.get("content-type", "").split(";")[0].lower()
     if content_type == FORM_CONTENT_TYPE:

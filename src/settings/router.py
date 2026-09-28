@@ -8,7 +8,7 @@ from src.forms import form_bool, form_str
 from src.settings import service as settings_service
 from src.settings import theme as theme_palettes
 from src.settings.schemas import SettingsUpdate
-from src.storage.config import storage_settings
+from src.storage.config import get_storage_settings
 from src.templating import templates
 from src.users.dependencies import AdminUser
 
@@ -27,7 +27,7 @@ async def settings_page(request: Request, db: DbDep, _: AdminUser):
             "values": values,
             "languages": LANGUAGES,
             "brand_colors": theme_palettes.options(),
-            "storage_backend": storage_settings.BACKEND,
+            "storage_backend": get_storage_settings().BACKEND,
             "upload_max_size_mb": round(int(values["upload_max_size"]) / (1024 * 1024)),
             "saved": request.query_params.get("saved") == "1",
         },

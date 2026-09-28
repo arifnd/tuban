@@ -48,6 +48,14 @@ and `test` additionally show an email dev-login on `/auth/login` when
 | `make test` / `make coverage` | pytest |
 | `make up` / `make down` / `make logs` | Docker Compose |
 
+## Configuration
+
+Settings come from environment variables / `.env` (see `.env.example`). `src/config.py`
+holds the root `Settings`; `AUTH_*` and `STORAGE_*` domain settings are exposed through
+cached `get_auth_settings()` / `get_storage_settings()` accessors so nothing is
+instantiated at import time. `STORAGE_BACKEND` is validated (`local` or `s3`) at startup,
+so a typo fails fast instead of at first upload.
+
 ## Database
 
 - **Dev default**: `sqlite+aiosqlite:///./instance/tuban.db`

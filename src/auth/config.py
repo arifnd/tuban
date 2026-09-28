@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from src.config import settings
@@ -46,4 +48,6 @@ class AuthConfig(BaseSettings):
         return settings.is_local and self.DEV_LOGIN_ENABLED is True
 
 
-auth_settings = AuthConfig()
+@lru_cache
+def get_auth_settings() -> AuthConfig:
+    return AuthConfig()

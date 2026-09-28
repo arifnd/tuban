@@ -7,7 +7,7 @@ from starlette.datastructures import Headers, UploadFile
 from src.exceptions import BadRequestError, PayloadTooLargeError
 from src.storage import service as storage_service
 from src.storage.client import LocalStorage, S3Storage, get_storage, new_key
-from src.storage.config import storage_settings
+from src.storage.config import get_storage_settings
 from tests.tickets.helpers import login, make_user
 
 
@@ -61,8 +61,8 @@ async def test_s3_storage_with_fake_client() -> None:
 
 
 def test_get_storage_s3(monkeypatch) -> None:
-    monkeypatch.setattr(storage_settings, "BACKEND", "s3")
-    monkeypatch.setattr(storage_settings, "AWS_S3_BUCKET", "bucket")
+    monkeypatch.setattr(get_storage_settings(), "BACKEND", "s3")
+    monkeypatch.setattr(get_storage_settings(), "AWS_S3_BUCKET", "bucket")
     assert isinstance(get_storage(), S3Storage)
 
 
@@ -88,7 +88,7 @@ async def test_save_upload_rejects_empty_file() -> None:
 
 
 async def test_save_upload_rejects_oversized(monkeypatch, tmp_path) -> None:
-    monkeypatch.setattr(storage_settings, "UPLOAD_MAX_SIZE", 2)
+    monkeypatch.setattr(get_storage_settings(), "UPLOAD_MAX_SIZE", 2)
     with pytest.raises(PayloadTooLargeError):
         await storage_service.save_upload(_upload("note.txt", b"too large"), "kb/1", backend=LocalStorage(root=tmp_path))
 

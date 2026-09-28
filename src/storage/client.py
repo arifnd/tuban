@@ -6,7 +6,7 @@ from pathlib import Path
 import boto3
 
 from src.config import PROJECT_ROOT
-from src.storage.config import storage_settings
+from src.storage.config import StorageConfig, get_storage_settings
 
 MEDIA_DIR = PROJECT_ROOT / "media"
 
@@ -32,7 +32,8 @@ class StorageBackend(ABC):
 
 class LocalStorage(StorageBackend):
     def __init__(self, root: Path | None = None, base_url: str = "/media") -> None:
-        self.root = root or (Path(storage_settings.LOCAL_DIR) if storage_settings.LOCAL_DIR else MEDIA_DIR)
+        local_dir = get_storage_settings().LOCAL_DIR
+        self.root = root or (Path(local_dir) if local_dir else MEDIA_DIR)
         self.base_url = base_url.rstrip("/")
 
     async def save(self, content: bytes, key: str) -> str:
@@ -47,7 +48,8 @@ class LocalStorage(StorageBackend):
 
 
 class S3Storage(StorageBackend):
-    def __init__(self, config=storage_settings, client=None) -> None:
+    def __init__(self, config: StorageConfig | None = None, client=None) -> None:
+        config = config or get_storage_settings()
         self.bucket = config.AWS_S3_BUCKET
         if not self.bucket:
             raise RuntimeError("STORAGE_AWS_S3_BUCKET is required when STORAGE_BACKEND=s3")
@@ -73,6 +75,6 @@ class S3Storage(StorageBackend):
 
 
 def get_storage() -> StorageBackend:
-    if storage_settings.BACKEND == "s3":
+    if get_storage_settings().BACKEND == "s3":
         return S3Storage()
     return LocalStorage()

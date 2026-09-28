@@ -68,6 +68,19 @@ def test_config_normalizes_database_urls() -> None:
     assert prod.is_production is True
 
 
+def test_storage_backend_validated() -> None:
+    from pydantic import ValidationError
+
+    from src.storage.config import StorageConfig
+
+    StorageConfig(BACKEND="s3")
+    try:
+        StorageConfig(BACKEND="ftp")
+    except ValidationError:
+        return
+    raise AssertionError("StorageConfig should reject an unknown backend")
+
+
 def test_business_hours_edge_cases() -> None:
     from datetime import UTC, datetime
 
