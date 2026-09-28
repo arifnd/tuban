@@ -47,6 +47,30 @@ def t(key: str) -> str:
     return _load_translations(language).get(key, key)
 
 
+def _navigation(request: Request, user: Any) -> list[dict[str, Any]]:
+    path = request.url.path
+    role = getattr(user, "role", None)
+    is_admin = role == "admin"
+    is_agent = role in ("admin", "agent")
+    items = [
+        ("/dashboard", t("nav.dashboard"), "home", True),
+        ("/kb", t("nav.kb"), "book-open", True),
+        ("/tickets", t("nav.tickets"), "ticket", True),
+        ("/reports", t("nav.reports"), "chart", is_agent),
+        ("/users", t("nav.users"), "users", is_admin),
+        ("/activity", t("nav.activity"), "activity", is_admin),
+        ("/carousel", t("nav.carousel"), "image", is_admin),
+        ("/settings", t("nav.settings"), "settings", is_admin),
+    ]
+    navigation: list[dict[str, Any]] = []
+    for href, label, icon_name, show in items:
+        if not show:
+            continue
+        active = (href == "/dashboard" and (path == "/" or path.startswith("/dashboard"))) or (href != "/dashboard" and path.startswith(href))
+        navigation.append({"href": href, "label": label, "icon": icon_name, "active": active})
+    return navigation
+
+
 def _context(request: Request) -> dict[str, Any]:
     current_user = getattr(request.state, "current_user", None)
     theme_color = settings_service.get("theme_color") or theme_palettes.DEFAULT_COLOR
@@ -54,6 +78,8 @@ def _context(request: Request) -> dict[str, Any]:
         "current_user": current_user,
         "csrf": getattr(request.state, "csrf", None),
         "csp_nonce": getattr(request.state, "csp_nonce", ""),
+        "current_language": settings_service.get("default_language") or DEFAULT_LANG,
+        "navigation": _navigation(request, current_user),
         "is_admin": bool(getattr(current_user, "role", None) == "admin"),
         "current_year": datetime.now().year,
         "unread_notifications": getattr(request.state, "unread_notifications", 0),

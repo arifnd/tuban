@@ -1,0 +1,20 @@
+{# Renders the shared navigation list. Set `variant` to "sidebar", "navbar" or
+   "mobile" and optionally `close_expr` (an Alpine expression to run on click). #}
+{% from "partials/icons.html" import icon with context %}
+{% set active_class = "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-white" %}
+{% set inactive_class = "text-slate-600 hover:bg-slate-50 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white" %}
+{% for item in navigation %}
+  {% if variant == "sidebar" %}
+  <a href="{{ item.href }}"{% if close_expr %} @click="{{ close_expr }}"{% endif %} class="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium {{ active_class if item.active else inactive_class }}"{% if item.active %} aria-current="page"{% endif %}>
+    {{ icon(item.icon, "w-5 h-5") }} {{ item.label }}
+  </a>
+  {% elif variant == "navbar" %}
+  <a href="{{ item.href }}" class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition {{ active_class if item.active else inactive_class }}"{% if item.active %} aria-current="page"{% endif %}>
+    {{ icon(item.icon, "w-4 h-4") }} {{ item.label }}
+  </a>
+  {% else %}
+  <a href="{{ item.href }}"{% if close_expr %} @click="{{ close_expr }}"{% endif %} class="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-medium {{ active_class if item.active else inactive_class }}"{% if item.active %} aria-current="page"{% endif %}>
+    {{ icon(item.icon, "w-5 h-5") }} {{ item.label }}
+  </a>
+  {% endif %}
+{% endfor %}

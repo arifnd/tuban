@@ -170,6 +170,37 @@ async def test_landing_shows_only_public_articles(client: AsyncClient, db) -> No
     assert "Draft Notes" not in resp.text
 
 
+async def test_html_lang_follows_default_language(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+    form = dict(BASE_FORM, _csrf=csrf(client.cookies), default_language="en")
+    assert (await client.post("/settings", data=form)).status_code == 303
+
+    client.cookies.clear()
+    resp = await client.get("/")
+    assert resp.status_code == 200
+    assert '<html lang="en"' in resp.text
+
+
+async def test_navigation_renders_in_all_layouts(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+    admin_page = await client.get("/dashboard")
+    assert 'href="/settings"' in admin_page.text
+    assert 'aria-current="page"' in admin_page.text
+
+    client.cookies.clear()
+    await make_user(db, "agent@example.com", UserRole.AGENT)
+    await login(client, "agent@example.com")
+    agent_page = await client.get("/dashboard")
+    assert 'href="/tickets"' in agent_page.text
+    assert 'href="/settings"' not in agent_page.text
+
+    client.cookies.clear()
+    public_page = await client.get("/")
+    assert 'href="/kb"' in public_page.text
+
+
 def test_defaults_are_centralized() -> None:
     from src.settings.theme import DEFAULT_COLOR
     from src.templating import DEFAULT_LANG

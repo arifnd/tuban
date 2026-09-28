@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="id" class="h-full">
+<html lang="{{ current_language }}" class="h-full">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -87,23 +87,9 @@
             </div>
           </div>
           {% from "partials/macros.html" import csrf_input with context %}
-          {% set path = request.url.path %}
-          {% for href, label, icon_name in [
-            ("/dashboard", t("nav.dashboard"), "home"),
-            ("/kb", t("nav.kb"), "book-open"),
-            ("/tickets", t("nav.tickets"), "ticket"),
-            ("/reports", t("nav.reports"), "chart"),
-            ("/users", t("nav.users"), "users"),
-            ("/activity", t("nav.activity"), "activity"),
-            ("/carousel", t("nav.carousel"), "image"),
-            ("/settings", t("nav.settings"), "settings"),
-          ] %}
-          {% set is_active = (href == "/dashboard" and (path == "/" or path.startswith("/dashboard"))) or (href != "/dashboard" and path.startswith(href)) %}
-          <a href="{{ href }}" @click="sidebar_open = false"
-             class="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-medium {% if is_active %}bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-white{% else %}text-slate-600 hover:bg-slate-50 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white{% endif %}">
-            {{ icon(icon_name, "w-5 h-5") }} {{ label }}
-          </a>
-          {% endfor %}
+          {% set variant = "mobile" %}
+          {% set close_expr = "sidebar_open = false" %}
+          {% include "partials/nav_list.html" %}
           <form method="post" action="/auth/logout" data-confirm="{{ t('nav.confirm_sign_out') }}" data-confirm-label="{{ t('nav.sign_out') }}" class="mt-2 border-t border-slate-100 pt-2 dark:border-slate-800">
             {{ csrf_input() }}
             <button type="submit" class="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40">

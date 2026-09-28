@@ -1,19 +1,4 @@
 {% from "partials/icons.html" import icon with context %}
-{% set path = request.url.path %}
-{% set nav_links = [
-  ("/dashboard", t("nav.dashboard"), "home"),
-  ("/kb", t("nav.kb"), "book-open"),
-  ("/tickets", t("nav.tickets"), "ticket"),
-  ("/reports", t("nav.reports"), "chart"),
-  ("/users", t("nav.users"), "users"),
-  ("/activity", t("nav.activity"), "activity"),
-  ("/carousel", t("nav.carousel"), "image"),
-  ("/settings", t("nav.settings"), "settings"),
-] %}
-{% macro side_link_classes(href) %}
-  {% set is_active = (href == "/dashboard" and (path == "/" or path.startswith("/dashboard"))) or (href != "/dashboard" and path.startswith(href)) %}
-  {% if is_active %}bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-white{% else %}text-slate-600 hover:bg-slate-50 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white{% endif %}
-{% endmacro %}
 <aside class="hidden w-60 shrink-0 flex-col border-r border-slate-200 bg-white md:flex dark:border-slate-800 dark:bg-slate-900">
   <div class="flex h-14 shrink-0 items-center gap-2 border-b border-slate-200 px-4 dark:border-slate-800">
     <a href="/" class="flex items-center gap-2 text-brand-900 dark:text-white">
@@ -23,10 +8,8 @@
   </div>
 
   <nav class="flex-1 space-y-1 overflow-y-auto p-3">
-    {% for href, label, icon_name in nav_links %}
-    <a href="{{ href }}" @click="sidebar_open = false" class="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium {{ side_link_classes(href) }}">
-      {{ icon(icon_name, "w-5 h-5") }} {{ label }}
-    </a>
-    {% endfor %}
+    {% set variant = "sidebar" %}
+    {% set close_expr = "sidebar_open = false" %}
+    {% include "partials/nav_list.html" %}
   </nav>
 </aside>
