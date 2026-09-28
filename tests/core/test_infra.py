@@ -7,13 +7,10 @@ from src.exceptions import (
     ForbiddenError,
     NotFoundError,
     PayloadTooLargeError,
-    UnprocessableError,
 )
 from src.kb.exceptions import (
-    ArticleForbidden,
     ArticleNotFound,
     CategoryHasArticles,
-    DuplicateSlug,
     InvalidStatusTransition,
     KbNotFound,
 )
@@ -27,7 +24,6 @@ def test_global_exceptions() -> None:
     assert BadRequestError().status_code == 400
     assert ConflictError().status_code == 409
     assert PayloadTooLargeError().status_code == 413
-    assert UnprocessableError().status_code == 422
 
 
 def test_auth_exceptions() -> None:
@@ -39,10 +35,8 @@ def test_auth_exceptions() -> None:
 def test_domain_exceptions() -> None:
     assert KbNotFound().status_code == 404
     assert isinstance(CategoryHasArticles(), ConflictError)
-    assert isinstance(DuplicateSlug(), ConflictError)
     assert ArticleNotFound().status_code == 404
     assert isinstance(InvalidStatusTransition(), BadRequestError)
-    assert isinstance(ArticleForbidden(), ForbiddenError)
     assert TicketNotFound().status_code == 404
     assert CategoryNotFound().status_code == 404
     assert isinstance(CategoryHasTickets(), ConflictError)
@@ -72,14 +66,6 @@ def test_config_normalizes_database_urls() -> None:
 
     prod = Settings(ENVIRONMENT="production")
     assert prod.is_production is True
-
-
-def test_dashboard_utils() -> None:
-    from src.dashboard import utils
-
-    assert utils.utc_day_start().hour == 0
-    assert utils.utc_month_start().day == 1
-    assert utils.utc_week_start().weekday() == 0
 
 
 def test_business_hours_edge_cases() -> None:

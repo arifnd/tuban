@@ -12,7 +12,6 @@ from src.users.dependencies import require_role
 from src.users.models import User, UserRole
 
 TicketEditor = Annotated[User, Depends(require_role("admin", "agent"))]
-TicketAdmin = Annotated[User, Depends(require_role("admin"))]
 
 
 async def get_ticket_by_id(db: DbDep, ticket_id: uuid.UUID) -> Ticket:

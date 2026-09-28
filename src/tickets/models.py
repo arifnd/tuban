@@ -37,11 +37,6 @@ class TicketPriority(StrEnum):
     URGENT = "urgent"
 
 
-class TicketSource(StrEnum):
-    WEB = "web"
-    EMAIL = "email"
-
-
 class TicketCategory(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __tablename__ = "ticket_categories"
 
@@ -67,7 +62,6 @@ class Ticket(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     category_id: Mapped[uuid.UUID | None] = mapped_column(Uuid(as_uuid=True), ForeignKey("ticket_categories.id"), index=True, nullable=True)
     status: Mapped[TicketStatus] = mapped_column(enum_col(TicketStatus, "ticket_status"), default=TicketStatus.OPEN, nullable=False)
     priority: Mapped[TicketPriority] = mapped_column(enum_col(TicketPriority, "ticket_priority"), default=TicketPriority.NORMAL, nullable=False)
-    source: Mapped[TicketSource] = mapped_column(enum_col(TicketSource, "ticket_source"), default=TicketSource.WEB, nullable=False)
     sla_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True, nullable=True)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

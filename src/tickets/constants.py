@@ -1,5 +1,5 @@
 from src.settings import service as settings_service
-from src.tickets.models import TicketPriority, TicketSource, TicketStatus
+from src.tickets.models import TicketPriority, TicketStatus
 from src.users.models import UserRole
 
 PAGE_SIZE = 10
@@ -47,6 +47,5 @@ __all__ = [
     "SLA_DUE_SOON_HOURS",
     "STATUS_TRANSITIONS",
     "TicketPriority",
-    "TicketSource",
     "TicketStatus",
 ]

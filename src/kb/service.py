@@ -137,13 +137,6 @@ async def delete_category(db: AsyncSession, actor: User, category: KbCategory) -
     await db.flush()
 
 
-async def reorder_categories(db: AsyncSession, actor: User, ordered_ids: list[uuid.UUID]) -> None:
-    for index, category_id in enumerate(ordered_ids):
-        await db.execute(update(KbCategory).where(KbCategory.id == category_id).values(position=index).execution_options(synchronize_session=False))
-    await activity_service.log(db, user_id=actor.id, action="update", entity_type="kb_categories", new_data={"order": [str(i) for i in ordered_ids]})
-    await db.flush()
-
-
 # --------------------------------------------------------------------------- #
 # Articles
 # --------------------------------------------------------------------------- #
@@ -530,12 +523,6 @@ async def submit_feedback(db: AsyncSession, user: User, article: KbArticle, *, i
     return existing
 
 
-def feedback_stats(article: KbArticle) -> dict:
-    entries = article.feedback or []
-    helpful = sum(1 for entry in entries if entry.is_helpful)
-    return {"helpful": helpful, "total": len(entries)}
-
-
 async def feedback_summary(db: AsyncSession, article_id: uuid.UUID) -> dict:
     row = (
         await db.execute(
@@ -601,7 +588,6 @@ __all__ = [
     "delete_attachment",
     "delete_category",
     "delete_tag",
-    "feedback_stats",
     "feedback_summary",
     "get_user_feedback",
     "get_article_by_id",
@@ -622,7 +608,6 @@ __all__ = [
     "list_tags",
     "popular_articles",
     "recent_articles",
-    "reorder_categories",
     "restore_revision",
     "search_articles",
     "set_article_tags",
