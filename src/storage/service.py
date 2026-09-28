@@ -28,6 +28,14 @@ def max_upload_size() -> int:
     return int(settings_service.get("upload_max_size"))
 
 
+def format_size(num_bytes: int) -> str:
+    """Human-readable size, e.g. ``128MB`` or ``1.5GB``."""
+    for suffix, factor in (("GB", 1024**3), ("MB", 1024**2), ("KB", 1024)):
+        if num_bytes >= factor:
+            return f"{num_bytes / factor:g}{suffix}"
+    return f"{num_bytes}B"
+
+
 async def read_upload(upload: UploadFile) -> bytes:
     buffer = bytearray()
     limit = max_upload_size()

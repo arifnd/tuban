@@ -71,6 +71,18 @@ async def test_save_upload_rejects_bad_extension() -> None:
         await storage_service.save_upload(_upload("evil.exe", b"MZ"), "kb/1")
 
 
+def test_upload_defaults_to_128mb() -> None:
+    from src.storage.config import StorageConfig
+
+    assert StorageConfig.model_fields["UPLOAD_MAX_SIZE"].default == 128 * 1024 * 1024
+
+
+def test_format_size() -> None:
+    assert storage_service.format_size(128 * 1024 * 1024) == "128MB"
+    assert storage_service.format_size(1024) == "1KB"
+    assert storage_service.format_size(512) == "512B"
+
+
 def test_allowed_extensions_intersects_safe_set(monkeypatch) -> None:
     from src.settings import service as settings_service
 

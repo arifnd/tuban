@@ -4,34 +4,67 @@
 {% block content %}
 <div class="mx-auto w-full max-w-2xl">
   <h1 class="mb-4 text-xl font-semibold text-slate-900 dark:text-white">{{ t("tickets.new") }}</h1>
-  <form method="post" action="/tickets" class="card space-y-4 p-6">
+  <form method="post" action="/tickets" enctype="multipart/form-data" class="card space-y-4 p-6" novalidate>
     {{ csrf_input() }}
-    <div>
-      <label class="label" for="subject">{{ t("tickets.subject") }}</label>
-      <input type="text" id="subject" name="subject" required minlength="3" class="input">
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label class="label" for="requester_name">{{ t("tickets.name") }}</label>
+        <input type="text" id="requester_name" value="{{ requester_name }}" disabled class="input cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+      </div>
+      <div>
+        <label class="label" for="requester_email">{{ t("tickets.email") }}</label>
+        <input type="email" id="requester_email" value="{{ requester_email }}" disabled class="input cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+      </div>
     </div>
     <div>
-      <label class="label" for="description">{{ t("tickets.description") }}</label>
-      <textarea id="description" name="description" rows="6" class="input"></textarea>
+      <label class="label" for="subject">{{ t("tickets.subject") }} <span class="text-red-600 dark:text-red-400">*</span></label>
+      <input type="text" id="subject" name="subject" required minlength="3" value="{{ values.subject or '' }}"
+             class="input{% if errors.subject %} border-red-500{% endif %}">
+      {% if errors.subject %}
+      <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ t(errors.subject) }}</p>
+      {% endif %}
     </div>
     <div class="grid gap-4 sm:grid-cols-2">
+      {% set selected_category = values.category_id or '' %}
       <div>
         <label class="label" for="category_id">{{ t("tickets.category") }}</label>
         <select id="category_id" name="category_id" class="input">
           <option value="">{{ t("tickets.all_categories") }}</option>
           {% for category in categories %}
-          <option value="{{ category.id }}">{{ category.name }}</option>
+          <option value="{{ category.id }}" {% if category.id|string == selected_category %}selected{% endif %}>{{ category.name }}</option>
           {% endfor %}
         </select>
       </div>
+      {% set selected_priority = values.priority or 'normal' %}
       <div>
         <label class="label" for="priority">{{ t("tickets.priority") }}</label>
-        <select id="priority" name="priority" class="input">
+        <select id="priority" name="priority" class="input{% if errors.priority %} border-red-500{% endif %}">
           {% for p in priorities %}
-          <option value="{{ p.value }}" {% if p.value == "normal" %}selected{% endif %}>{{ t("tickets.priority_" ~ p.value) }}</option>
+          <option value="{{ p.value }}" {% if p.value == selected_priority %}selected{% endif %}>{{ t("tickets.priority_" ~ p.value) }}</option>
           {% endfor %}
         </select>
+        {% if errors.priority %}
+        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ t(errors.priority) }}</p>
+        {% endif %}
       </div>
+    </div>
+    <div>
+      <label class="label" for="description">{{ t("tickets.description") }}</label>
+      <textarea id="description" name="description" rows="6" class="input">{{ values.description or '' }}</textarea>
+    </div>
+    <div x-data="{ rows: [0], next: 1 }">
+      <label class="label">{{ t("tickets.attachments") }}</label>
+      <template x-for="row in rows" :key="row">
+        <div class="mt-1 flex items-center gap-2">
+          <input type="file" name="attachments" class="input mt-0">
+          <button type="button" class="btn btn-secondary shrink-0" x-show="rows.length > 1" @click="rows.splice(rows.indexOf(row), 1)">{{ t("tickets.remove") }}</button>
+        </div>
+      </template>
+      <button type="button" class="btn btn-secondary mt-2" @click="rows.push(next++)">+ {{ t("tickets.add_attachment") }}</button>
+      {% if errors.attachments %}
+      <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ t(errors.attachments) }}</p>
+      {% endif %}
+      <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t("tickets.attachment_hint").format(size=max_upload_size_text) }}</p>
     </div>
     <div class="flex justify-end gap-2">
       <a href="/tickets" class="btn btn-secondary">{{ t("tickets.cancel") }}</a>

@@ -10,7 +10,7 @@ class StorageConfig(BaseSettings):
     BACKEND: Literal["local", "s3"] = "local"
     # Authoritative default for the upload size cap. Runtime settings
     # (src/settings/service.defaults) seed from this value and may override it.
-    UPLOAD_MAX_SIZE: int = 20 * 1024 * 1024
+    UPLOAD_MAX_SIZE: int = 128 * 1024 * 1024
     LOCAL_DIR: str = ""
 
     AWS_ACCESS_KEY_ID: str = ""

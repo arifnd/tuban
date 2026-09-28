@@ -71,6 +71,39 @@ async def test_comment_with_attachment(client: AsyncClient, db) -> None:
     assert any(attachment.comment_id is not None for attachment in ticket.attachments)
 
 
+async def test_create_ticket_with_attachments(client: AsyncClient, db) -> None:
+    await make_user(db, "u@example.com")
+    await login(client, "u@example.com")
+
+    resp = await client.post(
+        "/tickets",
+        data={"_csrf": csrf(client.cookies), "subject": "Ticket with files"},
+        files=[
+            ("attachments", ("photo.png", b"pngbytes", "image/png")),
+            ("attachments", ("report.pdf", b"pdfbytes", "application/pdf")),
+        ],
+    )
+    assert resp.status_code == 303
+
+    db.expire_all()
+    ticket = (await db.execute(select(Ticket).options(selectinload(Ticket.attachments)).where(Ticket.subject == "Ticket with files"))).scalar_one()
+    assert sorted(attachment.file_name for attachment in ticket.attachments) == ["photo.png", "report.pdf"]
+
+
+async def test_create_ticket_rejects_blocked_attachment_inline(client: AsyncClient, db) -> None:
+    await make_user(db, "u@example.com")
+    await login(client, "u@example.com")
+
+    resp = await client.post(
+        "/tickets",
+        data={"_csrf": csrf(client.cookies), "subject": "Blocked file"},
+        files=[("attachments", ("evil.exe", b"MZ", "application/octet-stream"))],
+    )
+    assert resp.status_code == 400
+    assert "Tipe file tidak didukung" in resp.text
+    assert (await db.execute(select(Ticket).where(Ticket.subject == "Blocked file"))).scalar_one_or_none() is None
+
+
 async def test_ticket_detail_shows_attachments(client: AsyncClient, db) -> None:
     requester = await make_user(db, "u@example.com")
     ticket = await make_ticket(db, requester)

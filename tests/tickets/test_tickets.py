@@ -1,6 +1,7 @@
 from httpx2 import AsyncClient
 from sqlalchemy import select
 
+from src.storage import service as storage_service
 from src.tickets.models import Ticket, TicketPriority, TicketStatus
 from src.users.models import UserRole
 from tests.helpers import csrf, login, make_user
@@ -23,6 +24,33 @@ async def test_create_ticket_sets_defaults(client: AsyncClient, db) -> None:
     assert ticket.priority == TicketPriority.HIGH
     assert ticket.ticket_number.startswith("TKT-")
     assert ticket.sla_due_at is not None
+
+
+async def test_new_ticket_form_shows_requester_and_attachment_hint(client: AsyncClient, db) -> None:
+    await make_user(db, "u@example.com")
+    await login(client, "u@example.com")
+
+    resp = await client.get("/tickets/new")
+    assert resp.status_code == 200
+    assert 'value="u@example.com"' in resp.text
+    assert "disabled" in resp.text
+    assert storage_service.format_size(storage_service.max_upload_size()) in resp.text
+    assert 'type="file"' in resp.text
+    assert 'name="attachments"' in resp.text
+
+
+async def test_create_ticket_inline_errors(client: AsyncClient, db) -> None:
+    await make_user(db, "u@example.com")
+    await login(client, "u@example.com")
+
+    resp = await client.post("/tickets", data={"_csrf": csrf(client.cookies), "subject": "Hi"})
+    assert resp.status_code == 400
+    assert "Subjek minimal 3 karakter" in resp.text
+    assert 'value="Hi"' in resp.text
+
+    resp = await client.post("/tickets", data={"_csrf": csrf(client.cookies), "subject": "Valid subject", "priority": "bogus"})
+    assert resp.status_code == 400
+    assert "Prioritas tidak valid" in resp.text
 
 
 async def test_invalid_priority_rejected(client: AsyncClient, db) -> None:

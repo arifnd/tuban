@@ -9,6 +9,7 @@ from src.exceptions import BadRequestError
 from src.forms import form_bool, form_int, form_str, parse_enum, parse_uuid
 from src.kb import markdown as markdown_utils
 from src.pagination import Page, clamp_per_page, paginate
+from src.storage import service as storage_service
 from src.templating import templates
 from src.tickets import service as ticket_service
 from src.tickets.constants import PAGE_SIZE
@@ -115,28 +116,66 @@ async def ticket_list_partial(
     return templates.TemplateResponse(request, "tickets/partials/list.html", context)
 
 
+_ATTACHMENT_ERROR_KEYS = {
+    "Unsupported file type": "tickets.error_file_type",
+    "File exceeds the upload size limit": "tickets.error_file_size",
+    "Empty file": "tickets.error_file_empty",
+    "Missing filename": "tickets.error_file_type",
+}
+
+
+async def _form_context(db, user, *, errors: dict | None = None, values: dict | None = None) -> dict:
+    return {
+        "categories": await ticket_service.list_categories(db),
+        "priorities": TicketPriority,
+        "errors": errors or {},
+        "values": values or {},
+        "requester_name": user.name,
+        "requester_email": user.email,
+        "max_upload_size_text": storage_service.format_size(storage_service.max_upload_size()),
+    }
+
+
 @router.get("/new")
 async def ticket_new(request: Request, db: DbDep, user: CurrentUser):
-    return templates.TemplateResponse(request, "tickets/form.html", {"categories": await ticket_service.list_categories(db), "priorities": TicketPriority})
+    return templates.TemplateResponse(request, "tickets/form.html", await _form_context(db, user))
 
 
 @router.post("")
 async def ticket_create(request: Request, db: DbDep, user: CurrentUser):
     form = await request.form()
-    subject = form_str(form, "subject")
-    if len(subject) < 3:
-        raise BadRequestError(detail="Subject must be at least 3 characters")
-    priority = parse_enum(TicketPriority, form.get("priority") or "normal", None)
+    values = {
+        "subject": form_str(form, "subject"),
+        "description": form_str(form, "description"),
+        "category_id": str(form.get("category_id") or ""),
+        "priority": str(form.get("priority") or "normal"),
+    }
+    errors: dict[str, str] = {}
+    if len(values["subject"]) < 3:
+        errors["subject"] = "tickets.error_subject_short"
+    priority = parse_enum(TicketPriority, values["priority"], None)
     if priority is None:
-        raise BadRequestError(detail="Invalid priority")
+        errors["priority"] = "tickets.error_priority_invalid"
+    if errors:
+        return templates.TemplateResponse(request, "tickets/form.html", await _form_context(db, user, errors=errors, values=values), status_code=400)
+
     ticket = await ticket_service.create_ticket(
         db,
         user,
-        subject=subject,
-        description=form_str(form, "description"),
-        category_id=parse_uuid(form.get("category_id")),
+        subject=values["subject"],
+        description=values["description"],
+        category_id=parse_uuid(values["category_id"]),
         priority=priority,
     )
+    try:
+        for upload in form.getlist("attachments"):
+            if isinstance(upload, UploadFile) and upload.filename:
+                await ticket_service.add_attachment(db, user, ticket, upload)
+    except BadRequestError as exc:
+        await db.rollback()
+        await db.refresh(user)
+        errors["attachments"] = _ATTACHMENT_ERROR_KEYS.get(exc.detail, "tickets.error_file_type")
+        return templates.TemplateResponse(request, "tickets/form.html", await _form_context(db, user, errors=errors, values=values), status_code=400)
     return RedirectResponse(f"/tickets/{ticket.id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
