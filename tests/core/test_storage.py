@@ -71,6 +71,17 @@ async def test_save_upload_rejects_bad_extension() -> None:
         await storage_service.save_upload(_upload("evil.exe", b"MZ"), "kb/1")
 
 
+def test_allowed_extensions_intersects_safe_set(monkeypatch) -> None:
+    from src.settings import service as settings_service
+
+    monkeypatch.setattr(
+        settings_service,
+        "get",
+        lambda key: ["png", "html", "svg", "js"] if key == "allowed_extensions" else None,
+    )
+    assert storage_service.allowed_extensions() == {"png"}
+
+
 async def test_save_upload_rejects_empty_file() -> None:
     with pytest.raises(BadRequestError):
         await storage_service.save_upload(_upload("note.txt", b""), "kb/1")

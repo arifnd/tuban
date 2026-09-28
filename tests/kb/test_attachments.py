@@ -39,6 +39,32 @@ async def test_upload_and_media_authorization(client: AsyncClient, db) -> None:
     resp = await client.get(f"/media/{key}")
     assert resp.status_code == 200
     assert resp.content == b"hello world"
+    assert resp.headers["content-disposition"].startswith("attachment")
+    assert resp.headers["content-type"] == "application/octet-stream"
+
+
+async def test_image_media_served_inline(client: AsyncClient, db) -> None:
+    editor = await make_editor(db, "editor@example.com")
+    article = await make_article(db, editor, title="With image", status=KbArticleStatus.PUBLISHED, visibility=KbArticleVisibility.PUBLIC)
+    article_id = article.id
+    slug = article.slug
+
+    await login(client, "editor@example.com")
+    resp = await client.post(
+        f"/kb/articles/{slug}/attachments",
+        data={"_csrf": csrf(client.cookies)},
+        files={"file": ("photo.png", b"\x89PNG\r\n\x1a\n", "image/png")},
+    )
+    assert resp.status_code == 303
+
+    db.expire_all()
+    article = await db.get(KbArticle, article_id)
+    key = article.attachments[0].file_path
+
+    resp = await client.get(f"/media/{key}")
+    assert resp.status_code == 200
+    assert resp.headers["content-disposition"] == "inline"
+    assert resp.headers["content-type"] == "image/png"
 
 
 async def test_blocked_file_type_rejected(client: AsyncClient, db) -> None:

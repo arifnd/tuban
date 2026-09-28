@@ -19,6 +19,19 @@ def _media_root() -> Path:
     return Path(storage_settings.LOCAL_DIR) if storage_settings.LOCAL_DIR else MEDIA_DIR
 
 
+def _media_response(target: Path) -> FileResponse:
+    """Render known image types inline; download everything else.
+
+    User uploads live on the app origin, so anything that is not a raster image is
+    forced to an attachment with an opaque content type to prevent stored XSS.
+    """
+    extension = target.suffix.lstrip(".").lower()
+    media_type = mimetypes.guess_type(str(target))[0] or "application/octet-stream"
+    if extension in IMAGE_EXTENSIONS and media_type.startswith("image/"):
+        return FileResponse(target, media_type=media_type, headers={"Content-Disposition": "inline", "X-Content-Type-Options": "nosniff"})
+    return FileResponse(target, media_type="application/octet-stream", filename=target.name, headers={"X-Content-Type-Options": "nosniff"})
+
+
 @router.get("/media/carousel/{filename}")
 async def serve_carousel_media(filename: str):
     if Path(filename).name != filename or Path(filename).suffix.lstrip(".").lower() not in IMAGE_EXTENSIONS:
@@ -29,8 +42,7 @@ async def serve_carousel_media(filename: str):
     if not target.is_relative_to(root) or not target.is_file():
         raise NotFoundError()
 
-    media_type = mimetypes.guess_type(str(target))[0] or "application/octet-stream"
-    return FileResponse(target, media_type=media_type, headers={"Content-Disposition": "inline", "X-Content-Type-Options": "nosniff"})
+    return _media_response(target)
 
 
 @router.get("/media/{path:path}")
@@ -60,5 +72,4 @@ async def serve_media(path: str, user: CurrentUser, db: DbDep):
     if not target.is_relative_to(root) or not target.is_file():
         raise NotFoundError()
 
-    media_type = mimetypes.guess_type(str(target))[0] or "application/octet-stream"
-    return FileResponse(target, media_type=media_type, headers={"Content-Disposition": "inline", "X-Content-Type-Options": "nosniff"})
+    return _media_response(target)

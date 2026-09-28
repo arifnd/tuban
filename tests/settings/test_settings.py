@@ -81,6 +81,10 @@ async def test_invalid_settings_rejected(client: AsyncClient, db) -> None:
     bad_extensions = dict(BASE_FORM, _csrf=token, allowed_extensions="")
     assert (await client.post("/settings", data=bad_extensions)).status_code == 400
 
+    for dangerous in ("png, html", "png, svg", "js", "xml"):
+        rejected = dict(BASE_FORM, _csrf=token, allowed_extensions=dangerous)
+        assert (await client.post("/settings", data=rejected)).status_code == 400, dangerous
+
 
 async def test_ticket_number_prefix_saved(client: AsyncClient, db) -> None:
     await make_user(db, "admin@example.com", UserRole.ADMIN)

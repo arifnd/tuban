@@ -3,7 +3,7 @@ from fastapi import UploadFile
 from src.exceptions import BadRequestError, PayloadTooLargeError
 from src.settings import service as settings_service
 from src.storage.client import StorageBackend, get_storage, new_key
-from src.storage.constants import CHUNK_SIZE
+from src.storage.constants import CHUNK_SIZE, SAFE_EXTENSIONS
 
 
 def file_extension(filename: str | None) -> str:
@@ -13,7 +13,8 @@ def file_extension(filename: str | None) -> str:
 
 
 def allowed_extensions() -> set[str]:
-    return set(settings_service.get("allowed_extensions") or [])
+    configured = set(settings_service.get("allowed_extensions") or [])
+    return configured & SAFE_EXTENSIONS
 
 
 def validate_extension(filename: str | None) -> str:

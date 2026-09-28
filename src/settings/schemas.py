@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 
 from src.settings.theme import PALETTES
+from src.storage.constants import SAFE_EXTENSIONS
 
 
 class SettingsUpdate(BaseModel):
@@ -31,6 +32,22 @@ class SettingsUpdate(BaseModel):
         if value not in PALETTES:
             raise ValueError("Unknown theme color")
         return value
+
+    @field_validator("allowed_extensions")
+    @classmethod
+    def _validate_allowed_extensions(cls, value: list[str]) -> list[str]:
+        normalized: list[str] = []
+        for item in value:
+            extension = str(item).strip().lower().lstrip(".")
+            if not extension:
+                continue
+            if extension not in SAFE_EXTENSIONS:
+                raise ValueError(f"Unsupported file type: {extension}")
+            if extension not in normalized:
+                normalized.append(extension)
+        if not normalized:
+            raise ValueError("At least one file type is required")
+        return normalized
 
     @field_validator("ticket_number_prefix")
     @classmethod
