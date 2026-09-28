@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 SHELL := /bin/sh
 
-.PHONY: help install assets dev dev-css dev-js migrate revision downgrade seed seed-reset lint format check test coverage up down build logs ps restart clean
+.PHONY: help install assets dev dev-css dev-js migrate revision downgrade seed seed-reset lint format check ci assets-check test coverage up down build logs ps restart clean
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -48,10 +48,16 @@ format: ## Format and autofix
 	uv run ruff format src tests alembic
 	uv run ruff check --fix src tests alembic
 
-check: ## CI-style check (format check + lint + tests)
+ci: ## Run the exact CI pipeline locally (format + lint + tests with coverage)
 	uv run ruff format --check src tests alembic
 	uv run ruff check src tests alembic
-	uv run pytest -n auto
+	uv run pytest --cov -n auto
+
+check: ci ## CI-style check (alias for `make ci`)
+
+assets-check: ## Verify generated assets are committed and current
+	npm run build:assets
+	git diff --exit-code -- static/css/app.css static/js/app.min.js templates/partials/sprite.html templates/partials/icons.html
 
 test: ## Run the test suite
 	uv run pytest -n auto

@@ -5,7 +5,8 @@ Tuban: server-rendered FastAPI + SQLAlchemy 2.0 async + Jinja2/HTMX/Alpine app. 
 ## Commands
 
 - `make help` — list all targets.
-- `make check` — CI-style: `ruff format --check` + `ruff check` + `pytest -n auto` (no coverage).
+- `make check` / `make ci` — exact CI pipeline: `ruff format --check` + `ruff check` + `pytest --cov -n auto` (coverage gate applies).
+- `make assets-check` — rebuild assets and fail if the committed files drift.
 - `make coverage` — `pytest --cov -n auto` then `coverage report -m`.
 - `make dev` — `uvicorn src.main:app --reload`.
 - `uv run pytest tests/kb/test_articles.py::test_name -q` — single test (no `-n` needed).
@@ -13,7 +14,7 @@ Tuban: server-rendered FastAPI + SQLAlchemy 2.0 async + Jinja2/HTMX/Alpine app. 
 
 ## CI (`.github/workflows/test.yml`)
 
-Exact order: `uv sync --extra dev` → `ruff format --check src tests alembic` → `ruff check src tests alembic` → `pytest --cov -n auto`. Coverage gate is `fail_under = 90` in `pyproject.toml`; a green test run can still fail CI on coverage. Ruff is line-length 160, double quotes.
+Exact order: `uv sync --extra dev` → `npm ci` → `ruff format --check src tests alembic` → `ruff check src tests alembic` → `pytest --cov -n auto` → `npm run build:assets` → `git diff --exit-code` on the generated assets. Coverage gate is `fail_under = 90` in `pyproject.toml`; a green test run can still fail CI on coverage. Ruff is line-length 160, double quotes.
 
 ## Testing
 

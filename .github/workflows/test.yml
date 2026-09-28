@@ -14,9 +14,20 @@ jobs:
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
       - name: Sync dependencies
         run: uv sync --extra dev
+      - name: Set up Node
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install Node dependencies
+        run: npm ci
       - name: Ruff format check
         run: uv run ruff format --check src tests alembic
       - name: Ruff lint
         run: uv run ruff check src tests alembic
       - name: Tests with coverage (SQLite)
         run: uv run pytest --cov -n auto
+      - name: Build frontend assets
+        run: npm run build:assets
+      - name: Generated assets are committed
+        run: git diff --exit-code -- static/css/app.css static/js/app.min.js templates/partials/sprite.html templates/partials/icons.html

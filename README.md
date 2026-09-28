@@ -44,8 +44,9 @@ and `test` additionally show an email dev-login on `/auth/login` when
 | `make dev` | Run the app with autoreload |
 | `make migrate` / `make revision m="..."` / `make downgrade` | Migrations |
 | `make seed` / `make seed-reset` | Demo data |
-| `make lint` / `make format` / `make check` | ruff + tests |
+| `make lint` / `make format` / `make check` | ruff + tests with coverage (`make check` == `make ci`) |
 | `make test` / `make coverage` | pytest |
+| `make assets-check` | Rebuild assets and fail on uncommitted drift |
 | `make up` / `make down` / `make logs` | Docker Compose |
 
 ## Configuration
