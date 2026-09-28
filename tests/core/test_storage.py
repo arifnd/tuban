@@ -8,7 +8,7 @@ from src.exceptions import BadRequestError, PayloadTooLargeError
 from src.storage import service as storage_service
 from src.storage.client import LocalStorage, S3Storage, get_storage, new_key
 from src.storage.config import get_storage_settings
-from tests.tickets.helpers import login, make_user
+from tests.helpers import login, make_user
 
 
 class _FakeS3Client:

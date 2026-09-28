@@ -2,8 +2,8 @@ from httpx2 import AsyncClient
 
 from src.kb import service as kb_service
 from src.kb.models import KbArticleStatus, KbArticleVisibility
-from tests.kb.helpers import csrf, login, make_article, make_editor
-from tests.tickets.helpers import make_user
+from tests.helpers import csrf, login, make_user
+from tests.kb.helpers import make_article, make_editor
 
 
 async def test_not_found_renders_html(client: AsyncClient) -> None:

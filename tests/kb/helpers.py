@@ -1,28 +1,14 @@
-from httpx2 import AsyncClient
 from sqlalchemy import select
 
-from src.auth import service as auth_service
-from src.auth.utils import decode_session_token
 from src.kb.models import KbArticle, KbArticleStatus, KbArticleVisibility, KbCategory
 from src.users.models import User, UserRole
+from tests.helpers import csrf, login, make_user  # noqa: F401  (re-exported for tests)
 
-
-def csrf(cookies) -> str:
-    return decode_session_token(cookies["app_session"])["csrf"]
-
-
-async def login(client: AsyncClient, email: str) -> None:
-    client.cookies.clear()
-    resp = await client.post("/auth/dev-login", json={"email": email})
-    assert resp.status_code == 303
+__all__ = ["csrf", "get_category", "login", "make_article", "make_editor", "make_user"]
 
 
 async def make_editor(db, email: str) -> User:
-    user = await auth_service.dev_login(db, email)
-    user.role = UserRole.AGENT
-    await db.commit()
-    await db.refresh(user)
-    return user
+    return await make_user(db, email, UserRole.AGENT)
 
 
 async def make_article(

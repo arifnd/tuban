@@ -3,7 +3,7 @@ import logging
 from httpx2 import AsyncClient
 
 from src.logging_filters import RedactSensitiveQueryFilter
-from tests.tickets.helpers import login, make_user
+from tests.helpers import login, make_user
 
 
 async def test_security_headers(client: AsyncClient) -> None:

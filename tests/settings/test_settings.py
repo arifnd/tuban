@@ -4,8 +4,8 @@ from sqlalchemy import select
 from src.kb.models import KbArticleStatus, KbArticleVisibility
 from src.settings import service as settings_service
 from src.users.models import User, UserRole
+from tests.helpers import csrf, login, make_user
 from tests.kb.helpers import make_article, make_editor
-from tests.tickets.helpers import csrf, login, make_user
 
 BASE_FORM = {
     "app_name": "Batik Helpdesk",

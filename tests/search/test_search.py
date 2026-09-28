@@ -1,8 +1,9 @@
 from httpx2 import AsyncClient
 
 from src.kb.models import KbArticleStatus, KbArticleVisibility
+from tests.helpers import login, make_user
 from tests.kb.helpers import make_article, make_editor
-from tests.tickets.helpers import login, make_ticket, make_user
+from tests.tickets.helpers import make_ticket
 
 
 async def test_search_groups_kb_and_tickets(client: AsyncClient, db) -> None:

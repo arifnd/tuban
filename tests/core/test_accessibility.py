@@ -1,7 +1,7 @@
 from httpx2 import AsyncClient
 
 from src.users.models import UserRole
-from tests.tickets.helpers import login, make_user
+from tests.helpers import login, make_user
 
 
 async def test_theme_radios_have_accessible_names(client: AsyncClient, db) -> None:

@@ -4,7 +4,7 @@ from sqlalchemy import select
 from src.settings import service as settings_service
 from src.tickets.models import Ticket
 from src.users.models import UserRole
-from tests.tickets.helpers import csrf, login, make_user
+from tests.helpers import csrf, login, make_user
 
 
 async def test_ticket_numbers_are_unique_and_sequential(client: AsyncClient, db) -> None:

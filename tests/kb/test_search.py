@@ -2,7 +2,8 @@ from httpx2 import AsyncClient
 
 from src.kb import service as kb_service
 from src.kb.models import KbArticleStatus, KbArticleVisibility
-from tests.kb.helpers import login, make_article, make_editor
+from tests.helpers import login
+from tests.kb.helpers import make_article, make_editor
 
 
 async def test_search_matches_title_summary_body(client: AsyncClient, db) -> None:

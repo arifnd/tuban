@@ -2,7 +2,7 @@ from httpx2 import AsyncClient
 
 from src.settings import service as settings_service
 from src.users.models import UserRole
-from tests.tickets.helpers import csrf, login, make_user
+from tests.helpers import csrf, login, make_user
 
 
 async def test_carousel_requires_admin(client: AsyncClient, db) -> None:

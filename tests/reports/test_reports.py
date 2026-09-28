@@ -6,7 +6,8 @@ from openpyxl import load_workbook
 
 from src.reports import exporters
 from src.users.models import UserRole
-from tests.tickets.helpers import login, make_ticket, make_user
+from tests.helpers import login, make_user
+from tests.tickets.helpers import make_ticket
 
 DATE_RANGE = {"start": (date.today() - timedelta(days=30)).isoformat(), "end": date.today().isoformat()}
 

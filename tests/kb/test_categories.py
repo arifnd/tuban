@@ -3,7 +3,8 @@ from sqlalchemy import select
 
 from src.kb import service as kb_service
 from src.kb.models import KbCategory
-from tests.kb.helpers import csrf, get_category, login, make_article, make_editor
+from tests.helpers import csrf, login
+from tests.kb.helpers import get_category, make_article, make_editor
 
 
 async def test_categories_requires_editor(client: AsyncClient) -> None:

@@ -6,8 +6,9 @@ from sqlalchemy import select
 from src.kb.models import KbArticleStatus, KbArticleVisibility
 from src.tickets.models import Ticket, TicketComment, TicketStatus
 from src.users.models import UserRole
+from tests.helpers import csrf, login, make_user
 from tests.kb.helpers import make_article, make_editor
-from tests.tickets.helpers import csrf, login, make_ticket, make_user
+from tests.tickets.helpers import make_ticket
 
 
 async def test_ticket_not_found(client: AsyncClient, db) -> None:

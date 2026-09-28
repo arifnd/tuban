@@ -2,7 +2,8 @@ from httpx2 import AsyncClient
 
 from src.kb import service as kb_service
 from src.kb.models import KbArticleStatus, KbArticleVisibility
-from tests.kb.helpers import csrf, login, make_article, make_editor
+from tests.helpers import csrf, login
+from tests.kb.helpers import make_article, make_editor
 
 
 async def test_kb_home(client: AsyncClient, db) -> None:

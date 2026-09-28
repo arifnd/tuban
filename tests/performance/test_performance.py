@@ -3,7 +3,8 @@ from sqlalchemy import event, text
 
 from src.database import engine
 from src.pagination import clamp_per_page, paginate
-from tests.tickets.helpers import login, make_ticket, make_user
+from tests.helpers import login, make_user
+from tests.tickets.helpers import make_ticket
 
 HOT_PATH_INDEXES = (
     "tickets_status_updated_idx",

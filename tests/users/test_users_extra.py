@@ -1,7 +1,7 @@
 from httpx2 import AsyncClient
 
 from src.users.models import UserRole
-from tests.tickets.helpers import csrf, login, make_user
+from tests.helpers import csrf, login, make_user
 
 
 async def test_user_detail_and_filters(client: AsyncClient, db) -> None:

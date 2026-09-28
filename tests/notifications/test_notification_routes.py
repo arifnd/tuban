@@ -2,7 +2,8 @@ from httpx2 import AsyncClient
 
 from src.notifications import service as notification_service
 from src.users.models import UserRole
-from tests.tickets.helpers import csrf, login, make_ticket, make_user
+from tests.helpers import csrf, login, make_user
+from tests.tickets.helpers import make_ticket
 
 
 async def test_notification_route_flow(client: AsyncClient, db) -> None:

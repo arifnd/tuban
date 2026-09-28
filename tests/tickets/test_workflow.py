@@ -2,7 +2,8 @@ from httpx2 import AsyncClient
 
 from src.tickets.models import Ticket, TicketStatus
 from src.users.models import UserRole
-from tests.tickets.helpers import csrf, login, make_ticket, make_user
+from tests.helpers import csrf, login, make_user
+from tests.tickets.helpers import make_ticket
 
 
 async def test_agent_status_transitions(client: AsyncClient, db) -> None:

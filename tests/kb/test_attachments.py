@@ -1,7 +1,8 @@
 from httpx2 import AsyncClient
 
 from src.kb.models import KbArticle, KbArticleStatus, KbArticleVisibility
-from tests.kb.helpers import csrf, login, make_article, make_editor
+from tests.helpers import csrf, login
+from tests.kb.helpers import make_article, make_editor
 
 
 async def test_upload_and_media_authorization(client: AsyncClient, db) -> None:

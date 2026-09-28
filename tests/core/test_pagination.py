@@ -4,8 +4,9 @@ from src.activity import service as activity_service
 from src.notifications import service as notification_service
 from src.pagination import Page, clamp_per_page, paginate
 from src.users.models import UserRole
+from tests.helpers import login, make_user
 from tests.kb.helpers import make_article, make_editor
-from tests.tickets.helpers import login, make_ticket, make_user
+from tests.tickets.helpers import make_ticket
 
 
 def _page_indicator(html: str, page: int, total_pages: int) -> str:

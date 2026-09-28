@@ -2,7 +2,8 @@ from httpx2 import AsyncClient
 from sqlalchemy import select
 
 from src.kb.models import KbArticleFeedback, KbArticleStatus, KbArticleVisibility
-from tests.kb.helpers import csrf, login, make_article, make_editor
+from tests.helpers import csrf, login
+from tests.kb.helpers import make_article, make_editor
 
 
 async def test_feedback_upsert_and_aggregate(client: AsyncClient, db) -> None:

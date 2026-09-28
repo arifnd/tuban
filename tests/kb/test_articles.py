@@ -4,7 +4,8 @@ from sqlalchemy import select
 from src.kb import service as kb_service
 from src.kb.markdown import render_markdown
 from src.kb.models import KbArticle, KbArticleRevision, KbArticleStatus, KbArticleVisibility
-from tests.kb.helpers import csrf, login, make_article, make_editor
+from tests.helpers import csrf, login
+from tests.kb.helpers import make_article, make_editor
 
 
 async def test_create_draft_with_revision_and_tags(client: AsyncClient, db) -> None:

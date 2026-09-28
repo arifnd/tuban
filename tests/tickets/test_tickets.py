@@ -3,7 +3,8 @@ from sqlalchemy import select
 
 from src.tickets.models import Ticket, TicketPriority, TicketStatus
 from src.users.models import UserRole
-from tests.tickets.helpers import csrf, login, make_ticket, make_user
+from tests.helpers import csrf, login, make_user
+from tests.tickets.helpers import make_ticket
 
 
 async def _ticket(db, subject: str) -> Ticket:

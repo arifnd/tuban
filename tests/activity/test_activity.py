@@ -3,7 +3,7 @@ from sqlalchemy import select
 
 from src.activity.models import ActivityLog
 from src.users.models import UserRole
-from tests.tickets.helpers import csrf, login, make_user
+from tests.helpers import csrf, login, make_user
 
 
 async def test_activity_admin_only(client: AsyncClient, db) -> None:

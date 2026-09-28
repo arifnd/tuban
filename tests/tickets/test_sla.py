@@ -7,7 +7,8 @@ from src.tickets.models import Ticket, TicketPriority, TicketStatus
 from src.tickets.service import sla_state
 from src.tickets.utils import business_hours_add
 from src.users.models import UserRole
-from tests.tickets.helpers import csrf, login, make_ticket, make_user
+from tests.helpers import csrf, login, make_user
+from tests.tickets.helpers import make_ticket
 
 
 def test_business_hours_add_within_day() -> None:

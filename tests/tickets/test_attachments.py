@@ -3,7 +3,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from src.tickets.models import Ticket
-from tests.tickets.helpers import csrf, login, make_ticket, make_user
+from tests.helpers import csrf, login, make_user
+from tests.tickets.helpers import make_ticket
 
 
 async def _load_ticket(db, ticket_id):
