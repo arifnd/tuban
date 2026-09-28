@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from src.auth.dependencies import CsrfDep, CurrentUser, DbDep
 from src.notifications import service as notification_service
 from src.notifications.constants import NOTIFICATIONS_PER_PAGE
-from src.pagination import clamp_per_page, paginate
+from src.pagination import Page, clamp_per_page, paginate
 from src.templating import templates
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
@@ -20,15 +20,13 @@ async def _dropdown_context(db, user) -> dict:
 
 
 async def _page_context(db, user, page: int, per_page: int) -> dict:
-    pag = paginate(page, per_page, await notification_service.count_notifications(db, user.id))
-    return {
-        "notifications": await notification_service.list_notifications_page(db, user.id, offset=pag["offset"], limit=per_page),
-        "unread_notifications": await notification_service.count_unread(db, user.id),
-        "page": pag["page"],
-        "per_page": per_page,
-        "total_pages": pag["total_pages"],
-        "total": pag["total"],
-    }
+    total = await notification_service.count_notifications(db, user.id)
+    pag = paginate(page, per_page, total)
+    notifications = await notification_service.list_notifications_page(db, user.id, offset=pag["offset"], limit=per_page)
+    return Page.create(pag["page"], per_page, notifications, total).as_context(
+        "notifications",
+        unread_notifications=await notification_service.count_unread(db, user.id),
+    )
 
 
 @router.get("")

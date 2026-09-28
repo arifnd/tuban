@@ -7,7 +7,7 @@ from fastapi.responses import RedirectResponse
 from src.activity import service as activity_service
 from src.auth.dependencies import CsrfDep, CurrentUser, DbDep
 from src.exceptions import BadRequestError
-from src.pagination import clamp_per_page, paginate
+from src.pagination import Page, clamp_per_page, paginate
 from src.templating import templates
 from src.users import service as users_service
 from src.users.constants import USERS_PER_PAGE
@@ -36,27 +36,26 @@ def _parse_active(value: str | None) -> bool | None:
 
 async def _list_context(db, admin, q, role, active, page, per_page) -> dict:
     per_page = clamp_per_page(per_page)
-    users, total = await users_service.list_users(
+    role_filter = _parse_role(role)
+    active_filter = _parse_active(active)
+    total = await users_service.count_users(db, search=q or None, role=role_filter, is_active=active_filter, exclude_id=admin.id)
+    pag = paginate(page, per_page, total)
+    users = await users_service.list_users(
         db,
         search=q or None,
-        role=_parse_role(role),
-        is_active=_parse_active(active),
-        page=page,
-        per_page=per_page,
+        role=role_filter,
+        is_active=active_filter,
+        offset=pag["offset"],
+        limit=per_page,
         exclude_id=admin.id,
     )
-    pag = paginate(page, per_page, total)
-    return {
-        "users": users,
-        "search": q or "",
-        "role_filter": role or "",
-        "active_filter": active or "",
-        "roles": UserRole,
-        "page": pag["page"],
-        "per_page": per_page,
-        "total_pages": pag["total_pages"],
-        "total": pag["total"],
-    }
+    return Page.create(pag["page"], per_page, users, total).as_context(
+        "users",
+        search=q or "",
+        role_filter=role or "",
+        active_filter=active or "",
+        roles=UserRole,
+    )
 
 
 @router.get("/users")

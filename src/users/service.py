@@ -65,10 +65,27 @@ async def list_users(
     search: str | None = None,
     role: UserRole | None = None,
     is_active: bool | None = None,
-    page: int = 1,
-    per_page: int = 25,
+    *,
+    offset: int = 0,
+    limit: int = 25,
     exclude_id: uuid.UUID | None = None,
-) -> tuple[list[User], int]:
+) -> list[User]:
+    stmt = _user_query(search=search, role=role, is_active=is_active, exclude_id=exclude_id)
+    return list((await db.execute(stmt.order_by(User.created_at.desc()).offset(offset).limit(limit))).scalars())
+
+
+async def count_users(
+    db: AsyncSession,
+    search: str | None = None,
+    role: UserRole | None = None,
+    is_active: bool | None = None,
+    exclude_id: uuid.UUID | None = None,
+) -> int:
+    stmt = _user_query(search=search, role=role, is_active=is_active, exclude_id=exclude_id)
+    return (await db.scalar(select(func.count()).select_from(stmt.subquery()))) or 0
+
+
+def _user_query(*, search=None, role=None, is_active=None, exclude_id=None):
     stmt = select(User)
     if exclude_id is not None:
         stmt = stmt.where(User.id != exclude_id)
@@ -79,9 +96,7 @@ async def list_users(
         stmt = stmt.where(User.role == role)
     if is_active is not None:
         stmt = stmt.where(User.is_active.is_(is_active))
-    total = (await db.scalar(select(func.count()).select_from(stmt.subquery()))) or 0
-    rows = (await db.execute(stmt.order_by(User.created_at.desc()).offset((page - 1) * per_page).limit(per_page))).scalars().all()
-    return list(rows), total
+    return stmt
 
 
 async def get_user_by_id(db: AsyncSession, user_id: uuid.UUID) -> User:

@@ -151,9 +151,54 @@ async def list_articles(
     status: KbArticleStatus | None = None,
     visibility: KbArticleVisibility | None = None,
     author_id: uuid.UUID | None = None,
-    page: int = 1,
-    per_page: int = 25,
-) -> tuple[list[KbArticle], int]:
+    offset: int = 0,
+    limit: int = 25,
+) -> list[KbArticle]:
+    stmt = _article_query(
+        viewer,
+        q=q,
+        category_id=category_id,
+        tag_id=tag_id,
+        status=status,
+        visibility=visibility,
+        author_id=author_id,
+    )
+    return list((await db.execute(stmt.order_by(KbArticle.updated_at.desc()).offset(offset).limit(limit))).scalars())
+
+
+async def count_articles(
+    db: AsyncSession,
+    viewer: User | None,
+    *,
+    q: str | None = None,
+    category_id: uuid.UUID | None = None,
+    tag_id: uuid.UUID | None = None,
+    status: KbArticleStatus | None = None,
+    visibility: KbArticleVisibility | None = None,
+    author_id: uuid.UUID | None = None,
+) -> int:
+    stmt = _article_query(
+        viewer,
+        q=q,
+        category_id=category_id,
+        tag_id=tag_id,
+        status=status,
+        visibility=visibility,
+        author_id=author_id,
+    )
+    return (await db.scalar(select(func.count()).select_from(stmt.subquery()))) or 0
+
+
+def _article_query(
+    viewer: User | None,
+    *,
+    q=None,
+    category_id=None,
+    tag_id=None,
+    status=None,
+    visibility=None,
+    author_id=None,
+):
     stmt = _scope(select(KbArticle), viewer)
     if q:
         like = f"%{q}%"
@@ -168,9 +213,7 @@ async def list_articles(
         stmt = stmt.where(KbArticle.visibility == visibility)
     if author_id is not None:
         stmt = stmt.where(KbArticle.author_id == author_id)
-    total = (await db.scalar(select(func.count()).select_from(stmt.subquery()))) or 0
-    rows = (await db.execute(stmt.order_by(KbArticle.updated_at.desc()).offset((page - 1) * per_page).limit(per_page))).scalars().all()
-    return list(rows), total
+    return stmt
 
 
 async def recent_articles(db: AsyncSession, viewer: User | None, limit: int = 5) -> list[KbArticle]:
@@ -404,9 +447,26 @@ async def search_articles(
     *,
     category_id: uuid.UUID | None = None,
     tag_ids: list[uuid.UUID] | None = None,
-    page: int = 1,
-    per_page: int = 25,
-) -> tuple[list[KbArticle], int]:
+    offset: int = 0,
+    limit: int = 25,
+) -> list[KbArticle]:
+    stmt, rank = _search_query(viewer, q, category_id=category_id, tag_ids=tag_ids)
+    return list((await db.execute(stmt.order_by(rank.desc(), KbArticle.updated_at.desc()).offset(offset).limit(limit))).scalars())
+
+
+async def count_search_articles(
+    db: AsyncSession,
+    viewer: User | None,
+    q: str,
+    *,
+    category_id: uuid.UUID | None = None,
+    tag_ids: list[uuid.UUID] | None = None,
+) -> int:
+    stmt, _ = _search_query(viewer, q, category_id=category_id, tag_ids=tag_ids)
+    return (await db.scalar(select(func.count()).select_from(stmt.subquery()))) or 0
+
+
+def _search_query(viewer: User | None, q: str, *, category_id=None, tag_ids=None):
     like = f"%{q}%"
     rank = case(
         (KbArticle.title.ilike(like), 3),
@@ -420,9 +480,7 @@ async def search_articles(
     if tag_ids:
         tagged = select(KbArticleTag.article_id).where(KbArticleTag.tag_id.in_(tag_ids))
         stmt = stmt.where(KbArticle.id.in_(tagged))
-    total = (await db.scalar(select(func.count()).select_from(stmt.subquery()))) or 0
-    rows = (await db.execute(stmt.order_by(rank.desc(), KbArticle.updated_at.desc()).offset((page - 1) * per_page).limit(per_page))).scalars().all()
-    return list(rows), total
+    return stmt, rank
 
 
 # --------------------------------------------------------------------------- #
@@ -507,6 +565,8 @@ async def delete_attachment(db: AsyncSession, actor: User, article: KbArticle, a
 
 __all__ = [
     "add_attachment",
+    "count_articles",
+    "count_search_articles",
     "create_article",
     "create_category",
     "delete_attachment",

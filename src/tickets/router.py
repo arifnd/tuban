@@ -7,7 +7,7 @@ from starlette.datastructures import UploadFile
 from src.auth.dependencies import CsrfDep, CurrentUser, DbDep
 from src.exceptions import BadRequestError
 from src.kb import markdown as markdown_utils
-from src.pagination import clamp_per_page, paginate
+from src.pagination import Page, clamp_per_page, paginate
 from src.templating import templates
 from src.tickets import service as ticket_service
 from src.tickets.constants import PAGE_SIZE
@@ -43,38 +43,31 @@ def _parse_priority(value: object) -> TicketPriority | None:
 
 async def _list_context(db, user, *, q, status_value, priority_value, category, assignee, sort, mine, page, per_page) -> dict:
     requester_id = user.id if mine or not ticket_service.is_editor(user) else None
-    tickets, total = await ticket_service.list_tickets(
-        db,
-        user,
-        q=q or None,
-        status=_parse_status(status_value),
-        priority=_parse_priority(priority_value),
-        category_id=_parse_uuid(category),
-        assignee_id=_parse_uuid(assignee),
-        requester_id=requester_id,
-        sort=sort,
-        page=page,
-        per_page=per_page,
-    )
-    pag = paginate(page, per_page, total)
-    return {
-        "tickets": tickets,
-        "sla_states": {ticket.id: ticket_service.sla_state(ticket) for ticket in tickets},
-        "search": q or "",
-        "status_filter": status_value or "",
-        "priority_filter": priority_value or "",
-        "category_filter": category or "",
-        "assignee_filter": assignee or "",
-        "sort": sort,
-        "mine": mine,
-        "is_editor": ticket_service.is_editor(user),
-        "categories": await ticket_service.list_categories(db),
-        "agents": await users_service.list_agents(db),
-        "page": pag["page"],
-        "per_page": per_page,
-        "total_pages": pag["total_pages"],
-        "total": pag["total"],
+    filters = {
+        "q": q or None,
+        "status": _parse_status(status_value),
+        "priority": _parse_priority(priority_value),
+        "category_id": _parse_uuid(category),
+        "assignee_id": _parse_uuid(assignee),
+        "requester_id": requester_id,
     }
+    total = await ticket_service.count_tickets(db, user, **filters)
+    pag = paginate(page, per_page, total)
+    tickets = await ticket_service.list_tickets(db, user, sort=sort, offset=pag["offset"], limit=per_page, **filters)
+    return Page.create(pag["page"], per_page, tickets, total).as_context(
+        "tickets",
+        sla_states={ticket.id: ticket_service.sla_state(ticket) for ticket in tickets},
+        search=q or "",
+        status_filter=status_value or "",
+        priority_filter=priority_value or "",
+        category_filter=category or "",
+        assignee_filter=assignee or "",
+        sort=sort,
+        mine=mine,
+        is_editor=ticket_service.is_editor(user),
+        categories=await ticket_service.list_categories(db),
+        agents=await users_service.list_agents(db),
+    )
 
 
 # --------------------------------------------------------------------------- #

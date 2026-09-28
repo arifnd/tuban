@@ -32,8 +32,20 @@ async def log(
     return entry
 
 
-async def count_activity_logs(db: AsyncSession) -> int:
-    return (await db.scalar(select(func.count()).select_from(ActivityLog))) or 0
+def _activity_conditions(*, user_id=None, entity_type=None, action=None) -> list:
+    conditions = []
+    if user_id is not None:
+        conditions.append(ActivityLog.user_id == user_id)
+    if entity_type:
+        conditions.append(ActivityLog.entity_type == entity_type)
+    if action:
+        conditions.append(ActivityLog.action == action)
+    return conditions
+
+
+async def count_activity_logs(db: AsyncSession, *, user_id: uuid.UUID | None = None, entity_type: str | None = None, action: str | None = None) -> int:
+    conditions = _activity_conditions(user_id=user_id, entity_type=entity_type, action=action)
+    return (await db.scalar(select(func.count()).select_from(ActivityLog).where(*conditions))) or 0
 
 
 async def list_ticket_activity(db: AsyncSession, ticket_id: uuid.UUID, *, limit: int = 100) -> list[dict]:
@@ -54,27 +66,20 @@ async def list_activity_logs(
     user_id: uuid.UUID | None = None,
     entity_type: str | None = None,
     action: str | None = None,
-    page: int = 1,
-    per_page: int = 25,
-) -> tuple[list[dict], int]:
-    conditions = []
-    if user_id is not None:
-        conditions.append(ActivityLog.user_id == user_id)
-    if entity_type:
-        conditions.append(ActivityLog.entity_type == entity_type)
-    if action:
-        conditions.append(ActivityLog.action == action)
-    total = (await db.scalar(select(func.count()).select_from(ActivityLog).where(*conditions))) or 0
+    offset: int = 0,
+    limit: int = 25,
+) -> list[dict]:
+    conditions = _activity_conditions(user_id=user_id, entity_type=entity_type, action=action)
     stmt = (
         select(ActivityLog, User.name.label("actor"), User.email.label("actor_email"))
         .join(User, User.id == ActivityLog.user_id, isouter=True)
         .where(*conditions)
         .order_by(ActivityLog.created_at.desc())
-        .offset((page - 1) * per_page)
-        .limit(per_page)
+        .offset(offset)
+        .limit(limit)
     )
     rows = (await db.execute(stmt)).all()
-    return [{"entry": entry, "actor": actor, "actor_email": email} for entry, actor, email in rows], total
+    return [{"entry": entry, "actor": actor, "actor_email": email} for entry, actor, email in rows]
 
 
 async def filter_users(db: AsyncSession) -> list[User]:

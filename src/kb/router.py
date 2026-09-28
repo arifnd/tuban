@@ -11,7 +11,7 @@ from src.kb import service as kb_service
 from src.kb.constants import PAGE_SIZE
 from src.kb.dependencies import KbEditor
 from src.kb.models import KbArticleStatus, KbArticleVisibility
-from src.pagination import clamp_per_page, paginate
+from src.pagination import Page, clamp_per_page, paginate
 from src.templating import templates
 
 router = APIRouter(prefix="/kb", tags=["kb"])
@@ -65,19 +65,6 @@ async def _filter_tag_id(db, slug: str | None) -> uuid.UUID | None:
     return tag.id
 
 
-def _list_context(articles, total, page, per_page, filters: dict) -> dict:
-    pag = paginate(page, per_page, total)
-    context = {
-        "articles": articles,
-        "page": pag["page"],
-        "per_page": per_page,
-        "total_pages": pag["total_pages"],
-        "total": pag["total"],
-    }
-    context.update(filters)
-    return context
-
-
 # --------------------------------------------------------------------------- #
 # Home
 # --------------------------------------------------------------------------- #
@@ -86,7 +73,7 @@ async def home(request: Request, db: DbDep, user: OptionalUser):
     categories = await kb_service.list_categories(db, viewer=user)
     category_sections = []
     for category in categories:
-        articles, _ = await kb_service.list_articles(db, user, category_id=category.id, per_page=5)
+        articles = await kb_service.list_articles(db, user, category_id=category.id, offset=0, limit=5)
         if articles:
             category_sections.append({"category": category, "articles": articles})
     return templates.TemplateResponse(
@@ -154,17 +141,24 @@ async def article_list(
     per_page: int = PAGE_SIZE,
 ):
     per_page = clamp_per_page(per_page)
-    articles, total = await kb_service.list_articles(
+    article_status_value = _parse_status(article_status) if kb_service.is_editor(user) else None
+    category_id = await _filter_category_id(db, category)
+    tag_id = await _filter_tag_id(db, tag)
+    total = await kb_service.count_articles(db, user, q=q.strip() or None, category_id=category_id, tag_id=tag_id, status=article_status_value)
+    pag = paginate(page, per_page, total)
+    articles = await kb_service.list_articles(
         db,
         user,
         q=q.strip() or None,
-        category_id=await _filter_category_id(db, category),
-        tag_id=await _filter_tag_id(db, tag),
-        status=_parse_status(article_status) if kb_service.is_editor(user) else None,
-        page=page,
-        per_page=per_page,
+        category_id=category_id,
+        tag_id=tag_id,
+        status=article_status_value,
+        offset=pag["offset"],
+        limit=per_page,
     )
-    context = _list_context(articles, total, page, per_page, {"search": q, "category_slug": category, "tag_slug": tag, "status_filter": article_status})
+    context = Page.create(pag["page"], per_page, articles, total).as_context(
+        "articles", search=q, category_slug=category, tag_slug=tag, status_filter=article_status
+    )
     if request.headers.get("HX-Request") == "true":
         return templates.TemplateResponse(request, "kb/articles/partials/article_table.html", context)
     return templates.TemplateResponse(request, "kb/articles/list.html", context)
@@ -343,8 +337,10 @@ async def tag_delete(request: Request, db: DbDep, editor: KbEditor, _: CsrfDep, 
 async def tag_articles(request: Request, db: DbDep, user: OptionalUser, slug: str, page: int = 1):
     tag = await kb_service.get_tag_by_slug(db, slug)
     per_page = clamp_per_page(PAGE_SIZE)
-    articles, total = await kb_service.list_articles(db, user, tag_id=tag.id, page=page, per_page=per_page)
-    context = _list_context(articles, total, page, per_page, {"heading": f"#{tag.name}", "tag": tag})
+    total = await kb_service.count_articles(db, user, tag_id=tag.id)
+    pag = paginate(page, per_page, total)
+    articles = await kb_service.list_articles(db, user, tag_id=tag.id, offset=pag["offset"], limit=per_page)
+    context = Page.create(pag["page"], per_page, articles, total).as_context("articles", heading=f"#{tag.name}", tag=tag)
     return templates.TemplateResponse(request, "kb/articles/list.html", context)
 
 
@@ -367,16 +363,21 @@ async def search(
     total = 0
     if len(query) >= 2:
         tag_ids = [tid for tid in [await _filter_tag_id(db, tag)] if tid]
-        results, total = await kb_service.search_articles(
+        category_id = await _filter_category_id(db, category)
+        total = await kb_service.count_search_articles(db, user, query, category_id=category_id, tag_ids=tag_ids)
+        pag = paginate(page, per_page, total)
+        results = await kb_service.search_articles(
             db,
             user,
             query,
-            category_id=await _filter_category_id(db, category),
+            category_id=category_id,
             tag_ids=tag_ids,
-            page=page,
-            per_page=per_page,
+            offset=pag["offset"],
+            limit=per_page,
         )
-    context = _list_context(results, total, page, per_page, {"search": q, "category_slug": category, "tag_slug": tag})
+    else:
+        pag = paginate(page, per_page, total)
+    context = Page.create(pag["page"], per_page, results, total).as_context("articles", search=q, category_slug=category, tag_slug=tag)
     context["categories"] = await kb_service.list_categories(db, include_counts=False)
     if request.headers.get("HX-Request") == "true":
         return templates.TemplateResponse(request, "kb/partials/result_list.html", context)
@@ -389,5 +390,6 @@ async def search_partial(request: Request, db: DbDep, user: OptionalUser, q: str
     results: list = []
     total = 0
     if len(query) >= 2:
-        results, total = await kb_service.search_articles(db, user, query, page=1, per_page=5)
+        results = await kb_service.search_articles(db, user, query, offset=0, limit=5)
+        total = await kb_service.count_search_articles(db, user, query)
     return templates.TemplateResponse(request, "kb/partials/result_list.html", {"articles": results, "search": q, "total": total})

@@ -180,9 +180,54 @@ async def list_tickets(
     assignee_id: uuid.UUID | None = None,
     requester_id: uuid.UUID | None = None,
     sort: str = "updated",
-    page: int = 1,
-    per_page: int = 25,
-) -> tuple[list[Ticket], int]:
+    offset: int = 0,
+    limit: int = 25,
+) -> list[Ticket]:
+    stmt = _ticket_query(
+        user,
+        q=q,
+        status=status,
+        priority=priority,
+        category_id=category_id,
+        assignee_id=assignee_id,
+        requester_id=requester_id,
+    )
+    return list((await db.execute(stmt.order_by(*_ticket_order(sort)).offset(offset).limit(limit))).scalars())
+
+
+async def count_tickets(
+    db: AsyncSession,
+    user: User,
+    *,
+    q: str | None = None,
+    status: TicketStatus | None = None,
+    priority: TicketPriority | None = None,
+    category_id: uuid.UUID | None = None,
+    assignee_id: uuid.UUID | None = None,
+    requester_id: uuid.UUID | None = None,
+) -> int:
+    stmt = _ticket_query(
+        user,
+        q=q,
+        status=status,
+        priority=priority,
+        category_id=category_id,
+        assignee_id=assignee_id,
+        requester_id=requester_id,
+    )
+    return (await db.scalar(select(func.count()).select_from(stmt.subquery()))) or 0
+
+
+def _ticket_query(
+    user: User,
+    *,
+    q=None,
+    status=None,
+    priority=None,
+    category_id=None,
+    assignee_id=None,
+    requester_id=None,
+):
     stmt = select(Ticket)
     if not is_editor(user):
         stmt = stmt.where(or_(Ticket.requester_id == user.id, Ticket.assignee_id == user.id))
@@ -199,19 +244,17 @@ async def list_tickets(
         stmt = stmt.where(Ticket.assignee_id == assignee_id)
     if requester_id is not None and is_editor(user):
         stmt = stmt.where(Ticket.requester_id == requester_id)
+    return stmt
 
+
+def _ticket_order(sort: str):
     if sort == "priority":
-        order = [case(PRIORITY_ORDER, value=Ticket.priority).desc(), Ticket.updated_at.desc()]
-    elif sort == "created":
-        order = [Ticket.created_at.desc()]
-    elif sort == "sla":
-        order = [Ticket.sla_due_at.asc().nullslast(), Ticket.updated_at.desc()]
-    else:
-        order = [Ticket.updated_at.desc()]
-
-    total = (await db.scalar(select(func.count()).select_from(stmt.subquery()))) or 0
-    rows = (await db.execute(stmt.order_by(*order).offset((page - 1) * per_page).limit(per_page))).scalars().all()
-    return list(rows), total
+        return [case(PRIORITY_ORDER, value=Ticket.priority).desc(), Ticket.updated_at.desc()]
+    if sort == "created":
+        return [Ticket.created_at.desc()]
+    if sort == "sla":
+        return [Ticket.sla_due_at.asc().nullslast(), Ticket.updated_at.desc()]
+    return [Ticket.updated_at.desc()]
 
 
 def can_transition(ticket: Ticket, target: TicketStatus, actor: User) -> bool:
@@ -424,8 +467,8 @@ async def related_articles(db: AsyncSession, ticket: Ticket, viewer: User) -> li
     words = [word.strip(".,:;!?").lower() for word in ticket.subject.split() if len(word.strip(".,:;!?")) > 3]
     if not words:
         return []
-    results, _ = await kb_service.search_articles(db, viewer, " ".join(words[:3]), page=1, per_page=5)
-    return results
+    results = await kb_service.search_articles(db, viewer, " ".join(words[:3]), offset=0, limit=5)
+    return list(results)
 
 
 # --------------------------------------------------------------------------- #
@@ -494,6 +537,7 @@ __all__ = [
     "assign_ticket",
     "can_transition",
     "claim_ticket",
+    "count_tickets",
     "create_category",
     "create_ticket",
     "delete_attachment",

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request
 
 from src.activity import service as activity_service
 from src.auth.dependencies import DbDep
-from src.pagination import clamp_per_page, paginate
+from src.pagination import Page, clamp_per_page, paginate
 from src.templating import templates
 from src.users.dependencies import AdminUser
 
@@ -25,23 +25,22 @@ async def activity_page(
     action: str = "",
 ):
     per_page = clamp_per_page(per_page)
-    logs, total = await activity_service.list_activity_logs(
-        db, user_id=user_id, entity_type=entity_type or None, action=action or None, page=page, per_page=per_page
-    )
+    total = await activity_service.count_activity_logs(db, user_id=user_id, entity_type=entity_type or None, action=action or None)
     pag = paginate(page, per_page, total)
-    return templates.TemplateResponse(
-        request,
-        "activity/list.html",
-        {
-            "logs": logs,
-            "page": pag["page"],
-            "per_page": per_page,
-            "total_pages": pag["total_pages"],
-            "total": pag["total"],
-            "users": await activity_service.filter_users(db),
-            "entity_types": await activity_service.entity_types(db),
-            "filter_user_id": user_id,
-            "filter_entity_type": entity_type,
-            "filter_action": action,
-        },
+    logs = await activity_service.list_activity_logs(
+        db,
+        user_id=user_id,
+        entity_type=entity_type or None,
+        action=action or None,
+        offset=pag["offset"],
+        limit=per_page,
     )
+    context = Page.create(pag["page"], per_page, logs, total).as_context(
+        "logs",
+        users=await activity_service.filter_users(db),
+        entity_types=await activity_service.entity_types(db),
+        filter_user_id=user_id,
+        filter_entity_type=entity_type,
+        filter_action=action,
+    )
+    return templates.TemplateResponse(request, "activity/list.html", context)

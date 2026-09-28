@@ -29,8 +29,8 @@ async def search(db: AsyncSession, user: User, query: str, *, limit: int = 20) -
     if len(query) < MIN_QUERY_LENGTH:
         return {"query": query, "hits": [], "kb": [], "tickets": [], "total": 0}
 
-    articles, _ = await kb_service.search_articles(db, user, query, page=1, per_page=limit)
-    tickets, _ = await tickets_service.list_tickets(db, user, q=query, page=1, per_page=limit)
+    articles = await kb_service.search_articles(db, user, query, offset=0, limit=limit)
+    tickets = await tickets_service.list_tickets(db, user, q=query, offset=0, limit=limit)
 
     hits: list[dict] = []
     for article in articles:
