@@ -97,5 +97,5 @@ async def update(db: AsyncSession, actor, values: dict[str, Any]) -> dict[str, A
         else:
             row.value = value
     await activity_service.log(db, user_id=actor.id, action="update", entity_type="app_settings", new_data=values)
-    await db.commit()
+    await db.flush()
     return await load(db)

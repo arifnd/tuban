@@ -118,3 +118,23 @@ async def test_profile_update(client: AsyncClient, db) -> None:
     db.expire_all()
     member = await db.get(User, member_id)
     assert member.name == "New Name"
+
+
+async def test_role_change_rolls_back_when_audit_fails(client: AsyncClient, db, monkeypatch) -> None:
+    from src.activity import service as activity_service
+
+    await _login(client, "member@example.com")
+    await _login(client, "admin@example.com")
+    member_id = await _user_id(db, "member@example.com")
+
+    async def _boom(*args, **kwargs):
+        raise RuntimeError("audit write failed")
+
+    monkeypatch.setattr(activity_service, "log", _boom)
+
+    resp = await client.post(f"/users/{member_id}/role", data={"_csrf": _csrf(client.cookies), "role": "agent"})
+    assert resp.status_code == 500
+
+    db.expire_all()
+    member = await db.get(User, member_id)
+    assert member.role == UserRole.USER

@@ -107,7 +107,6 @@ async def update_role(
         old_data={"role": old_role},
         new_data={"role": new_role.value},
     )
-    await db.commit()
     return RedirectResponse(f"/users/{user.id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -132,7 +131,6 @@ async def toggle_active(
         entity_id=user.id,
         new_data={"is_active": target},
     )
-    await db.commit()
     return RedirectResponse(f"/users/{user.id}", status_code=status.HTTP_303_SEE_OTHER)
 
 

@@ -16,12 +16,18 @@ os.environ.setdefault("STORAGE_LOCAL_DIR", "./instance/test_media")
 
 import pytest
 from httpx2 import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from src import models_registry  # noqa: F401  (registers every model on Base.metadata)
-from src.database import SessionFactory, engine
+from src.database import engine
 from src.main import app
 from src.models import Base
 from src.settings import service as settings_service
+
+# Test setup uses an autocommit session: services only flush now, and a long-lived
+# transactional session would keep SQLite locks open across HTTP requests. The app
+# itself keeps its transactional get_db boundary.
+TestSessionFactory = async_sessionmaker(engine.execution_options(isolation_level="AUTOCOMMIT"), expire_on_commit=False)
 
 
 @pytest.fixture(autouse=True)
@@ -43,12 +49,14 @@ async def _db():
 
 @pytest.fixture
 async def client():
-    transport = ASGITransport(app=app)
+    # raise_app_exceptions=False mirrors a real server, where an unhandled 500 is
+    # returned to the client rather than propagated.
+    transport = ASGITransport(app=app, raise_app_exceptions=False)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
 
 @pytest.fixture
 async def db():
-    async with SessionFactory() as session:
+    async with TestSessionFactory() as session:
         yield session

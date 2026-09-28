@@ -30,6 +30,6 @@ async def make_ticket(db, requester: User, *, subject: str = "Test ticket", prio
     if fields:
         for key, value in fields.items():
             setattr(ticket, key, value)
-        await db.commit()
-        await db.refresh(ticket)
+    await db.commit()
+    await db.refresh(ticket)
     return ticket

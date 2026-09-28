@@ -84,7 +84,7 @@ async def create_category(db: AsyncSession, actor: User, *, name: str, position:
     db.add(category)
     await db.flush()
     await activity_service.log(db, user_id=actor.id, action="create", entity_type="ticket_categories", entity_id=category.id, new_data={"name": category.name})
-    await db.commit()
+    await db.flush()
     await db.refresh(category)
     category.ticket_count = 0
     return category
@@ -100,7 +100,7 @@ async def update_category(db: AsyncSession, actor: User, category: TicketCategor
     await activity_service.log(
         db, user_id=actor.id, action="update", entity_type="ticket_categories", entity_id=category.id, old_data=old, new_data={"name": category.name}
     )
-    await db.commit()
+    await db.flush()
     await db.refresh(category)
     return category
 
@@ -111,7 +111,7 @@ async def delete_category(db: AsyncSession, actor: User, category: TicketCategor
         raise CategoryHasTickets()
     await activity_service.log(db, user_id=actor.id, action="delete", entity_type="ticket_categories", entity_id=category.id, old_data={"name": category.name})
     await db.delete(category)
-    await db.commit()
+    await db.flush()
 
 
 # --------------------------------------------------------------------------- #
@@ -157,7 +157,7 @@ async def create_ticket(
         link=f"/tickets/{ticket.id}",
         actor_id=requester.id,
     )
-    await db.commit()
+    await db.flush()
     await db.refresh(ticket)
     return ticket
 
@@ -274,7 +274,7 @@ async def transition_status(db: AsyncSession, actor: User, ticket: Ticket, targe
             link=f"/tickets/{ticket.id}",
             actor_id=actor.id,
         )
-    await db.commit()
+    await db.flush()
     await db.refresh(ticket)
     return ticket
 
@@ -306,7 +306,7 @@ async def assign_ticket(db: AsyncSession, actor: User, ticket: Ticket, assignee:
             link=f"/tickets/{ticket.id}",
             actor_id=actor.id,
         )
-    await db.commit()
+    await db.flush()
     await db.refresh(ticket)
     return ticket
 
@@ -330,7 +330,7 @@ async def set_priority(db: AsyncSession, actor: User, ticket: Ticket, priority: 
         old_data={"priority": old},
         new_data={"priority": priority.value},
     )
-    await db.commit()
+    await db.flush()
     await db.refresh(ticket)
     return ticket
 
@@ -399,7 +399,7 @@ async def add_comment(db: AsyncSession, user: User, ticket: Ticket, body: str, i
             link=f"/tickets/{ticket.id}",
             actor_id=user.id,
         )
-    await db.commit()
+    await db.flush()
     await db.refresh(comment)
     return comment
 
@@ -408,7 +408,7 @@ async def delete_comment(db: AsyncSession, user: User, comment: TicketComment) -
     if comment.author_id != user.id and not is_editor(user):
         raise TicketForbidden(detail="You cannot delete this comment")
     await db.delete(comment)
-    await db.commit()
+    await db.flush()
 
 
 async def ticket_timeline(db: AsyncSession, ticket: Ticket, viewer: User) -> list[dict]:
@@ -456,7 +456,7 @@ async def add_attachment(db: AsyncSession, actor: User, ticket: Ticket, upload: 
         link=f"/tickets/{ticket.id}",
         actor_id=actor.id,
     )
-    await db.commit()
+    await db.flush()
     await db.refresh(attachment)
     return attachment
 
@@ -480,7 +480,7 @@ async def delete_attachment(db: AsyncSession, user: User, attachment: TicketAtta
         raise TicketForbidden(detail="You cannot delete this attachment")
     await storage_service.delete_upload(attachment.file_path)
     await db.delete(attachment)
-    await db.commit()
+    await db.flush()
 
 
 def user_can_access_ticket(ticket: Ticket, user: User) -> bool:

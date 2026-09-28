@@ -19,5 +19,13 @@ SessionFactory = async_sessionmaker(engine, expire_on_commit=False)
 
 
 async def get_db() -> AsyncIterator[AsyncSession]:
+    # Request-scoped unit of work: services only flush, the boundary commits once
+    # after the handler succeeds, or rolls back everything on failure.
     async with SessionFactory() as session:
-        yield session
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+        else:
+            await session.commit()

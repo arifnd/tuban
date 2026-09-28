@@ -55,7 +55,7 @@ async def mark_read(db: AsyncSession, notification_id: uuid.UUID, user_id: uuid.
         return False
     notification.is_read = True
     notification.read_at = datetime.now(UTC)
-    await db.commit()
+    await db.flush()
     return True
 
 
@@ -65,7 +65,7 @@ async def mark_all_read(db: AsyncSession, user_id: uuid.UUID) -> None:
     for notification in result.scalars():
         notification.is_read = True
         notification.read_at = now
-    await db.commit()
+    await db.flush()
 
 
 async def mark_read_many(db: AsyncSession, user_id: uuid.UUID, notification_ids: list[uuid.UUID]) -> int:
@@ -80,5 +80,5 @@ async def mark_read_many(db: AsyncSession, user_id: uuid.UUID, notification_ids:
         notification.is_read = True
         notification.read_at = now
         updated += 1
-    await db.commit()
+    await db.flush()
     return updated

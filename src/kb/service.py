@@ -95,7 +95,7 @@ async def create_category(db: AsyncSession, actor: User, *, name: str, descripti
     db.add(category)
     await db.flush()
     await activity_service.log(db, user_id=actor.id, action="create", entity_type="kb_categories", entity_id=category.id, new_data={"name": category.name})
-    await db.commit()
+    await db.flush()
     await db.refresh(category)
     category.article_count = 0
     return category
@@ -117,7 +117,7 @@ async def update_category(db: AsyncSession, actor: User, category: KbCategory, *
         old_data=old,
         new_data={"name": category.name, "position": position},
     )
-    await db.commit()
+    await db.flush()
     await db.refresh(category)
     return category
 
@@ -128,14 +128,14 @@ async def delete_category(db: AsyncSession, actor: User, category: KbCategory) -
         raise CategoryHasArticles()
     await activity_service.log(db, user_id=actor.id, action="delete", entity_type="kb_categories", entity_id=category.id, old_data={"name": category.name})
     await db.delete(category)
-    await db.commit()
+    await db.flush()
 
 
 async def reorder_categories(db: AsyncSession, actor: User, ordered_ids: list[uuid.UUID]) -> None:
     for index, category_id in enumerate(ordered_ids):
         await db.execute(update(KbCategory).where(KbCategory.id == category_id).values(position=index).execution_options(synchronize_session=False))
     await activity_service.log(db, user_id=actor.id, action="update", entity_type="kb_categories", new_data={"order": [str(i) for i in ordered_ids]})
-    await db.commit()
+    await db.flush()
 
 
 # --------------------------------------------------------------------------- #
@@ -222,7 +222,7 @@ async def create_article(
     await activity_service.log(
         db, user_id=actor.id, action="create", entity_type="kb_articles", entity_id=article.id, new_data={"title": article.title, "status": status.value}
     )
-    await db.commit()
+    await db.flush()
     await db.refresh(article)
     return article
 
@@ -267,7 +267,7 @@ async def update_article(
         old_data=old,
         new_data={"title": article.title, "visibility": visibility.value},
     )
-    await db.commit()
+    await db.flush()
     await db.refresh(article)
     return article
 
@@ -282,7 +282,7 @@ async def set_status(db: AsyncSession, actor: User, article: KbArticle, status: 
     await activity_service.log(
         db, user_id=actor.id, action=status.value, entity_type="kb_articles", entity_id=article.id, old_data={"status": old}, new_data={"status": status.value}
     )
-    await db.commit()
+    await db.flush()
     await db.refresh(article)
     return article
 
@@ -313,7 +313,7 @@ async def restore_revision(db: AsyncSession, actor: User, article: KbArticle, re
     await activity_service.log(
         db, user_id=actor.id, action="restore", entity_type="kb_articles", entity_id=article.id, new_data={"revision_no": revision.revision_no}
     )
-    await db.commit()
+    await db.flush()
     await db.refresh(article)
     return article
 
@@ -324,7 +324,7 @@ async def increment_view(db: AsyncSession, article: KbArticle, viewer: User | No
     await db.execute(
         update(KbArticle).where(KbArticle.id == article.id).values(view_count=KbArticle.view_count + 1).execution_options(synchronize_session=False)
     )
-    await db.commit()
+    await db.flush()
     await db.refresh(article)
 
 
@@ -383,7 +383,7 @@ async def set_article_tags(db: AsyncSession, actor: User, article: KbArticle, na
     await activity_service.log(
         db, user_id=actor.id, action="update", entity_type="kb_articles", entity_id=article.id, new_data={"tags": [tag.name for tag in tags]}
     )
-    await db.commit()
+    await db.flush()
     await db.refresh(article)
     return article
 
@@ -391,7 +391,7 @@ async def set_article_tags(db: AsyncSession, actor: User, article: KbArticle, na
 async def delete_tag(db: AsyncSession, actor: User, tag: KbTag) -> None:
     await activity_service.log(db, user_id=actor.id, action="delete", entity_type="kb_tags", entity_id=tag.id, old_data={"name": tag.name})
     await db.delete(tag)
-    await db.commit()
+    await db.flush()
 
 
 # --------------------------------------------------------------------------- #
@@ -438,7 +438,7 @@ async def submit_feedback(db: AsyncSession, user: User, article: KbArticle, *, i
     else:
         existing.is_helpful = is_helpful
         existing.comment = comment or None
-    await db.commit()
+    await db.flush()
     await db.refresh(existing)
     return existing
 
@@ -482,7 +482,7 @@ async def add_attachment(db: AsyncSession, actor: User, article: KbArticle, uplo
     )
     db.add(attachment)
     await activity_service.log(db, user_id=actor.id, action="create", entity_type="kb_attachments", entity_id=article.id, new_data={"file_name": filename})
-    await db.commit()
+    await db.flush()
     await db.refresh(attachment)
     await db.refresh(article)
     return attachment
@@ -501,7 +501,7 @@ async def delete_attachment(db: AsyncSession, actor: User, article: KbArticle, a
         db, user_id=actor.id, action="delete", entity_type="kb_attachments", entity_id=article.id, old_data={"file_name": attachment.file_name}
     )
     await db.delete(attachment)
-    await db.commit()
+    await db.flush()
     await db.refresh(article)
 
 

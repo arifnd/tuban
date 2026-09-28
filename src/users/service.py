@@ -48,14 +48,14 @@ async def ensure_user(
         else:
             logger.info("created user %s email=%s role=%s", user.id, email, user.role.value)
     if not user.is_active:
-        await db.commit()
+        await db.flush()
         raise UserDeactivated()
     if google_id and not user.google_id:
         user.google_id = google_id
     if avatar:
         user.avatar = avatar
     user.last_login = datetime.now(UTC)
-    await db.commit()
+    await db.flush()
     await db.refresh(user)
     return user
 
@@ -107,7 +107,7 @@ async def set_user_role(db: AsyncSession, user: User, role: UserRole) -> User:
     if user.role == UserRole.ADMIN and role != UserRole.ADMIN:
         await ensure_not_last_active_admin(db, user.id)
     user.role = role
-    await db.commit()
+    await db.flush()
     await db.refresh(user)
     return user
 
@@ -116,14 +116,14 @@ async def set_user_active(db: AsyncSession, user: User, is_active: bool) -> User
     if not is_active and user.role == UserRole.ADMIN:
         await ensure_not_last_active_admin(db, user.id)
     user.is_active = is_active
-    await db.commit()
+    await db.flush()
     await db.refresh(user)
     return user
 
 
 async def update_profile(db: AsyncSession, user: User, name: str) -> User:
     user.name = name
-    await db.commit()
+    await db.flush()
     await db.refresh(user)
     return user
 

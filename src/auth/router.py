@@ -72,7 +72,15 @@ async def callback(request: Request, db: DbDep):
             authorization_response=str(request.url),
             expected_state=expected_state,
         )
-    except (OAuthFailed, UserDeactivated, RegistrationClosedError) as exc:
+    except UserDeactivated as exc:
+        # A pending registration still needs to be persisted even though the
+        # login is refused.
+        await db.commit()
+        return RedirectResponse(
+            f"{LOGIN_URL}?error={quote(str(exc.detail))}",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    except (OAuthFailed, RegistrationClosedError) as exc:
         return RedirectResponse(
             f"{LOGIN_URL}?error={quote(str(exc.detail))}",
             status_code=status.HTTP_303_SEE_OTHER,
@@ -105,7 +113,12 @@ async def dev_login(request: Request, db: DbDep):
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Invalid email address",
         ) from None
-    user = await auth_service.dev_login(db, email)
+    try:
+        user = await auth_service.dev_login(db, email)
+    except UserDeactivated:
+        # Persist a newly-created (pending-approval) account before refusing login.
+        await db.commit()
+        raise
     response = RedirectResponse(_home_url(), status_code=status.HTTP_303_SEE_OTHER)
     set_session_cookie(response, create_session_token(user.id))
     return response
