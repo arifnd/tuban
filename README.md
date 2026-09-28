@@ -17,15 +17,17 @@ storage layer. Runs on **SQLite (default)** or **PostgreSQL** via one `DATABASE_
 ## Quickstart
 
 ```shell
-cp .env.example .env
-# AUTH_SESSION_SECRET has no safe default — generate one and paste it into .env:
-python -c "import secrets;print(secrets.token_urlsafe(64))"
+make env                                # create .env with a generated AUTH_SESSION_SECRET
 uv sync --extra dev
 npm install && npm run build:assets     # build CSS/JS/icon sprite
 make migrate                            # alembic upgrade head
 make seed                               # optional demo data
 make dev                                # http://localhost:8000
 ```
+
+`make env` copies `.env.example` and fills in a strong `AUTH_SESSION_SECRET`; `make dev`,
+`make migrate`, `make revision`, `make downgrade`, `make seed` and `make seed-reset` run
+it automatically when `.env` is missing, so a fresh checkout starts without manual setup.
 
 `ENVIRONMENT` is required (`local`, `test`, `staging`, or `production`) and the app
 refuses to start without a strong `AUTH_SESSION_SECRET` (except in `test`). `local`
@@ -40,6 +42,7 @@ and `test` additionally show an email dev-login on `/auth/login` when
 | Target | Purpose |
 |--------|---------|
 | `make install` | `uv sync` + `npm install` |
+| `make env` | Create `.env` with a generated secret (local dev) |
 | `make assets` | Build icons, CSS, and JS |
 | `make dev` | Run the app with autoreload |
 | `make migrate` / `make revision m="..."` / `make downgrade` | Migrations |

@@ -5,6 +5,7 @@ Tuban: server-rendered FastAPI + SQLAlchemy 2.0 async + Jinja2/HTMX/Alpine app. 
 ## Commands
 
 - `make help` — list all targets.
+- `make env` — create a local `.env` with a generated `AUTH_SESSION_SECRET` if missing (dev targets depend on it).
 - `make check` / `make ci` — exact CI pipeline: `ruff format --check` + `ruff check` + `pytest --cov -n auto` (coverage gate applies).
 - `make assets-check` — rebuild assets and fail if the committed files drift.
 - `make coverage` — `pytest --cov -n auto` then `coverage report -m`.

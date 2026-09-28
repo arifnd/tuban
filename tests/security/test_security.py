@@ -123,7 +123,7 @@ def test_dev_login_off_by_default(monkeypatch) -> None:
 
     monkeypatch.delenv("AUTH_DEV_LOGIN_ENABLED", raising=False)
     monkeypatch.setattr(config_module.settings, "ENVIRONMENT", "local")
-    config = AuthConfig(SESSION_SECRET="a-strong-secret-that-is-long-enough")
+    config = AuthConfig(_env_file=None, SESSION_SECRET="a-strong-secret-that-is-long-enough")
     assert config.dev_login_enabled is False
 
 
@@ -143,7 +143,7 @@ def test_secure_cookies_forced_outside_local(monkeypatch) -> None:
     monkeypatch.delenv("AUTH_DEV_LOGIN_ENABLED", raising=False)
     for env in ("staging", "production"):
         monkeypatch.setattr(config_module.settings, "ENVIRONMENT", env)
-        config = AuthConfig(SESSION_SECRET="a-strong-secret-that-is-long-enough", SECURE_COOKIES=False)
+        config = AuthConfig(_env_file=None, SESSION_SECRET="a-strong-secret-that-is-long-enough", SECURE_COOKIES=False)
         assert config.SECURE_COOKIES is True
 
 
