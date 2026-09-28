@@ -4,6 +4,7 @@ from pydantic import ValidationError
 
 from src.auth.dependencies import DbDep
 from src.exceptions import BadRequestError
+from src.forms import form_bool, form_str
 from src.settings import service as settings_service
 from src.settings import theme as theme_palettes
 from src.settings.schemas import SettingsUpdate
@@ -37,33 +38,27 @@ async def settings_page(request: Request, db: DbDep, _: AdminUser):
 async def update_settings(request: Request, db: DbDep, admin: AdminUser):
     form = await request.form()
 
-    def field(name: str, default: str = "") -> str:
-        return str(form.get(name, default)).strip()
-
-    def checked(name: str) -> bool:
-        return str(form.get(name, "")) in {"1", "on", "true", "yes"}
-
     payload = {
-        "app_name": field("app_name"),
-        "default_language": field("default_language", "id"),
-        "theme_color": field("theme_color", "green"),
-        "sla_urgent_hours": field("sla_urgent_hours", "4"),
-        "sla_high_hours": field("sla_high_hours", "8"),
-        "sla_normal_hours": field("sla_normal_hours", "24"),
-        "sla_low_hours": field("sla_low_hours", "72"),
-        "ticket_number_prefix": field("ticket_number_prefix", "TKT"),
-        "upload_max_size_mb": field("upload_max_size_mb", "20"),
-        "allowed_extensions": [ext.strip().lower().lstrip(".") for ext in field("allowed_extensions").split(",") if ext.strip()],
-        "open_registration": checked("open_registration"),
-        "require_approval": checked("require_approval"),
-        "contact_email": field("contact_email"),
-        "contact_phone": field("contact_phone"),
-        "contact_address": field("contact_address"),
-        "social_facebook": field("social_facebook"),
-        "social_instagram": field("social_instagram"),
-        "social_x": field("social_x"),
-        "social_linkedin": field("social_linkedin"),
-        "social_youtube": field("social_youtube"),
+        "app_name": form_str(form, "app_name"),
+        "default_language": form_str(form, "default_language", "id"),
+        "theme_color": form_str(form, "theme_color", "green"),
+        "sla_urgent_hours": form_str(form, "sla_urgent_hours", "4"),
+        "sla_high_hours": form_str(form, "sla_high_hours", "8"),
+        "sla_normal_hours": form_str(form, "sla_normal_hours", "24"),
+        "sla_low_hours": form_str(form, "sla_low_hours", "72"),
+        "ticket_number_prefix": form_str(form, "ticket_number_prefix", "TKT"),
+        "upload_max_size_mb": form_str(form, "upload_max_size_mb", "20"),
+        "allowed_extensions": [ext.strip().lower().lstrip(".") for ext in form_str(form, "allowed_extensions").split(",") if ext.strip()],
+        "open_registration": form_bool(form, "open_registration"),
+        "require_approval": form_bool(form, "require_approval"),
+        "contact_email": form_str(form, "contact_email"),
+        "contact_phone": form_str(form, "contact_phone"),
+        "contact_address": form_str(form, "contact_address"),
+        "social_facebook": form_str(form, "social_facebook"),
+        "social_instagram": form_str(form, "social_instagram"),
+        "social_x": form_str(form, "social_x"),
+        "social_linkedin": form_str(form, "social_linkedin"),
+        "social_youtube": form_str(form, "social_youtube"),
     }
     try:
         data = SettingsUpdate(**payload)

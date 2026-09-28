@@ -7,6 +7,7 @@ from fastapi.responses import RedirectResponse
 from src.activity import service as activity_service
 from src.auth.dependencies import CurrentUser, DbDep
 from src.exceptions import BadRequestError
+from src.forms import parse_bool, parse_enum
 from src.pagination import Page, clamp_per_page, paginate
 from src.templating import templates
 from src.users import service as users_service
@@ -17,27 +18,10 @@ from src.users.models import UserRole
 router = APIRouter(tags=["users"])
 
 
-def _parse_role(value: str | None) -> UserRole | None:
-    if not value:
-        return None
-    try:
-        return UserRole(value)
-    except ValueError:
-        return None
-
-
-def _parse_active(value: str | None) -> bool | None:
-    if value == "1":
-        return True
-    if value == "0":
-        return False
-    return None
-
-
 async def _list_context(db, admin, q, role, active, page, per_page) -> dict:
     per_page = clamp_per_page(per_page)
-    role_filter = _parse_role(role)
-    active_filter = _parse_active(active)
+    role_filter = parse_enum(UserRole, role, None)
+    active_filter = parse_bool(active)
     total = await users_service.count_users(db, search=q or None, role=role_filter, is_active=active_filter, exclude_id=admin.id)
     pag = paginate(page, per_page, total)
     users = await users_service.list_users(

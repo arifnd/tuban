@@ -6,6 +6,7 @@ from starlette.datastructures import UploadFile
 
 from src.auth.dependencies import CurrentUser, DbDep
 from src.exceptions import BadRequestError
+from src.forms import form_bool, form_int, form_str, parse_enum, parse_uuid
 from src.kb import markdown as markdown_utils
 from src.pagination import Page, clamp_per_page, paginate
 from src.templating import templates
@@ -18,37 +19,14 @@ from src.users import service as users_service
 router = APIRouter(prefix="/tickets", tags=["tickets"])
 
 
-def _parse_uuid(value: object) -> uuid.UUID | None:
-    if not value:
-        return None
-    try:
-        return uuid.UUID(str(value))
-    except (ValueError, TypeError):
-        return None
-
-
-def _parse_status(value: object) -> TicketStatus | None:
-    try:
-        return TicketStatus(str(value))
-    except ValueError:
-        return None
-
-
-def _parse_priority(value: object) -> TicketPriority | None:
-    try:
-        return TicketPriority(str(value))
-    except ValueError:
-        return None
-
-
 async def _list_context(db, user, *, q, status_value, priority_value, category, assignee, sort, mine, page, per_page) -> dict:
     requester_id = user.id if mine or not ticket_service.is_editor(user) else None
     filters = {
         "q": q or None,
-        "status": _parse_status(status_value),
-        "priority": _parse_priority(priority_value),
-        "category_id": _parse_uuid(category),
-        "assignee_id": _parse_uuid(assignee),
+        "status": parse_enum(TicketStatus, status_value, None),
+        "priority": parse_enum(TicketPriority, priority_value, None),
+        "category_id": parse_uuid(category),
+        "assignee_id": parse_uuid(assignee),
         "requester_id": requester_id,
     }
     total = await ticket_service.count_tickets(db, user, **filters)
@@ -145,18 +123,18 @@ async def ticket_new(request: Request, db: DbDep, user: CurrentUser):
 @router.post("")
 async def ticket_create(request: Request, db: DbDep, user: CurrentUser):
     form = await request.form()
-    subject = str(form.get("subject", "")).strip()
+    subject = form_str(form, "subject")
     if len(subject) < 3:
         raise BadRequestError(detail="Subject must be at least 3 characters")
-    priority = _parse_priority(form.get("priority") or "normal")
+    priority = parse_enum(TicketPriority, form.get("priority") or "normal", None)
     if priority is None:
         raise BadRequestError(detail="Invalid priority")
     ticket = await ticket_service.create_ticket(
         db,
         user,
         subject=subject,
-        description=str(form.get("description", "")).strip(),
-        category_id=_parse_uuid(form.get("category_id")),
+        description=form_str(form, "description"),
+        category_id=parse_uuid(form.get("category_id")),
         priority=priority,
     )
     return RedirectResponse(f"/tickets/{ticket.id}", status_code=status.HTTP_303_SEE_OTHER)
@@ -173,10 +151,10 @@ async def categories_page(request: Request, db: DbDep, editor: TicketEditor):
 @router.post("/categories")
 async def create_category(request: Request, db: DbDep, editor: TicketEditor):
     form = await request.form()
-    name = str(form.get("name", "")).strip()
+    name = form_str(form, "name")
     if not name:
         raise BadRequestError(detail="Name is required")
-    position = int(str(form.get("position") or 0) or 0)
+    position = form_int(form, "position")
     await ticket_service.create_category(db, editor, name=name, position=position)
     return RedirectResponse("/tickets/categories", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -184,11 +162,11 @@ async def create_category(request: Request, db: DbDep, editor: TicketEditor):
 @router.post("/categories/{category_id}")
 async def update_category(request: Request, db: DbDep, editor: TicketEditor, category_id: uuid.UUID):
     form = await request.form()
-    name = str(form.get("name", "")).strip()
+    name = form_str(form, "name")
     if not name:
         raise BadRequestError(detail="Name is required")
     category = await ticket_service.get_category_by_id(db, category_id)
-    position = int(str(form.get("position") or 0) or 0)
+    position = form_int(form, "position")
     await ticket_service.update_category(db, editor, category, name=name, position=position)
     return RedirectResponse("/tickets/categories", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -235,10 +213,10 @@ async def ticket_detail(request: Request, db: DbDep, user: CurrentUser, ticket: 
 @router.post("/{ticket_id}/comments")
 async def add_comment(request: Request, db: DbDep, user: CurrentUser, ticket: TicketMember):
     form = await request.form()
-    body = str(form.get("body", "")).strip()
+    body = form_str(form, "body")
     if not body:
         raise BadRequestError(detail="Comment cannot be empty")
-    is_internal = str(form.get("is_internal", "")) == "1"
+    is_internal = form_bool(form, "is_internal")
     comment = await ticket_service.add_comment(db, user, ticket, body, is_internal=is_internal)
     upload = form.get("file")
     if isinstance(upload, UploadFile) and upload.filename:
@@ -277,7 +255,7 @@ async def delete_comment(request: Request, db: DbDep, user: CurrentUser, ticket:
 @router.post("/{ticket_id}/assign")
 async def assign_ticket(request: Request, db: DbDep, editor: TicketEditor, ticket: TicketDep):
     form = await request.form()
-    assignee_id = _parse_uuid(form.get("assignee_id"))
+    assignee_id = parse_uuid(form.get("assignee_id"))
     assignee = await users_service.get_user_by_id(db, assignee_id) if assignee_id else None
     await ticket_service.assign_ticket(db, editor, ticket, assignee)
     return RedirectResponse(f"/tickets/{ticket.id}", status_code=status.HTTP_303_SEE_OTHER)
@@ -292,7 +270,7 @@ async def claim_ticket(request: Request, db: DbDep, editor: TicketEditor, ticket
 @router.post("/{ticket_id}/status")
 async def set_status(request: Request, db: DbDep, user: CurrentUser, ticket: TicketMember):
     form = await request.form()
-    target = _parse_status(form.get("status"))
+    target = parse_enum(TicketStatus, form.get("status"), None)
     if target is None:
         raise BadRequestError(detail="Invalid status")
     await ticket_service.transition_status(db, user, ticket, target)
@@ -302,7 +280,7 @@ async def set_status(request: Request, db: DbDep, user: CurrentUser, ticket: Tic
 @router.post("/{ticket_id}/priority")
 async def set_priority(request: Request, db: DbDep, editor: TicketEditor, ticket: TicketDep):
     form = await request.form()
-    priority = _parse_priority(form.get("priority"))
+    priority = parse_enum(TicketPriority, form.get("priority"), None)
     if priority is None:
         raise BadRequestError(detail="Invalid priority")
     await ticket_service.set_priority(db, editor, ticket, priority)

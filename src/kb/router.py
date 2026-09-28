@@ -6,6 +6,7 @@ from starlette.datastructures import UploadFile
 
 from src.auth.dependencies import CurrentUser, DbDep, OptionalUser
 from src.exceptions import BadRequestError
+from src.forms import form_int, form_str, parse_enum, parse_uuid
 from src.kb import markdown as markdown_utils
 from src.kb import service as kb_service
 from src.kb.constants import PAGE_SIZE
@@ -15,36 +16,6 @@ from src.pagination import Page, clamp_per_page, paginate
 from src.templating import templates
 
 router = APIRouter(prefix="/kb", tags=["kb"])
-
-
-def _parse_uuid(value: object) -> uuid.UUID | None:
-    if not value:
-        return None
-    try:
-        return uuid.UUID(str(value))
-    except (ValueError, TypeError):
-        return None
-
-
-def _parse_int(value: object, default: int = 0) -> int:
-    try:
-        return int(str(value))
-    except (ValueError, TypeError):
-        return default
-
-
-def _parse_visibility(value: object) -> KbArticleVisibility:
-    try:
-        return KbArticleVisibility(str(value))
-    except ValueError:
-        return KbArticleVisibility.INTERNAL
-
-
-def _parse_status(value: object) -> KbArticleStatus | None:
-    try:
-        return KbArticleStatus(str(value))
-    except ValueError:
-        return None
 
 
 def _parse_tags(value: object) -> list[str]:
@@ -98,23 +69,21 @@ async def categories_page(request: Request, db: DbDep, editor: KbEditor):
 @router.post("/categories")
 async def create_category(request: Request, db: DbDep, editor: KbEditor):
     form = await request.form()
-    name = str(form.get("name", "")).strip()
+    name = form_str(form, "name")
     if not name:
         raise BadRequestError(detail="Name is required")
-    await kb_service.create_category(db, editor, name=name, description=str(form.get("description", "")).strip(), position=_parse_int(form.get("position")))
+    await kb_service.create_category(db, editor, name=name, description=form_str(form, "description"), position=form_int(form, "position"))
     return RedirectResponse("/kb/categories", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/categories/{category_id}")
 async def update_category(request: Request, db: DbDep, editor: KbEditor, category_id: uuid.UUID):
     form = await request.form()
-    name = str(form.get("name", "")).strip()
+    name = form_str(form, "name")
     if not name:
         raise BadRequestError(detail="Name is required")
     category = await kb_service.get_category_by_id(db, category_id)
-    await kb_service.update_category(
-        db, editor, category, name=name, description=str(form.get("description", "")).strip(), position=_parse_int(form.get("position"))
-    )
+    await kb_service.update_category(db, editor, category, name=name, description=form_str(form, "description"), position=form_int(form, "position"))
     return RedirectResponse("/kb/categories", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -141,7 +110,7 @@ async def article_list(
     per_page: int = PAGE_SIZE,
 ):
     per_page = clamp_per_page(per_page)
-    article_status_value = _parse_status(article_status) if kb_service.is_editor(user) else None
+    article_status_value = parse_enum(KbArticleStatus, article_status, None) if kb_service.is_editor(user) else None
     category_id = await _filter_category_id(db, category)
     tag_id = await _filter_tag_id(db, tag)
     total = await kb_service.count_articles(db, user, q=q.strip() or None, category_id=category_id, tag_id=tag_id, status=article_status_value)
@@ -181,18 +150,18 @@ async def article_new(request: Request, db: DbDep, editor: KbEditor):
 @router.post("/articles")
 async def article_create(request: Request, db: DbDep, editor: KbEditor):
     form = await request.form()
-    title = str(form.get("title", "")).strip()
+    title = form_str(form, "title")
     if not title:
         raise BadRequestError(detail="Title is required")
-    publish = str(form.get("action", "draft")) == "publish"
+    publish = form_str(form, "action", "draft") == "publish"
     article = await kb_service.create_article(
         db,
         editor,
         title=title,
-        summary=str(form.get("summary", "")).strip(),
+        summary=form_str(form, "summary"),
         body=str(form.get("body", "")),
-        category_id=_parse_uuid(form.get("category_id")),
-        visibility=_parse_visibility(form.get("visibility")),
+        category_id=parse_uuid(form.get("category_id")),
+        visibility=parse_enum(KbArticleVisibility, form.get("visibility"), KbArticleVisibility.INTERNAL),
         status=KbArticleStatus.PUBLISHED if publish else KbArticleStatus.DRAFT,
     )
     tag_names = _parse_tags(form.get("tags"))
@@ -248,7 +217,7 @@ async def article_feedback(request: Request, db: DbDep, user: CurrentUser, slug:
     article = await kb_service.get_article_by_slug(db, slug, user)
     form = await request.form()
     is_helpful = str(form.get("is_helpful", "1")) == "1"
-    comment = str(form.get("comment", "")).strip() or None
+    comment = form_str(form, "comment") or None
     await kb_service.submit_feedback(db, user, article, is_helpful=is_helpful, comment=comment)
     return templates.TemplateResponse(
         request,
@@ -264,7 +233,7 @@ async def article_feedback(request: Request, db: DbDep, user: CurrentUser, slug:
 @router.post("/articles/{slug}/status")
 async def article_status(request: Request, db: DbDep, editor: KbEditor, slug: str):
     form = await request.form()
-    target = _parse_status(form.get("status"))
+    target = parse_enum(KbArticleStatus, form.get("status"), None)
     if target is None:
         raise BadRequestError(detail="Invalid status")
     article = await kb_service.get_article_by_slug(db, slug, editor)
@@ -283,7 +252,7 @@ async def article_restore(request: Request, db: DbDep, editor: KbEditor, slug: s
 @router.post("/articles/{slug}")
 async def article_update(request: Request, db: DbDep, editor: KbEditor, slug: str):
     form = await request.form()
-    title = str(form.get("title", "")).strip()
+    title = form_str(form, "title")
     if not title:
         raise BadRequestError(detail="Title is required")
     article = await kb_service.get_article_by_slug(db, slug, editor)
@@ -292,10 +261,10 @@ async def article_update(request: Request, db: DbDep, editor: KbEditor, slug: st
         editor,
         article,
         title=title,
-        summary=str(form.get("summary", "")).strip(),
+        summary=form_str(form, "summary"),
         body=str(form.get("body", "")),
-        category_id=_parse_uuid(form.get("category_id")),
-        visibility=_parse_visibility(form.get("visibility")),
+        category_id=parse_uuid(form.get("category_id")),
+        visibility=parse_enum(KbArticleVisibility, form.get("visibility"), KbArticleVisibility.INTERNAL),
     )
     await kb_service.set_article_tags(db, editor, article, _parse_tags(form.get("tags")))
     return RedirectResponse(f"/kb/articles/{article.slug}", status_code=status.HTTP_303_SEE_OTHER)
