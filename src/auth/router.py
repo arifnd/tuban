@@ -17,6 +17,7 @@ from src.auth.utils import (
     create_session_token,
     set_session_cookie,
 )
+from src.ratelimit import rate_limiter
 from src.templating import templates
 from src.users.exceptions import RegistrationClosedError
 
@@ -101,9 +102,20 @@ async def dev_login(request: Request, db: DbDep):
         raw_email = str(form.get("email", "")).strip()
     else:
         raw_email = str((await request.json()).get("email", "")).strip()
+    email_key = f"auth:email:{raw_email.lower()}" if raw_email else ""
+    if email_key:
+        retry_after = rate_limiter.retry_after(email_key)
+        if retry_after:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Too many login attempts",
+                headers={"Retry-After": str(retry_after)},
+            )
     try:
         email = DevLoginIn(email=raw_email).email
     except ValidationError:
+        if email_key:
+            rate_limiter.record_failure(email_key)
         if content_type == FORM_CONTENT_TYPE:
             return RedirectResponse(
                 f"{LOGIN_URL}?error={quote('Enter a valid email address')}",
@@ -119,6 +131,8 @@ async def dev_login(request: Request, db: DbDep):
         # Persist a newly-created (pending-approval) account before refusing login.
         await db.commit()
         raise
+    if email_key:
+        rate_limiter.reset(email_key)
     response = RedirectResponse(_home_url(), status_code=status.HTTP_303_SEE_OTHER)
     set_session_cookie(response, create_session_token(user.id))
     return response

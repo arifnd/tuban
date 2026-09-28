@@ -68,7 +68,8 @@ DATABASE_URL=postgresql+asyncpg://tuban:tuban@db:5432/tuban \
 
 The container runs `alembic upgrade head` before starting uvicorn, behind nginx, with
 `instance/` and `media/` on named volumes. Upgrade path: migrate before swapping the
-image.
+image. Automated abuse is limited in-process (`RATE_LIMIT_*`); configure an additional
+rate limit at the reverse proxy, especially for `/auth/*`.
 
 ## Documentation
 

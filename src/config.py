@@ -25,6 +25,13 @@ class Settings(BaseSettings):
 
     INITIAL_ADMIN_EMAIL: str = ""
 
+    # Failure-based rate limiting for unsafe requests (in-process; the reverse
+    # proxy should enforce an additional limit).
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_MAX_FAILURES: int = 20
+    RATE_LIMIT_WINDOW_SECONDS: int = 300
+    RATE_LIMIT_LOCKOUT_SECONDS: int = 300
+
     @field_validator("ENVIRONMENT")
     @classmethod
     def _validate_environment(cls, value: str) -> str:

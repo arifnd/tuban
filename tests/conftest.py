@@ -22,6 +22,7 @@ from src import models_registry  # noqa: F401  (registers every model on Base.me
 from src.database import engine
 from src.main import app
 from src.models import Base
+from src.ratelimit import rate_limiter
 from src.settings import service as settings_service
 
 # Test setup uses an autocommit session: services only flush now, and a long-lived
@@ -33,8 +34,10 @@ TestSessionFactory = async_sessionmaker(engine.execution_options(isolation_level
 @pytest.fixture(autouse=True)
 def _reset_settings_cache():
     settings_service.reset_cache()
+    rate_limiter.clear()
     yield
     settings_service.reset_cache()
+    rate_limiter.clear()
 
 
 @pytest.fixture(autouse=True)

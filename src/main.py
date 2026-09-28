@@ -18,7 +18,7 @@ from src.database import SessionFactory
 from src.kb import router as kb_router
 from src.kb import service as kb_service
 from src.logging_filters import RedactSensitiveQueryFilter
-from src.middleware import BodySizeLimitMiddleware, SecurityHeadersMiddleware
+from src.middleware import BodySizeLimitMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware
 from src.notifications import router as notifications_router
 from src.reports import router as reports_router
 from src.search import router as search_router
@@ -60,6 +60,7 @@ app = FastAPI(**app_kwargs, lifespan=lifespan)
 app.add_middleware(SecurityHeadersMiddleware)
 # Added last so it runs outermost and can cap the body before CSRF buffers it.
 app.add_middleware(BodySizeLimitMiddleware)
+app.add_middleware(RateLimitMiddleware)
 
 app.mount("/static", StaticFiles(directory=str(PROJECT_ROOT / "static")), name="static")
 

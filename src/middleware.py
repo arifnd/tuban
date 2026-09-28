@@ -10,6 +10,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from src.auth.constants import CSRF_FORM_FIELD, CSRF_HEADER, SESSION_COOKIE_NAME
 from src.auth.utils import decode_session_token
 from src.config import settings
+from src.ratelimit import rate_limiter
 from src.storage import service as storage_service
 
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS", "TRACE"}
@@ -87,6 +88,48 @@ class BodySizeLimitMiddleware:
         except _RequestBodyTooLarge:
             if not response_started:
                 await PlainTextResponse("Request body too large", status_code=413)(scope, receive, send)
+
+
+class RateLimitMiddleware:
+    """Throttle repeated failures on unsafe requests.
+
+    Keyed by client IP and path group (``auth`` vs. other mutations) so an
+    attack on the login form cannot lock unrelated endpoints. Successful
+    requests reset the counter; failed ones accumulate toward a lockout.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or not settings.RATE_LIMIT_ENABLED or scope["method"] in SAFE_METHODS:
+            await self.app(scope, receive, send)
+            return
+
+        request = Request(scope, receive)
+        client = request.client.host if request.client else "unknown"
+        group = "auth" if scope["path"].startswith("/auth") else "mutation"
+        key = f"{group}:{client}"
+
+        retry_after = rate_limiter.retry_after(key)
+        if retry_after:
+            response = PlainTextResponse("Too many requests", status_code=429, headers={"Retry-After": str(retry_after)})
+            await response(scope, receive, send)
+            return
+
+        status_code = 500
+
+        async def tracking_send(message: Message) -> None:
+            nonlocal status_code
+            if message["type"] == "http.response.start":
+                status_code = message["status"]
+            await send(message)
+
+        await self.app(scope, receive, tracking_send)
+        if status_code >= 400:
+            rate_limiter.record_failure(key)
+        else:
+            rate_limiter.reset(key)
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):

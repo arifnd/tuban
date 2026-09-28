@@ -122,6 +122,29 @@ async def test_dev_login_disabled_returns_404(client: AsyncClient, monkeypatch) 
     assert resp.status_code == 404
 
 
+async def test_repeated_failed_logins_are_throttled(client: AsyncClient, monkeypatch) -> None:
+    from src.config import settings
+
+    monkeypatch.setattr(settings, "RATE_LIMIT_MAX_FAILURES", 3)
+    monkeypatch.setattr(settings, "RATE_LIMIT_LOCKOUT_SECONDS", 60)
+
+    for _ in range(3):
+        resp = await client.post("/auth/dev-login", json={"email": "not-an-email"})
+        assert resp.status_code == 422
+
+    throttled = await client.post("/auth/dev-login", json={"email": "not-an-email"})
+    assert throttled.status_code == 429
+    assert "retry-after" in {key.lower() for key in throttled.headers}
+
+
+async def test_successful_login_under_threshold_unaffected(client: AsyncClient, monkeypatch) -> None:
+    from src.config import settings
+
+    monkeypatch.setattr(settings, "RATE_LIMIT_MAX_FAILURES", 3)
+    resp = await client.post("/auth/dev-login", json={"email": "fresh@example.com"})
+    assert resp.status_code == 303
+
+
 async def test_decode_session_token_returns_none_for_invalid_token() -> None:
     assert decode_session_token("not-a-token") is None
 
