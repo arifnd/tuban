@@ -170,6 +170,18 @@ async def test_landing_shows_only_public_articles(client: AsyncClient, db) -> No
     assert "Draft Notes" not in resp.text
 
 
+def test_defaults_are_centralized() -> None:
+    from src.settings.theme import DEFAULT_COLOR
+    from src.templating import DEFAULT_LANG
+
+    assert settings_service.defaults()["default_language"] == settings_service.DEFAULT_LANGUAGE == DEFAULT_LANG
+    assert settings_service.defaults()["theme_color"] == settings_service.DEFAULT_THEME_COLOR == DEFAULT_COLOR
+    assert settings_service.defaults()["ticket_number_prefix"] == settings_service.DEFAULT_TICKET_NUMBER_PREFIX
+    sla = settings_service.defaults()
+    for key, value in settings_service.DEFAULT_SLA_HOURS.items():
+        assert sla[key] == value
+
+
 async def test_landing_category_counts_exclude_non_public(db) -> None:
     from src.kb import service as kb_service
 

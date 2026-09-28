@@ -16,7 +16,7 @@ from src.version import __version__
 
 TEMPLATES_DIR = PROJECT_ROOT / "templates"
 I18N_DIR = PROJECT_ROOT / "static" / "i18n"
-DEFAULT_LANG = "id"
+DEFAULT_LANG = settings_service.DEFAULT_LANGUAGE
 
 SOCIAL_PLATFORMS = (
     ("facebook", "Facebook"),

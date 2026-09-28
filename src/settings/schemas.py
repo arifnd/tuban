@@ -1,13 +1,13 @@
 from pydantic import BaseModel, Field, field_validator
 
-from src.settings.theme import PALETTES
+from src.settings.theme import DEFAULT_COLOR, PALETTES
 from src.storage.constants import SAFE_EXTENSIONS
 
 
 class SettingsUpdate(BaseModel):
     app_name: str = Field(min_length=1, max_length=100)
     default_language: str = Field(pattern=r"^(en|id)$")
-    theme_color: str = Field(default="green")
+    theme_color: str = Field(default=DEFAULT_COLOR)
     sla_urgent_hours: int = Field(ge=1, le=1000)
     sla_high_hours: int = Field(ge=1, le=1000)
     sla_normal_hours: int = Field(ge=1, le=1000)

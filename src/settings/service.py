@@ -6,21 +6,33 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.activity import service as activity_service
 from src.config import settings as config_settings
 from src.settings.models import AppSetting
+from src.settings.theme import DEFAULT_COLOR
 from src.storage.config import storage_settings
 from src.storage.constants import ALLOWED_EXTENSIONS
+
+# Single source of truth for runtime setting defaults. Routers, schemas and
+# templates should import these instead of repeating the literals.
+DEFAULT_LANGUAGE = "id"
+DEFAULT_THEME_COLOR = DEFAULT_COLOR
+DEFAULT_TICKET_NUMBER_PREFIX = "TKT"
+DEFAULT_SLA_HOURS = {
+    "sla_urgent_hours": 4,
+    "sla_high_hours": 8,
+    "sla_normal_hours": 24,
+    "sla_low_hours": 72,
+}
 
 
 def defaults() -> dict[str, Any]:
     return {
         "app_name": config_settings.APP_NAME,
-        "default_language": "id",
-        "theme_color": "green",
+        "default_language": DEFAULT_LANGUAGE,
+        "theme_color": DEFAULT_THEME_COLOR,
         "initial_admin_email": config_settings.INITIAL_ADMIN_EMAIL,
-        "sla_urgent_hours": 4,
-        "sla_high_hours": 8,
-        "sla_normal_hours": 24,
-        "sla_low_hours": 72,
-        "ticket_number_prefix": "TKT",
+        **DEFAULT_SLA_HOURS,
+        "ticket_number_prefix": DEFAULT_TICKET_NUMBER_PREFIX,
+        # Authoritative upload limit lives in StorageConfig; the DB-backed setting
+        # overrides it at runtime once an admin saves a value.
         "upload_max_size": storage_settings.UPLOAD_MAX_SIZE,
         "allowed_extensions": sorted(ALLOWED_EXTENSIONS),
         "open_registration": True,

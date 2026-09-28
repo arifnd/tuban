@@ -1,3 +1,4 @@
+from src.settings import service as settings_service
 from src.tickets.models import TicketPriority, TicketSource, TicketStatus
 from src.users.models import UserRole
 
@@ -29,10 +30,10 @@ PRIORITY_ORDER = {
 }
 
 DEFAULT_SLA_HOURS = {
-    TicketPriority.URGENT: 4,
-    TicketPriority.HIGH: 8,
-    TicketPriority.NORMAL: 24,
-    TicketPriority.LOW: 72,
+    TicketPriority.URGENT: settings_service.DEFAULT_SLA_HOURS["sla_urgent_hours"],
+    TicketPriority.HIGH: settings_service.DEFAULT_SLA_HOURS["sla_high_hours"],
+    TicketPriority.NORMAL: settings_service.DEFAULT_SLA_HOURS["sla_normal_hours"],
+    TicketPriority.LOW: settings_service.DEFAULT_SLA_HOURS["sla_low_hours"],
 }
 
 SLA_DUE_SOON_HOURS = 4

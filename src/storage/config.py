@@ -5,6 +5,8 @@ class StorageConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="STORAGE_", env_file=".env", extra="ignore")
 
     BACKEND: str = "local"
+    # Authoritative default for the upload size cap. Runtime settings
+    # (src/settings/service.defaults) seed from this value and may override it.
     UPLOAD_MAX_SIZE: int = 20 * 1024 * 1024
     LOCAL_DIR: str = ""
 
