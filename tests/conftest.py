@@ -9,6 +9,7 @@ os.environ.setdefault("ENVIRONMENT", "local")
 if not os.environ.get("DATABASE_URL") or "instance/test" in os.environ.get("DATABASE_URL", ""):
     os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///./instance/test_{os.environ.get('PYTEST_XDIST_WORKER', 'main')}.db"
 os.environ.setdefault("AUTH_SESSION_SECRET", "test-secret-that-is-longer-than-32-bytes-for-hmac")
+os.environ.setdefault("AUTH_DEV_LOGIN_ENABLED", "true")
 os.environ.setdefault("INITIAL_ADMIN_EMAIL", "admin@example.com")
 os.environ.setdefault("STORAGE_BACKEND", "local")
 os.environ.setdefault("STORAGE_LOCAL_DIR", "./instance/test_media")

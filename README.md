@@ -18,6 +18,8 @@ storage layer. Runs on **SQLite (default)** or **PostgreSQL** via one `DATABASE_
 
 ```shell
 cp .env.example .env
+# AUTH_SESSION_SECRET has no safe default — generate one and paste it into .env:
+python -c "import secrets;print(secrets.token_urlsafe(64))"
 uv sync --extra dev
 npm install && npm run build:assets     # build CSS/JS/icon sprite
 make migrate                            # alembic upgrade head
@@ -25,8 +27,11 @@ make seed                               # optional demo data
 make dev                                # http://localhost:8000
 ```
 
-Local environments show an email dev-login on `/auth/login`. Production uses Google SSO
-(`AUTH_GOOGLE_CLIENT_ID` / `AUTH_GOOGLE_CLIENT_SECRET`).
+`ENVIRONMENT` is required (`local`, `test`, `staging`, or `production`) and the app
+refuses to start without a strong `AUTH_SESSION_SECRET` (except in `test`). `local`
+and `test` additionally show an email dev-login on `/auth/login` when
+`AUTH_DEV_LOGIN_ENABLED=true`; staging/production use Google SSO
+(`AUTH_GOOGLE_CLIENT_ID` / `AUTH_GOOGLE_CLIENT_SECRET`) with secure cookies.
 
 ## Commands
 

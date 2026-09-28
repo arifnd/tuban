@@ -6,6 +6,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
+VALID_ENVIRONMENTS = ("local", "test", "staging", "production")
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -15,11 +17,21 @@ class Settings(BaseSettings):
     )
 
     APP_NAME: str = "Tuban Helpdesk"
-    ENVIRONMENT: str = "local"
+    # No default: a deploy that forgets ENVIRONMENT must fail closed rather than
+    # silently run with a development posture.
+    ENVIRONMENT: str
 
     DATABASE_URL: str = "sqlite+aiosqlite:///./instance/tuban.db"
 
     INITIAL_ADMIN_EMAIL: str = ""
+
+    @field_validator("ENVIRONMENT")
+    @classmethod
+    def _validate_environment(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if normalized not in VALID_ENVIRONMENTS:
+            raise ValueError(f"ENVIRONMENT must be one of {', '.join(VALID_ENVIRONMENTS)}; got {value!r}")
+        return normalized
 
     @field_validator("DATABASE_URL")
     @classmethod
@@ -40,6 +52,10 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.ENVIRONMENT == "production"
+
+    @property
+    def is_local(self) -> bool:
+        return self.ENVIRONMENT in ("local", "test")
 
     @property
     def is_sqlite(self) -> bool:

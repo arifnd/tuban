@@ -51,6 +51,28 @@ def test_production_requires_strong_secret(monkeypatch) -> None:
     raise AssertionError("AuthConfig should reject a weak secret in production")
 
 
+def test_local_requires_strong_secret(monkeypatch) -> None:
+    from src import config as config_module
+    from src.auth.config import AuthConfig
+
+    monkeypatch.setattr(config_module.settings, "ENVIRONMENT", "local")
+    for secret in ("", "change-me-in-production", "short", "a" * 40):
+        try:
+            AuthConfig(SESSION_SECRET=secret)
+        except RuntimeError:
+            continue
+        raise AssertionError(f"AuthConfig should reject weak secret {secret!r} in local")
+
+
+def test_test_environment_tolerates_weak_secret(monkeypatch) -> None:
+    from src import config as config_module
+    from src.auth.config import AuthConfig
+
+    monkeypatch.setattr(config_module.settings, "ENVIRONMENT", "test")
+    config = AuthConfig(SESSION_SECRET="change-me-in-production")
+    assert config.SESSION_SECRET == "change-me-in-production"
+
+
 def test_production_disables_dev_login(monkeypatch) -> None:
     from src import config as config_module
     from src.auth.config import AuthConfig
@@ -61,3 +83,33 @@ def test_production_disables_dev_login(monkeypatch) -> None:
     except RuntimeError:
         return
     raise AssertionError("AuthConfig should reject dev login in production")
+
+
+def test_dev_login_off_by_default(monkeypatch) -> None:
+    from src import config as config_module
+    from src.auth.config import AuthConfig
+
+    monkeypatch.delenv("AUTH_DEV_LOGIN_ENABLED", raising=False)
+    monkeypatch.setattr(config_module.settings, "ENVIRONMENT", "local")
+    config = AuthConfig(SESSION_SECRET="a-strong-secret-that-is-long-enough")
+    assert config.dev_login_enabled is False
+
+
+def test_dev_login_enabled_locally_when_explicit(monkeypatch) -> None:
+    from src import config as config_module
+    from src.auth.config import AuthConfig
+
+    monkeypatch.setattr(config_module.settings, "ENVIRONMENT", "local")
+    config = AuthConfig(SESSION_SECRET="a-strong-secret-that-is-long-enough", DEV_LOGIN_ENABLED=True)
+    assert config.dev_login_enabled is True
+
+
+def test_secure_cookies_forced_outside_local(monkeypatch) -> None:
+    from src import config as config_module
+    from src.auth.config import AuthConfig
+
+    monkeypatch.delenv("AUTH_DEV_LOGIN_ENABLED", raising=False)
+    for env in ("staging", "production"):
+        monkeypatch.setattr(config_module.settings, "ENVIRONMENT", env)
+        config = AuthConfig(SESSION_SECRET="a-strong-secret-that-is-long-enough", SECURE_COOKIES=False)
+        assert config.SECURE_COOKIES is True
