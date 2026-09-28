@@ -8,12 +8,28 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+# Characters that make a spreadsheet treat a cell as a formula.
+FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def sanitize_cell(value: object) -> str:
+    """Neutralize spreadsheet formula injection by prefixing a single quote.
+
+    User-controlled values (names, subjects, ...) must never be interpreted as
+    formulas when an export is opened in Excel/LibreOffice.
+    """
+    text = "" if value is None else str(value)
+    if text.startswith(FORMULA_PREFIXES):
+        return "'" + text
+    return text
+
 
 def build_csv(columns: list[str], rows: list[list]) -> bytes:
     buffer = io.StringIO()
     writer = csv.writer(buffer)
     writer.writerow(columns)
-    writer.writerows(rows)
+    for row in rows:
+        writer.writerow([sanitize_cell(value) for value in row])
     return buffer.getvalue().encode("utf-8-sig")
 
 
@@ -27,6 +43,11 @@ def build_xlsx(title: str, columns: list[str], rows: list[list]) -> bytes:
     for row in rows:
         sheet.append(list(row))
     sheet.freeze_panes = "A2"
+    for row in sheet.iter_rows(min_row=2):
+        for cell in row:
+            if isinstance(cell.value, str) and cell.value.startswith(FORMULA_PREFIXES):
+                # Store the literal value as text instead of a formula.
+                cell.data_type = "s"
     for index, column in enumerate(columns, start=1):
         widths = [len(str(column))] + [len(str(row[index - 1])) for row in rows if len(row) >= index]
         letter = sheet.cell(row=1, column=index).column_letter

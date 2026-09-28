@@ -1,6 +1,8 @@
+import io
 from datetime import date, timedelta
 
 from httpx2 import AsyncClient
+from openpyxl import load_workbook
 
 from src.reports import exporters
 from src.users.models import UserRole
@@ -62,3 +64,39 @@ def test_exporter_builders() -> None:
     assert b"Open" in exporters.build_csv(columns, rows)
     assert exporters.build_xlsx("Report", columns, rows)[:2] == b"PK"
     assert exporters.build_pdf("Report", "subtitle", columns, rows)[:4] == b"%PDF"
+
+
+def test_csv_neutralizes_formula_injection() -> None:
+    payloads = ["=cmd|'/c calc'!A1", "+1+1", "-2+3", "@SUM(A1)", "\tstart", "\rcarriage"]
+    text = exporters.build_csv(["Name"], [[payload] for payload in payloads]).decode("utf-8-sig")
+    for payload in payloads:
+        assert f"'{payload}" in text
+
+
+def test_xlsx_stores_formula_as_text() -> None:
+    data = exporters.build_xlsx("Report", ["Name"], [["=cmd|'/c calc'!A1"]])
+    sheet = load_workbook(io.BytesIO(data), data_only=False).active
+    cell = sheet["A2"]
+    assert cell.data_type == "s"
+    assert cell.value == "=cmd|'/c calc'!A1"
+
+
+async def test_export_sanitizes_formula_agent_name(client: AsyncClient, db) -> None:
+    agent = await make_user(db, "agent@example.com", UserRole.AGENT)
+    agent.name = "=cmd|'/c calc'!A1"
+    requester = await make_user(db, "u@example.com")
+    ticket = await make_ticket(db, requester)
+    ticket.assignee_id = agent.id
+    await db.commit()
+    await login(client, "agent@example.com")
+
+    csv = await client.get("/reports/export", params={"report": "agents", "format": "csv", **DATE_RANGE})
+    assert csv.status_code == 200
+    assert "'=cmd|'/c calc'!A1" in csv.text
+
+    xlsx = await client.get("/reports/export", params={"report": "agents", "format": "xlsx", **DATE_RANGE})
+    assert xlsx.status_code == 200
+    sheet = load_workbook(io.BytesIO(xlsx.content), data_only=False).active
+    formula_cells = [cell for row in sheet.iter_rows() for cell in row if isinstance(cell.value, str) and cell.value.startswith("=cmd")]
+    assert formula_cells
+    assert all(cell.data_type == "s" for cell in formula_cells)
