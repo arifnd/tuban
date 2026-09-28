@@ -113,3 +113,30 @@ def test_secure_cookies_forced_outside_local(monkeypatch) -> None:
         monkeypatch.setattr(config_module.settings, "ENVIRONMENT", env)
         config = AuthConfig(SESSION_SECRET="a-strong-secret-that-is-long-enough", SECURE_COOKIES=False)
         assert config.SECURE_COOKIES is True
+
+
+async def test_body_size_limit_rejects_declared_oversize(client: AsyncClient, monkeypatch) -> None:
+    from src.storage import service as storage_service
+
+    monkeypatch.setattr(storage_service, "max_upload_size", lambda: 10)
+    resp = await client.post("/auth/dev-login", data={"email": "a" * 70_000})
+    assert resp.status_code == 413
+
+
+async def test_body_size_limit_rejects_chunked_upload(client: AsyncClient, db, monkeypatch) -> None:
+    from src.storage import service as storage_service
+
+    await make_user(db, "u@example.com")
+    await login(client, "u@example.com")
+    monkeypatch.setattr(storage_service, "max_upload_size", lambda: 1024)
+
+    async def _chunks():
+        for _ in range(80):
+            yield b"x" * 1024
+
+    resp = await client.post(
+        "/profile",
+        content=_chunks(),
+        headers={"content-type": "application/x-www-form-urlencoded"},
+    )
+    assert resp.status_code == 413
