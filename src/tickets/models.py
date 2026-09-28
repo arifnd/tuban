@@ -75,8 +75,9 @@ class Ticket(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     category: Mapped["TicketCategory | None"] = relationship(back_populates="tickets", lazy="selectin")
     requester: Mapped["User"] = relationship(foreign_keys=[requester_id], lazy="selectin")
     assignee: Mapped["User | None"] = relationship(foreign_keys=[assignee_id], lazy="selectin")
-    comments: Mapped[list["TicketComment"]] = relationship(back_populates="ticket", cascade="all, delete-orphan", lazy="selectin")
-    attachments: Mapped[list["TicketAttachment"]] = relationship(back_populates="ticket", cascade="all, delete-orphan", lazy="selectin")
+    # Loaded explicitly with selectinload where needed; never eager-loaded by lists.
+    comments: Mapped[list["TicketComment"]] = relationship(back_populates="ticket", cascade="all, delete-orphan", lazy="raise")
+    attachments: Mapped[list["TicketAttachment"]] = relationship(back_populates="ticket", cascade="all, delete-orphan", lazy="raise")
 
 
 class TicketComment(Base, UUIDPrimaryKeyMixin, TimestampMixin):

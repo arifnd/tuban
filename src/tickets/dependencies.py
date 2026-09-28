@@ -2,6 +2,8 @@ import uuid
 from typing import Annotated
 
 from fastapi import Depends
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from src.auth.dependencies import CurrentUser, DbDep
 from src.tickets.exceptions import TicketForbidden, TicketNotFound
@@ -14,7 +16,7 @@ TicketAdmin = Annotated[User, Depends(require_role("admin"))]
 
 
 async def get_ticket_by_id(db: DbDep, ticket_id: uuid.UUID) -> Ticket:
-    ticket = await db.get(Ticket, ticket_id)
+    ticket = (await db.execute(select(Ticket).options(selectinload(Ticket.attachments)).where(Ticket.id == ticket_id))).scalar_one_or_none()
     if ticket is None:
         raise TicketNotFound()
     return ticket

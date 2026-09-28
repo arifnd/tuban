@@ -68,3 +68,78 @@ async def test_ticket_list_query_count_is_bounded(client: AsyncClient, db) -> No
 
     assert resp.status_code == 200
     assert counter["selects"] <= 12
+
+
+async def test_kb_home_query_count_is_constant(client: AsyncClient, db) -> None:
+    from src.kb import service as kb_service
+    from src.kb.models import KbArticleStatus, KbArticleVisibility
+    from tests.kb.helpers import make_article, make_editor
+
+    editor = await make_editor(db, "editor@example.com")
+
+    async def seed(count: int, tag: int) -> None:
+        for index in range(count):
+            category = await kb_service.create_category(db, editor, name=f"Cat {tag}-{index}")
+            await make_article(
+                db,
+                editor,
+                title=f"Art {tag}-{index}",
+                category_id=category.id,
+                status=KbArticleStatus.PUBLISHED,
+                visibility=KbArticleVisibility.PUBLIC,
+            )
+
+    await seed(2, 1)
+    await login(client, "editor@example.com")
+
+    counter = {"selects": 0}
+
+    def _before(conn, cursor, statement, parameters, context, executemany):  # noqa: ANN001
+        if statement.lstrip().upper().startswith("SELECT"):
+            counter["selects"] += 1
+
+    event.listen(engine.sync_engine, "before_cursor_execute", _before)
+    try:
+        assert (await client.get("/kb")).status_code == 200
+        first = counter["selects"]
+        await seed(7, 2)
+        counter["selects"] = 0
+        assert (await client.get("/kb")).status_code == 200
+        second = counter["selects"]
+    finally:
+        event.remove(engine.sync_engine, "before_cursor_execute", _before)
+
+    assert first > 0
+    assert second == first
+
+
+async def test_ticket_list_does_not_load_attachments(client: AsyncClient, db) -> None:
+    from src.tickets.models import TicketAttachment
+
+    requester = await make_user(db, "u@example.com")
+    ticket = await make_ticket(db, requester)
+    db.add(
+        TicketAttachment(
+            ticket_id=ticket.id,
+            file_name="a.txt",
+            file_path=f"tickets/{ticket.id}/a.txt",
+            uploaded_by=requester.id,
+            size_bytes=1,
+            mime_type="text/plain",
+        )
+    )
+    await db.flush()
+    await login(client, "u@example.com")
+
+    statements: list[str] = []
+
+    def _capture(conn, cursor, statement, parameters, context, executemany):  # noqa: ANN001
+        statements.append(statement)
+
+    event.listen(engine.sync_engine, "before_cursor_execute", _capture)
+    try:
+        assert (await client.get("/tickets")).status_code == 200
+    finally:
+        event.remove(engine.sync_engine, "before_cursor_execute", _capture)
+
+    assert not any("ticket_attachments" in statement for statement in statements)

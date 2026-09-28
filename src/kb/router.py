@@ -41,19 +41,13 @@ async def _filter_tag_id(db, slug: str | None) -> uuid.UUID | None:
 # --------------------------------------------------------------------------- #
 @router.get("")
 async def home(request: Request, db: DbDep, user: OptionalUser):
-    categories = await kb_service.list_categories(db, viewer=user)
-    category_sections = []
-    for category in categories:
-        articles = await kb_service.list_articles(db, user, category_id=category.id, offset=0, limit=5)
-        if articles:
-            category_sections.append({"category": category, "articles": articles})
     return templates.TemplateResponse(
         request,
         "kb/home.html",
         {
             "recent": await kb_service.recent_articles(db, user, 5),
             "popular": await kb_service.popular_articles(db, user, 5),
-            "category_sections": category_sections,
+            "category_sections": await kb_service.home_sections(db, user, per_category=5),
         },
     )
 

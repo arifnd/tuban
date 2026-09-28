@@ -40,10 +40,16 @@ def is_editor(user: User | None) -> bool:
     return user is not None and user.role in EDITOR_ROLES
 
 
-def _scope(stmt, viewer: User | None):
+def _visibility_conditions(viewer: User | None) -> list:
     if is_editor(viewer):
-        return stmt
-    return stmt.where(KbArticle.status == KbArticleStatus.PUBLISHED, KbArticle.visibility == KbArticleVisibility.PUBLIC)
+        return []
+    return [KbArticle.status == KbArticleStatus.PUBLISHED, KbArticle.visibility == KbArticleVisibility.PUBLIC]
+
+
+def _scope(stmt, viewer: User | None):
+    for condition in _visibility_conditions(viewer):
+        stmt = stmt.where(condition)
+    return stmt
 
 
 async def _unique_slug(db: AsyncSession, model, base: str, exclude_id: uuid.UUID | None = None) -> str:
@@ -219,6 +225,29 @@ def _article_query(
 async def recent_articles(db: AsyncSession, viewer: User | None, limit: int = 5) -> list[KbArticle]:
     stmt = _scope(select(KbArticle), viewer).order_by(KbArticle.published_at.desc().nullslast(), KbArticle.updated_at.desc()).limit(limit)
     return list((await db.execute(stmt)).scalars())
+
+
+async def home_sections(db: AsyncSession, viewer: User | None, *, per_category: int = 5) -> list[dict]:
+    """Return categories with their most recent articles in a constant number of queries."""
+    categories = await list_categories(db, viewer=viewer)
+    if not categories:
+        return []
+    ranked = (
+        select(
+            KbArticle.id.label("article_id"),
+            func.row_number().over(partition_by=KbArticle.category_id, order_by=(KbArticle.published_at.desc(), KbArticle.updated_at.desc())).label("rank"),
+        )
+        .where(KbArticle.category_id.isnot(None), *_visibility_conditions(viewer))
+        .subquery()
+    )
+    stmt = (
+        select(KbArticle).join(ranked, ranked.c.article_id == KbArticle.id).where(ranked.c.rank <= per_category).order_by(KbArticle.category_id, ranked.c.rank)
+    )
+    articles = list((await db.execute(stmt)).scalars())
+    by_category: dict[uuid.UUID | None, list[KbArticle]] = {}
+    for article in articles:
+        by_category.setdefault(article.category_id, []).append(article)
+    return [{"category": category, "articles": by_category.get(category.id, [])} for category in categories if by_category.get(category.id)]
 
 
 async def popular_articles(db: AsyncSession, viewer: User | None, limit: int = 5) -> list[KbArticle]:
@@ -584,6 +613,7 @@ __all__ = [
     "get_revision",
     "get_tag_by_id",
     "get_tag_by_slug",
+    "home_sections",
     "increment_view",
     "is_editor",
     "list_articles",
