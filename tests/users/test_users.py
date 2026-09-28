@@ -6,6 +6,7 @@ from sqlalchemy import select
 from src.activity.models import ActivityLog
 from src.auth.utils import decode_session_token
 from src.users.models import User, UserRole
+from tests.helpers import make_user
 
 
 def _csrf(cookies) -> str:
@@ -138,3 +139,20 @@ async def test_role_change_rolls_back_when_audit_fails(client: AsyncClient, db, 
     db.expire_all()
     member = await db.get(User, member_id)
     assert member.role == UserRole.USER
+
+
+async def test_user_service_guards(db) -> None:
+    import pytest
+
+    from src.users import service as users_service
+    from src.users.exceptions import CannotDeactivateLastAdminError, UserNotFoundError
+
+    admin = await make_user(db, "admin@example.com", UserRole.ADMIN)
+    with pytest.raises(CannotDeactivateLastAdminError):
+        await users_service.set_user_active(db, admin, False)
+    with pytest.raises(UserNotFoundError):
+        await users_service.get_user_by_id(db, uuid.uuid4())
+
+    await make_user(db, "agent@example.com", UserRole.AGENT)
+    agents = await users_service.list_agents(db)
+    assert {agent.email for agent in agents} == {"admin@example.com", "agent@example.com"}

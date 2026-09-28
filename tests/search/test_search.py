@@ -53,3 +53,19 @@ async def test_search_dropdown_partial(client: AsyncClient, db) -> None:
     resp = await client.get("/search/partials/dropdown", params={"q": "password"})
     assert resp.status_code == 200
     assert "reset" in resp.text
+
+
+async def test_search_type_filter(client: AsyncClient, db) -> None:
+    editor = await make_editor(db, "editor@example.com")
+    await make_article(db, editor, title="Widget guide", body="All about widgets", status=KbArticleStatus.PUBLISHED, visibility=KbArticleVisibility.PUBLIC)
+    requester = await make_user(db, "u@example.com")
+    await make_ticket(db, requester, subject="Widget broken")
+    await login(client, "u@example.com")
+
+    kb = await client.get("/search", params={"q": "widget", "type": "kb"})
+    assert kb.status_code == 200
+    assert "guide" in kb.text
+
+    ticket = await client.get("/search", params={"q": "widget", "type": "ticket"})
+    assert ticket.status_code == 200
+    assert "broken" in ticket.text

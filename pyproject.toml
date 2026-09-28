@@ -48,6 +48,13 @@ path = "src/version.py"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+addopts = "--strict-markers"
+filterwarnings = [
+    "error",
+    # Starlette's UploadFile temp files are garbage-collected in tests.
+    "ignore::ResourceWarning",
+    "ignore::pytest.PytestUnraisableExceptionWarning",
+]
 
 [tool.ruff]
 line-length = 160

@@ -1,5 +1,3 @@
-import pytest
-
 from src.auth.exceptions import NotAuthenticated, OAuthFailed, UserDeactivated
 from src.exceptions import (
     BadRequestError,
@@ -129,7 +127,6 @@ def test_templating_helpers() -> None:
     assert "<strong>" in str(_markdown_filter("**b**"))
 
 
-@pytest.mark.asyncio
 async def test_notifications_service_functions(db) -> None:
     from src.auth import service as auth_service
     from src.notifications import service as notification_service

@@ -1,6 +1,7 @@
 import io
 from datetime import date, timedelta
 
+import pytest
 from httpx2 import AsyncClient
 from openpyxl import load_workbook
 
@@ -101,3 +102,45 @@ async def test_export_sanitizes_formula_agent_name(client: AsyncClient, db) -> N
     formula_cells = [cell for row in sheet.iter_rows() for cell in row if isinstance(cell.value, str) and cell.value.startswith("=cmd")]
     assert formula_cells
     assert all(cell.data_type == "s" for cell in formula_cells)
+
+
+async def test_report_date_grouping_and_metrics(db) -> None:
+    from datetime import UTC, datetime
+
+    from src.reports import service as reports_service
+
+    requester = await make_user(db, "u@example.com")
+    ticket = await make_ticket(db, requester)
+    ticket.created_at = datetime(2026, 1, 5, 12, 0, tzinfo=UTC)
+    ticket.resolved_at = datetime(2026, 1, 6, 12, 0, tzinfo=UTC)
+    await db.commit()
+
+    start, end = date(2026, 1, 1), date(2026, 1, 31)
+    assert await reports_service.ticket_volume(db, start, end) == [("2026-01-05", 1)]
+    assert await reports_service.ticket_volume(db, start, end, group_by="week") == [("2026-01-05", 1)]
+    assert await reports_service.ticket_volume(db, start, end, group_by="month") == [("2026-01", 1)]
+    resolution = await reports_service.resolution_time(db, start, end)
+    assert resolution["count"] == 1
+    assert await reports_service.activity_metrics(db, start, end) == 0
+
+
+async def test_resolution_time_without_data(db) -> None:
+    from src.reports import service as reports_service
+
+    assert await reports_service.resolution_time(db, date.today(), date.today()) == {"average": 0.0, "median": 0.0, "count": 0}
+
+
+async def test_build_report_unknown_raises(db) -> None:
+    from src.reports import service as reports_service
+
+    with pytest.raises(ValueError):
+        await reports_service.build_report(db, "nope", date.today(), date.today())
+
+
+async def test_export_invalid_and_reversed_range(client: AsyncClient, db) -> None:
+    await make_user(db, "agent@example.com", UserRole.AGENT)
+    await login(client, "agent@example.com")
+    invalid = await client.get("/reports/export", params={"report": "status", "format": "csv", "start": "not-a-date"})
+    assert invalid.status_code == 400
+    reversed_range = await client.get("/reports/export", params={"report": "status", "format": "csv", "start": "2026-02-01", "end": "2026-01-01"})
+    assert reversed_range.status_code == 400
