@@ -1,5 +1,6 @@
 from httpx2 import AsyncClient
 
+from src.notifications import service as notification_service
 from src.users.models import UserRole
 from tests.tickets.helpers import csrf, login, make_ticket, make_user
 
@@ -43,3 +44,23 @@ async def test_notifications_list_partial(client: AsyncClient, db) -> None:
     resp = await client.post("/notifications/read-all", data={"_csrf": csrf(client.cookies)}, headers={"HX-Request": "true"})
     assert resp.status_code == 200
     assert "notifications-list" in resp.text
+
+
+async def test_open_notification_rejects_external_link(client: AsyncClient, db) -> None:
+    user = await make_user(db, "u@example.com")
+    notification = await notification_service.create_notification(db, user_id=user.id, type="test", title="External", link="https://evil.example.com/phish")
+    await login(client, "u@example.com")
+
+    resp = await client.get(f"/notifications/{notification.id}/open")
+    assert resp.status_code == 303
+    assert resp.headers["location"] == "/notifications"
+
+
+async def test_open_notification_allows_internal_link(client: AsyncClient, db) -> None:
+    user = await make_user(db, "u@example.com")
+    notification = await notification_service.create_notification(db, user_id=user.id, type="test", title="Internal", link="/tickets")
+    await login(client, "u@example.com")
+
+    resp = await client.get(f"/notifications/{notification.id}/open")
+    assert resp.status_code == 303
+    assert resp.headers["location"] == "/tickets"

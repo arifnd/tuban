@@ -65,6 +65,12 @@ def test_redact_sensitive_query_filter() -> None:
     assert "[REDACTED]" in message
 
 
+def test_redaction_filter_installed_on_root() -> None:
+    from src import main  # noqa: F401  (installs the filter at import time)
+
+    assert any(isinstance(log_filter, RedactSensitiveQueryFilter) for log_filter in logging.getLogger().filters)
+
+
 def test_production_requires_strong_secret(monkeypatch) -> None:
     from src import config as config_module
     from src.auth.config import AuthConfig

@@ -1,4 +1,5 @@
 import uuid
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -10,6 +11,18 @@ from src.pagination import Page, clamp_per_page, paginate
 from src.templating import templates
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
+
+SAFE_FALLBACK = "/notifications"
+
+
+def _safe_link(link: str | None) -> str:
+    """Only follow same-origin, internal paths; never an absolute/unsafe URL."""
+    if not link or "\\" in link:
+        return SAFE_FALLBACK
+    parsed = urlsplit(link)
+    if parsed.scheme or parsed.netloc or not parsed.path.startswith("/") or parsed.path.startswith("//"):
+        return SAFE_FALLBACK
+    return link
 
 
 async def _dropdown_context(db, user) -> dict:
@@ -94,7 +107,7 @@ async def open_notification(db: DbDep, user: CurrentUser, notification_id: uuid.
         return RedirectResponse("/notifications", status_code=status.HTTP_303_SEE_OTHER)
     if not notification.is_read:
         await notification_service.mark_read(db, notification_id, user.id)
-    return RedirectResponse(notification.link or "/notifications", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(_safe_link(notification.link), status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/{notification_id}/read")

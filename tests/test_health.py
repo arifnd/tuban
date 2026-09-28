@@ -5,8 +5,8 @@ async def test_health(client: AsyncClient) -> None:
     resp = await client.get("/health")
     assert resp.status_code == 200
     body = resp.json()
-    assert body["status"] == "ok"
-    assert "version" in body
+    assert body == {"status": "ok"}
+    assert "version" not in body
 
 
 async def test_landing_renders_for_anonymous(client: AsyncClient) -> None:

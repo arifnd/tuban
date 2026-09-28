@@ -17,7 +17,7 @@ from src.dashboard import router as dashboard_router
 from src.database import SessionFactory
 from src.kb import router as kb_router
 from src.kb import service as kb_service
-from src.logging_filters import RedactSensitiveQueryFilter
+from src.logging_filters import install_redaction_filter
 from src.middleware import BodySizeLimitMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware
 from src.notifications import router as notifications_router
 from src.reports import router as reports_router
@@ -39,7 +39,7 @@ if logging_file.exists():
 logger = logging.getLogger(__name__)
 
 # fileConfig ignores filters, so attach OAuth query redaction programmatically.
-logging.getLogger("uvicorn.access").addFilter(RedactSensitiveQueryFilter())
+install_redaction_filter()
 
 SHOW_DOCS_IN = {"local", "staging"}
 app_kwargs: dict = {"title": settings.APP_NAME, "version": __version__}
@@ -140,7 +140,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 @app.get("/health")
 async def health() -> dict[str, str]:
-    return {"status": "ok", "version": __version__}
+    return {"status": "ok"}
 
 
 @app.get("/")

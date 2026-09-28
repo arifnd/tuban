@@ -17,3 +17,19 @@ class RedactSensitiveQueryFilter(logging.Filter):
             record.msg = redacted
             record.args = ()
         return True
+
+
+def install_redaction_filter() -> None:
+    """Attach the redaction filter to every configured logger and handler.
+
+    ``logging.config.fileConfig`` ignores filters, so this runs afterwards to
+    cover uvicorn, the root logger and the shared console handler.
+    """
+    redaction = RedactSensitiveQueryFilter()
+    loggers = [logging.getLogger()]
+    loggers.extend(logging.getLogger(name) for name in ("uvicorn", "uvicorn.error", "uvicorn.access"))
+    handlers = {id(handler): handler for logger in loggers for handler in logger.handlers}
+    for handler in handlers.values():
+        handler.addFilter(redaction)
+    for logger in loggers:
+        logger.addFilter(redaction)
