@@ -122,6 +122,7 @@ async def set_user_role(db: AsyncSession, user: User, role: UserRole) -> User:
     if user.role == UserRole.ADMIN and role != UserRole.ADMIN:
         await ensure_not_last_active_admin(db, user.id)
     user.role = role
+    invalidate_sessions(user)
     await db.flush()
     await db.refresh(user)
     return user
@@ -131,9 +132,15 @@ async def set_user_active(db: AsyncSession, user: User, is_active: bool) -> User
     if not is_active and user.role == UserRole.ADMIN:
         await ensure_not_last_active_admin(db, user.id)
     user.is_active = is_active
+    invalidate_sessions(user)
     await db.flush()
     await db.refresh(user)
     return user
+
+
+def invalidate_sessions(user: User) -> None:
+    """Revoke the user's currently issued session tokens."""
+    user.sessions_invalid_after = datetime.now(UTC)
 
 
 async def update_profile(db: AsyncSession, user: User, name: str) -> User:

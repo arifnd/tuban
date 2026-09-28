@@ -46,11 +46,21 @@ def create_session_token(user_id: uuid.UUID) -> str:
     now = datetime.now(UTC)
     payload = {
         "sub": str(user_id),
+        "jti": uuid.uuid4().hex,
         "csrf": secrets.token_hex(16),
         "iat": now,
         "exp": now + timedelta(minutes=config.SESSION_EXP_MINUTES),
     }
     return jwt.encode(payload, config.SESSION_SECRET, algorithm=SESSION_ALG)
+
+
+def token_issued_at(payload: dict) -> datetime | None:
+    value = payload.get("iat")
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=UTC)
+    if isinstance(value, (int, float)):
+        return datetime.fromtimestamp(value, tz=UTC)
+    return None
 
 
 def decode_session_token(token: str) -> dict | None:

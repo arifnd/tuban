@@ -23,3 +23,6 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     role: Mapped[UserRole] = mapped_column(enum_col(UserRole, "user_role"), default=UserRole.USER, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Tokens issued at or before this instant are rejected; lets logout, role
+    # changes and deactivation revoke stateless JWTs before they expire.
+    sessions_invalid_after: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

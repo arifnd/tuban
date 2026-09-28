@@ -102,6 +102,19 @@ async def test_logout_clears_session(client: AsyncClient) -> None:
     assert "app_session" not in client.cookies
 
 
+async def test_logout_revokes_token_immediately(client: AsyncClient) -> None:
+    await _dev_login(client, "admin@example.com")
+    old_token = client.cookies["app_session"]
+    assert "jti" in decode_session_token(old_token)
+
+    resp = await client.post("/auth/logout", data={"_csrf": _csrf(client.cookies)})
+    assert resp.status_code == 303
+
+    client.cookies.set("app_session", old_token)
+    resp = await client.get("/dashboard", headers={"accept": "application/json"})
+    assert resp.status_code == 401
+
+
 async def test_middleware_rejects_missing_csrf(client: AsyncClient) -> None:
     await _dev_login(client, "admin@example.com")
     resp = await client.post("/auth/logout")

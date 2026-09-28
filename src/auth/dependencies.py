@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC
 from typing import Annotated
 
 from fastapi import Depends, Request
@@ -6,12 +7,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.constants import SESSION_COOKIE_NAME
 from src.auth.exceptions import NotAuthenticated
-from src.auth.utils import decode_session_token
+from src.auth.utils import decode_session_token, token_issued_at
 from src.database import get_db
 from src.notifications import service as notification_service
 from src.users.models import User
 
 DbDep = Annotated[AsyncSession, Depends(get_db)]
+
+
+def _is_revoked(user: User, payload: dict) -> bool:
+    invalid_after = user.sessions_invalid_after
+    if invalid_after is None:
+        return False
+    if invalid_after.tzinfo is None:
+        invalid_after = invalid_after.replace(tzinfo=UTC)
+    issued_at = token_issued_at(payload)
+    return issued_at is None or issued_at <= invalid_after
 
 
 def read_session_payload(request: Request) -> dict | None:
@@ -32,6 +43,8 @@ async def get_current_user(request: Request, db: DbDep) -> User:
     except (KeyError, ValueError):
         raise NotAuthenticated() from None
     if user is None or not user.is_active:
+        raise NotAuthenticated()
+    if _is_revoked(user, payload):
         raise NotAuthenticated()
     request.state.current_user = user
     request.state.csrf = payload["csrf"]

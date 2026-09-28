@@ -19,6 +19,7 @@ from src.auth.utils import (
 )
 from src.ratelimit import rate_limiter
 from src.templating import templates
+from src.users import service as users_service
 from src.users.exceptions import RegistrationClosedError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -139,7 +140,9 @@ async def dev_login(request: Request, db: DbDep):
 
 
 @router.post("/logout")
-async def logout(request: Request):
+async def logout(request: Request, db: DbDep, user: OptionalUser):
+    if user is not None:
+        users_service.invalidate_sessions(user)
     response = RedirectResponse(LOGIN_URL, status_code=status.HTTP_303_SEE_OTHER)
     clear_session_cookie(response)
     return response
