@@ -9,12 +9,13 @@ from src.users import service as users_service
 from src.users.models import User
 
 
-async def login_google(db: AsyncSession, authorization_response: str, expected_state: str) -> User:
+async def login_google(db: AsyncSession, authorization_response: str, expected_state: str, code_verifier: str | None = None) -> User:
     client = auth_utils.create_oauth_client()
     try:
         token = await client.fetch_token(
             authorization_response=authorization_response,
             state=expected_state,
+            code_verifier=code_verifier,
         )
         profile = await auth_utils.fetch_google_profile(token)
     except (OAuthError, HTTPError, InvalidTokenError, ValueError) as exc:

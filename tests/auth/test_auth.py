@@ -61,6 +61,20 @@ async def test_google_oauth_init_sets_state_cookie(client: AsyncClient) -> None:
     assert "app_oauth_state" in resp.cookies
 
 
+async def test_google_oauth_uses_pkce(client: AsyncClient) -> None:
+    import base64
+    import hashlib
+    from urllib.parse import parse_qs, urlparse
+
+    resp = await client.get("/auth/login?google=1")
+    params = parse_qs(urlparse(resp.headers["location"]).query)
+    assert params["code_challenge_method"] == ["S256"]
+    verifier = client.cookies["app_oauth_verifier"]
+    digest = hashlib.sha256(verifier.encode()).digest()
+    expected = base64.urlsafe_b64encode(digest).rstrip(b"=").decode()
+    assert params["code_challenge"] == [expected]
+
+
 async def test_callback_missing_code_redirects_to_login(client: AsyncClient) -> None:
     resp = await client.get("/auth/callback")
     assert resp.status_code == 303
@@ -68,29 +82,38 @@ async def test_callback_missing_code_redirects_to_login(client: AsyncClient) -> 
 
 
 async def test_callback_oauth_failure_redirects_to_login(client: AsyncClient, monkeypatch) -> None:
-    async def _boom(db, authorization_response, expected_state):
+    resp = await client.get("/auth/login?google=1")
+    assert "app_oauth_state" in client.cookies
+    assert "app_oauth_verifier" in client.cookies
+
+    async def _boom(db, authorization_response, expected_state, code_verifier=None):
         raise OAuthFailed()
 
     monkeypatch.setattr(auth_service, "login_google", _boom)
-    client.cookies.set("app_oauth_state", "state")
     resp = await client.get("/auth/callback?code=abc")
     assert resp.status_code == 303
     assert "/auth/login?error=" in resp.headers["location"]
+    assert "deactivated" not in resp.headers["location"]
+    assert "app_oauth_state" not in client.cookies
+    assert "app_oauth_verifier" not in client.cookies
 
 
 async def test_callback_success_sets_session(client: AsyncClient, monkeypatch, db) -> None:
     user = await auth_service.dev_login(db, "admin@example.com")
 
-    async def _fake(db, authorization_response, expected_state):
+    async def _fake(db, authorization_response, expected_state, code_verifier=None):
+        assert code_verifier == "verifier"
         return user
 
     monkeypatch.setattr(auth_service, "login_google", _fake)
     client.cookies.set("app_oauth_state", "state")
+    client.cookies.set("app_oauth_verifier", "verifier")
     resp = await client.get("/auth/callback?code=abc")
     assert resp.status_code == 303
     assert resp.headers["location"] == "/dashboard"
     assert "app_session" in resp.cookies
     assert "app_oauth_state" not in resp.cookies
+    assert "app_oauth_verifier" not in resp.cookies
 
 
 async def test_logout_clears_session(client: AsyncClient) -> None:

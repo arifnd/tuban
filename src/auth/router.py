@@ -1,3 +1,4 @@
+import secrets
 from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Request, status
@@ -6,7 +7,13 @@ from pydantic import ValidationError
 
 from src.auth import service as auth_service
 from src.auth.config import get_auth_settings
-from src.auth.constants import LOGIN_URL, OAUTH_STATE_COOKIE_NAME, OAUTH_STATE_MAX_AGE
+from src.auth.constants import (
+    GENERIC_LOGIN_ERROR,
+    LOGIN_URL,
+    OAUTH_STATE_COOKIE_NAME,
+    OAUTH_STATE_MAX_AGE,
+    OAUTH_VERIFIER_COOKIE_NAME,
+)
 from src.auth.dependencies import DbDep, OptionalUser
 from src.auth.exceptions import OAuthFailed, UserDeactivated
 from src.auth.schemas import DevLoginIn
@@ -36,18 +43,13 @@ async def login(request: Request, user: OptionalUser):
     if user is not None:
         return RedirectResponse(_home_url(), status_code=status.HTTP_303_SEE_OTHER)
     if request.query_params.get("google"):
+        verifier = secrets.token_urlsafe(64)
         client = create_oauth_client()
-        authorize_url, state = client.create_authorization_url(GOOGLE_AUTHORIZE_URL)
+        authorize_url, state = client.create_authorization_url(GOOGLE_AUTHORIZE_URL, code_verifier=verifier)
         response = RedirectResponse(authorize_url, status_code=status.HTTP_303_SEE_OTHER)
-        response.set_cookie(
-            OAUTH_STATE_COOKIE_NAME,
-            state,
-            max_age=OAUTH_STATE_MAX_AGE,
-            httponly=True,
-            samesite="lax",
-            secure=get_auth_settings().SECURE_COOKIES,
-            path="/",
-        )
+        secure = get_auth_settings().SECURE_COOKIES
+        for name, value in ((OAUTH_STATE_COOKIE_NAME, state), (OAUTH_VERIFIER_COOKIE_NAME, verifier)):
+            response.set_cookie(name, value, max_age=OAUTH_STATE_MAX_AGE, httponly=True, samesite="lax", secure=secure, path="/")
         return response
     return templates.TemplateResponse(
         request,
@@ -63,33 +65,30 @@ async def login(request: Request, user: OptionalUser):
 async def callback(request: Request, db: DbDep):
     code = request.query_params.get("code")
     expected_state = request.cookies.get(OAUTH_STATE_COOKIE_NAME)
-    if not code or not expected_state:
-        return RedirectResponse(
-            f"{LOGIN_URL}?error={quote('Sign-in could not be completed')}",
-            status_code=status.HTTP_303_SEE_OTHER,
-        )
-    try:
-        user = await auth_service.login_google(
-            db,
-            authorization_response=str(request.url),
-            expected_state=expected_state,
-        )
-    except UserDeactivated as exc:
-        # A pending registration still needs to be persisted even though the
-        # login is refused.
-        await db.commit()
-        return RedirectResponse(
-            f"{LOGIN_URL}?error={quote(str(exc.detail))}",
-            status_code=status.HTTP_303_SEE_OTHER,
-        )
-    except (OAuthFailed, RegistrationClosedError) as exc:
-        return RedirectResponse(
-            f"{LOGIN_URL}?error={quote(str(exc.detail))}",
-            status_code=status.HTTP_303_SEE_OTHER,
-        )
-    response = RedirectResponse(_home_url(), status_code=status.HTTP_303_SEE_OTHER)
-    set_session_cookie(response, create_session_token(user.id))
+    verifier = request.cookies.get(OAUTH_VERIFIER_COOKIE_NAME)
+    if not code or not expected_state or not verifier:
+        response = RedirectResponse(f"{LOGIN_URL}?error={quote(GENERIC_LOGIN_ERROR)}", status_code=status.HTTP_303_SEE_OTHER)
+    else:
+        try:
+            user = await auth_service.login_google(
+                db,
+                authorization_response=str(request.url),
+                expected_state=expected_state,
+                code_verifier=verifier,
+            )
+        except UserDeactivated:
+            # A pending registration still needs to be persisted even though the
+            # login is refused; the message stays generic to avoid enumeration.
+            await db.commit()
+            response = RedirectResponse(f"{LOGIN_URL}?error={quote(GENERIC_LOGIN_ERROR)}", status_code=status.HTTP_303_SEE_OTHER)
+        except (OAuthFailed, RegistrationClosedError):
+            response = RedirectResponse(f"{LOGIN_URL}?error={quote(GENERIC_LOGIN_ERROR)}", status_code=status.HTTP_303_SEE_OTHER)
+        else:
+            response = RedirectResponse(_home_url(), status_code=status.HTTP_303_SEE_OTHER)
+            set_session_cookie(response, create_session_token(user.id))
+    # Always drop the short-lived flow cookies, success or failure.
     response.delete_cookie(OAUTH_STATE_COOKIE_NAME, path="/")
+    response.delete_cookie(OAUTH_VERIFIER_COOKIE_NAME, path="/")
     return response
 
 

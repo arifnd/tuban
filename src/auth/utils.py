@@ -28,6 +28,7 @@ def create_oauth_client(token: dict | None = None) -> AsyncOAuth2Client:
         authorization_endpoint=GOOGLE_AUTHORIZE_URL,
         token_endpoint=GOOGLE_TOKEN_URL,
         token=token,
+        code_challenge_method="S256",
     )
 
 
