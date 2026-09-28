@@ -53,6 +53,7 @@ def _context(request: Request) -> dict[str, Any]:
     return {
         "current_user": current_user,
         "csrf": getattr(request.state, "csrf", None),
+        "csp_nonce": getattr(request.state, "csp_nonce", ""),
         "is_admin": bool(getattr(current_user, "role", None) == "admin"),
         "current_year": datetime.now().year,
         "unread_notifications": getattr(request.state, "unread_notifications", 0),

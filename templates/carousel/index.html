@@ -110,8 +110,8 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script type="application/json" id="carousel-initial">{{ slides | tojson }}</script>
-<script>
+<script type="application/json" id="carousel-initial" nonce="{{ csp_nonce }}">{{ slides | tojson }}</script>
+<script nonce="{{ csp_nonce }}">
   function carouselForm() {
     var initial = [];
     try {

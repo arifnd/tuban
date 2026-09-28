@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf or '' }}">
   <title>{% block title %}{{ t("brand.name") }}{% endblock %}</title>
-  <script>
+  <script nonce="{{ csp_nonce }}">
     (function () {
       var KEY = "batik-theme";
       function read() {
@@ -35,7 +35,7 @@
     --brand-{{ shade }}: {{ rgb }};
     {%- endfor %}
   }</style>
-  <script>
+  <script nonce="{{ csp_nonce }}">
     window.APP_LABELS = {
       confirm: {{ t("dialog.confirm")|tojson }},
       cancel: {{ t("dialog.cancel")|tojson }},
@@ -46,8 +46,6 @@
       return meta ? meta.getAttribute("content") : "";
     };
   </script>
-  <script defer src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js"></script>
-  <script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
   <script defer src="/static/js/app.min.js"></script>
   <style>[x-cloak]{display:none!important}</style>
   {% block head %}{% endblock %}

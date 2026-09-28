@@ -11,7 +11,33 @@ async def test_security_headers(client: AsyncClient) -> None:
     assert resp.headers["x-frame-options"] == "DENY"
     assert resp.headers["x-content-type-options"] == "nosniff"
     assert resp.headers["referrer-policy"] == "strict-origin-when-cross-origin"
-    assert "content-security-policy" in resp.headers
+    assert "permissions-policy" in resp.headers
+    csp = resp.headers["content-security-policy"]
+    assert "form-action 'self'" in csp
+    assert "nonce-" in csp
+    assert "unpkg.com" not in csp
+    assert "jsdelivr" not in csp
+    script_src = next(part.strip() for part in csp.split(";") if part.strip().startswith("script-src"))
+    assert "unsafe-inline" not in script_src
+
+
+async def test_csp_nonce_matches_inline_script(client: AsyncClient) -> None:
+    import re
+
+    resp = await client.get("/auth/login")
+    csp = resp.headers["content-security-policy"]
+    match = re.search(r"'nonce-([^']+)'", csp)
+    assert match is not None
+    assert f'nonce="{match.group(1)}"' in resp.text
+
+
+async def test_authenticated_html_is_not_cached(client: AsyncClient, db) -> None:
+    await make_user(db, "u@example.com")
+    await login(client, "u@example.com")
+    resp = await client.get("/dashboard")
+    assert resp.status_code == 200
+    assert resp.headers["cache-control"] == "no-store"
+    assert resp.headers["pragma"] == "no-cache"
 
 
 async def test_session_cookie_flags(client: AsyncClient) -> None:

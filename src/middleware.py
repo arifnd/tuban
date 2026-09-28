@@ -21,17 +21,23 @@ MULTIPART = "multipart/form-data"
 # configured per-file upload limit.
 REQUEST_SIZE_OVERHEAD = 64 * 1024
 
+# Scripts are self-hosted and gated by a per-response nonce; only Alpine's
+# runtime evaluator still requires 'unsafe-eval'. Styles keep 'unsafe-inline'
+# for the dynamic brand CSS variables and [x-cloak] rules.
 CONTENT_SECURITY_POLICY = (
     "default-src 'self'; "
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; "
+    "script-src 'self' 'nonce-{nonce}' 'unsafe-eval'; "
     "style-src 'self' 'unsafe-inline'; "
     "img-src 'self' data: https:; "
     "font-src 'self' data:; "
     "connect-src 'self'; "
     "object-src 'none'; "
     "base-uri 'self'; "
+    "form-action 'self'; "
     "frame-ancestors 'none'"
 )
+
+PERMISSIONS_POLICY = "geolocation=(), microphone=(), camera=(), payment=(), usb=(), interest-cohort=()"
 
 
 class _RequestBodyTooLarge(Exception):
@@ -138,10 +144,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         self._load_session(request)
+        nonce = secrets.token_urlsafe(16)
+        request.state.csp_nonce = nonce
         response = await self._check_csrf(request)
         if response is None:
             response = await call_next(request)
-        self._apply_headers(response)
+        self._apply_headers(request, response, nonce)
         return response
 
     def _load_session(self, request: Request) -> None:
@@ -175,10 +183,15 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             return PlainTextResponse("CSRF token mismatch", status_code=403)
         return None
 
-    def _apply_headers(self, response: Response) -> None:
+    def _apply_headers(self, request: Request, response: Response, nonce: str) -> None:
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-        response.headers.setdefault("Content-Security-Policy", CONTENT_SECURITY_POLICY)
+        response.headers.setdefault("Content-Security-Policy", CONTENT_SECURITY_POLICY.format(nonce=nonce))
+        response.headers.setdefault("Permissions-Policy", PERMISSIONS_POLICY)
+        is_html = response.headers.get("content-type", "").startswith("text/html")
+        if is_html and getattr(request.state, "session_payload", None):
+            response.headers.setdefault("Cache-Control", "no-store")
+            response.headers.setdefault("Pragma", "no-cache")
         if settings.is_production:
             response.headers.setdefault("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
