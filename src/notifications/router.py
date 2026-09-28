@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from src.auth.dependencies import CsrfDep, CurrentUser, DbDep
+from src.auth.dependencies import CurrentUser, DbDep
 from src.notifications import service as notification_service
 from src.notifications.constants import NOTIFICATIONS_PER_PAGE
 from src.pagination import Page, clamp_per_page, paginate
@@ -71,7 +71,7 @@ async def _hx_response(request: Request, db, user, page: int, per_page: int):
 
 
 @router.post("/read-many")
-async def mark_read_many(request: Request, db: DbDep, user: CurrentUser, _: CsrfDep):
+async def mark_read_many(request: Request, db: DbDep, user: CurrentUser):
     ids = await _notification_ids(request)
     await notification_service.mark_read_many(db, user.id, ids)
     if request.headers.get("HX-Request") == "true":
@@ -80,7 +80,7 @@ async def mark_read_many(request: Request, db: DbDep, user: CurrentUser, _: Csrf
 
 
 @router.post("/read-all")
-async def mark_all_read(request: Request, db: DbDep, user: CurrentUser, _: CsrfDep):
+async def mark_all_read(request: Request, db: DbDep, user: CurrentUser):
     await notification_service.mark_all_read(db, user.id)
     if request.headers.get("HX-Request") == "true":
         return await _hx_response(request, db, user, 1, NOTIFICATIONS_PER_PAGE)
@@ -98,7 +98,7 @@ async def open_notification(db: DbDep, user: CurrentUser, notification_id: uuid.
 
 
 @router.post("/{notification_id}/read")
-async def mark_read(request: Request, db: DbDep, user: CurrentUser, _: CsrfDep, notification_id: uuid.UUID):
+async def mark_read(request: Request, db: DbDep, user: CurrentUser, notification_id: uuid.UUID):
     await notification_service.mark_read(db, notification_id, user.id)
     if request.headers.get("HX-Request") == "true":
         return await _hx_response(request, db, user, 1, NOTIFICATIONS_PER_PAGE)

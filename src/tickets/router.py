@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.datastructures import UploadFile
 
-from src.auth.dependencies import CsrfDep, CurrentUser, DbDep
+from src.auth.dependencies import CurrentUser, DbDep
 from src.exceptions import BadRequestError
 from src.kb import markdown as markdown_utils
 from src.pagination import Page, clamp_per_page, paginate
@@ -143,7 +143,7 @@ async def ticket_new(request: Request, db: DbDep, user: CurrentUser):
 
 
 @router.post("")
-async def ticket_create(request: Request, db: DbDep, user: CurrentUser, _: CsrfDep):
+async def ticket_create(request: Request, db: DbDep, user: CurrentUser):
     form = await request.form()
     subject = str(form.get("subject", "")).strip()
     if len(subject) < 3:
@@ -171,7 +171,7 @@ async def categories_page(request: Request, db: DbDep, editor: TicketEditor):
 
 
 @router.post("/categories")
-async def create_category(request: Request, db: DbDep, editor: TicketEditor, _: CsrfDep):
+async def create_category(request: Request, db: DbDep, editor: TicketEditor):
     form = await request.form()
     name = str(form.get("name", "")).strip()
     if not name:
@@ -182,7 +182,7 @@ async def create_category(request: Request, db: DbDep, editor: TicketEditor, _: 
 
 
 @router.post("/categories/{category_id}")
-async def update_category(request: Request, db: DbDep, editor: TicketEditor, _: CsrfDep, category_id: uuid.UUID):
+async def update_category(request: Request, db: DbDep, editor: TicketEditor, category_id: uuid.UUID):
     form = await request.form()
     name = str(form.get("name", "")).strip()
     if not name:
@@ -194,7 +194,7 @@ async def update_category(request: Request, db: DbDep, editor: TicketEditor, _: 
 
 
 @router.post("/categories/{category_id}/delete")
-async def delete_category(request: Request, db: DbDep, editor: TicketEditor, _: CsrfDep, category_id: uuid.UUID):
+async def delete_category(request: Request, db: DbDep, editor: TicketEditor, category_id: uuid.UUID):
     category = await ticket_service.get_category_by_id(db, category_id)
     await ticket_service.delete_category(db, editor, category)
     return RedirectResponse("/tickets/categories", status_code=status.HTTP_303_SEE_OTHER)
@@ -233,7 +233,7 @@ async def ticket_detail(request: Request, db: DbDep, user: CurrentUser, ticket: 
 # Comments
 # --------------------------------------------------------------------------- #
 @router.post("/{ticket_id}/comments")
-async def add_comment(request: Request, db: DbDep, user: CurrentUser, _: CsrfDep, ticket: TicketMember):
+async def add_comment(request: Request, db: DbDep, user: CurrentUser, ticket: TicketMember):
     form = await request.form()
     body = str(form.get("body", "")).strip()
     if not body:
@@ -254,7 +254,7 @@ async def add_comment(request: Request, db: DbDep, user: CurrentUser, _: CsrfDep
 
 
 @router.post("/{ticket_id}/comments/{comment_id}/delete")
-async def delete_comment(request: Request, db: DbDep, user: CurrentUser, _: CsrfDep, ticket: TicketMember, comment_id: uuid.UUID):
+async def delete_comment(request: Request, db: DbDep, user: CurrentUser, ticket: TicketMember, comment_id: uuid.UUID):
     from src.tickets.models import TicketComment
 
     comment = await db.get(TicketComment, comment_id)
@@ -275,7 +275,7 @@ async def delete_comment(request: Request, db: DbDep, user: CurrentUser, _: Csrf
 # Workflow
 # --------------------------------------------------------------------------- #
 @router.post("/{ticket_id}/assign")
-async def assign_ticket(request: Request, db: DbDep, editor: TicketEditor, _: CsrfDep, ticket: TicketDep):
+async def assign_ticket(request: Request, db: DbDep, editor: TicketEditor, ticket: TicketDep):
     form = await request.form()
     assignee_id = _parse_uuid(form.get("assignee_id"))
     assignee = await users_service.get_user_by_id(db, assignee_id) if assignee_id else None
@@ -284,13 +284,13 @@ async def assign_ticket(request: Request, db: DbDep, editor: TicketEditor, _: Cs
 
 
 @router.post("/{ticket_id}/claim")
-async def claim_ticket(request: Request, db: DbDep, editor: TicketEditor, _: CsrfDep, ticket: TicketDep):
+async def claim_ticket(request: Request, db: DbDep, editor: TicketEditor, ticket: TicketDep):
     await ticket_service.claim_ticket(db, editor, ticket)
     return RedirectResponse(f"/tickets/{ticket.id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/{ticket_id}/status")
-async def set_status(request: Request, db: DbDep, user: CurrentUser, _: CsrfDep, ticket: TicketMember):
+async def set_status(request: Request, db: DbDep, user: CurrentUser, ticket: TicketMember):
     form = await request.form()
     target = _parse_status(form.get("status"))
     if target is None:
@@ -300,7 +300,7 @@ async def set_status(request: Request, db: DbDep, user: CurrentUser, _: CsrfDep,
 
 
 @router.post("/{ticket_id}/priority")
-async def set_priority(request: Request, db: DbDep, editor: TicketEditor, _: CsrfDep, ticket: TicketDep):
+async def set_priority(request: Request, db: DbDep, editor: TicketEditor, ticket: TicketDep):
     form = await request.form()
     priority = _parse_priority(form.get("priority"))
     if priority is None:
@@ -310,13 +310,13 @@ async def set_priority(request: Request, db: DbDep, editor: TicketEditor, _: Csr
 
 
 @router.post("/{ticket_id}/close")
-async def close_ticket(request: Request, db: DbDep, user: CurrentUser, _: CsrfDep, ticket: TicketMember):
+async def close_ticket(request: Request, db: DbDep, user: CurrentUser, ticket: TicketMember):
     await ticket_service.transition_status(db, user, ticket, TicketStatus.CLOSED)
     return RedirectResponse(f"/tickets/{ticket.id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/{ticket_id}/reopen")
-async def reopen_ticket(request: Request, db: DbDep, user: CurrentUser, _: CsrfDep, ticket: TicketMember):
+async def reopen_ticket(request: Request, db: DbDep, user: CurrentUser, ticket: TicketMember):
     await ticket_service.transition_status(db, user, ticket, TicketStatus.OPEN)
     return RedirectResponse(f"/tickets/{ticket.id}", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -325,7 +325,7 @@ async def reopen_ticket(request: Request, db: DbDep, user: CurrentUser, _: CsrfD
 # Attachments
 # --------------------------------------------------------------------------- #
 @router.post("/{ticket_id}/attachments")
-async def upload_attachment(request: Request, db: DbDep, user: CurrentUser, _: CsrfDep, ticket: TicketMember):
+async def upload_attachment(request: Request, db: DbDep, user: CurrentUser, ticket: TicketMember):
     form = await request.form()
     upload = form.get("file")
     if not isinstance(upload, UploadFile) or not upload.filename:
@@ -335,7 +335,7 @@ async def upload_attachment(request: Request, db: DbDep, user: CurrentUser, _: C
 
 
 @router.post("/{ticket_id}/attachments/{attachment_id}/delete")
-async def remove_attachment(request: Request, db: DbDep, user: CurrentUser, _: CsrfDep, ticket: TicketMember, attachment_id: uuid.UUID):
+async def remove_attachment(request: Request, db: DbDep, user: CurrentUser, ticket: TicketMember, attachment_id: uuid.UUID):
     attachment = await ticket_service.get_attachment(db, ticket, attachment_id)
     await ticket_service.delete_attachment(db, user, attachment)
     return RedirectResponse(f"/tickets/{ticket.id}", status_code=status.HTTP_303_SEE_OTHER)

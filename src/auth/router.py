@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from src.auth import service as auth_service
 from src.auth.config import auth_settings
 from src.auth.constants import LOGIN_URL, OAUTH_STATE_COOKIE_NAME, OAUTH_STATE_MAX_AGE
-from src.auth.dependencies import CsrfDep, DbDep, OptionalUser
+from src.auth.dependencies import DbDep, OptionalUser
 from src.auth.exceptions import OAuthFailed, UserDeactivated
 from src.auth.schemas import DevLoginIn
 from src.auth.utils import (
@@ -139,7 +139,7 @@ async def dev_login(request: Request, db: DbDep):
 
 
 @router.post("/logout")
-async def logout(request: Request, _: CsrfDep):
+async def logout(request: Request):
     response = RedirectResponse(LOGIN_URL, status_code=status.HTTP_303_SEE_OTHER)
     clear_session_cookie(response)
     return response

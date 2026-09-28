@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, status
 from fastapi.responses import RedirectResponse
 from starlette.datastructures import UploadFile
 
-from src.auth.dependencies import CsrfDep, DbDep
+from src.auth.dependencies import DbDep
 from src.exceptions import BadRequestError
 from src.settings import service as settings_service
 from src.storage import service as storage_service
@@ -41,7 +41,7 @@ async def carousel_page(request: Request, db: DbDep, _: AdminUser):
 
 
 @router.post("")
-async def update_carousel(request: Request, db: DbDep, admin: AdminUser, _: CsrfDep):
+async def update_carousel(request: Request, db: DbDep, admin: AdminUser):
     form = await request.form()
     indices = sorted(_row_indices(form))
     if len(indices) > MAX_SLIDES:

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, status
 from fastapi.responses import RedirectResponse
 from pydantic import ValidationError
 
-from src.auth.dependencies import CsrfDep, DbDep
+from src.auth.dependencies import DbDep
 from src.exceptions import BadRequestError
 from src.settings import service as settings_service
 from src.settings import theme as theme_palettes
@@ -34,7 +34,7 @@ async def settings_page(request: Request, db: DbDep, _: AdminUser):
 
 
 @router.post("")
-async def update_settings(request: Request, db: DbDep, admin: AdminUser, _: CsrfDep):
+async def update_settings(request: Request, db: DbDep, admin: AdminUser):
     form = await request.form()
 
     def field(name: str, default: str = "") -> str:

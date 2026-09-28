@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request, status
 from fastapi.responses import RedirectResponse
 from starlette.datastructures import UploadFile
 
-from src.auth.dependencies import CsrfDep, CurrentUser, DbDep, OptionalUser
+from src.auth.dependencies import CurrentUser, DbDep, OptionalUser
 from src.exceptions import BadRequestError
 from src.kb import markdown as markdown_utils
 from src.kb import service as kb_service
@@ -96,7 +96,7 @@ async def categories_page(request: Request, db: DbDep, editor: KbEditor):
 
 
 @router.post("/categories")
-async def create_category(request: Request, db: DbDep, editor: KbEditor, _: CsrfDep):
+async def create_category(request: Request, db: DbDep, editor: KbEditor):
     form = await request.form()
     name = str(form.get("name", "")).strip()
     if not name:
@@ -106,7 +106,7 @@ async def create_category(request: Request, db: DbDep, editor: KbEditor, _: Csrf
 
 
 @router.post("/categories/{category_id}")
-async def update_category(request: Request, db: DbDep, editor: KbEditor, _: CsrfDep, category_id: uuid.UUID):
+async def update_category(request: Request, db: DbDep, editor: KbEditor, category_id: uuid.UUID):
     form = await request.form()
     name = str(form.get("name", "")).strip()
     if not name:
@@ -119,7 +119,7 @@ async def update_category(request: Request, db: DbDep, editor: KbEditor, _: Csrf
 
 
 @router.post("/categories/{category_id}/delete")
-async def delete_category(request: Request, db: DbDep, editor: KbEditor, _: CsrfDep, category_id: uuid.UUID):
+async def delete_category(request: Request, db: DbDep, editor: KbEditor, category_id: uuid.UUID):
     category = await kb_service.get_category_by_id(db, category_id)
     await kb_service.delete_category(db, editor, category)
     return RedirectResponse("/kb/categories", status_code=status.HTTP_303_SEE_OTHER)
@@ -179,7 +179,7 @@ async def article_new(request: Request, db: DbDep, editor: KbEditor):
 
 
 @router.post("/articles")
-async def article_create(request: Request, db: DbDep, editor: KbEditor, _: CsrfDep):
+async def article_create(request: Request, db: DbDep, editor: KbEditor):
     form = await request.form()
     title = str(form.get("title", "")).strip()
     if not title:
@@ -225,7 +225,7 @@ async def article_history(request: Request, db: DbDep, editor: KbEditor, slug: s
 
 
 @router.post("/articles/{slug}/attachments")
-async def upload_attachment(request: Request, db: DbDep, editor: KbEditor, _: CsrfDep, slug: str):
+async def upload_attachment(request: Request, db: DbDep, editor: KbEditor, slug: str):
     form = await request.form()
     upload = form.get("file")
     if not isinstance(upload, UploadFile):
@@ -236,7 +236,7 @@ async def upload_attachment(request: Request, db: DbDep, editor: KbEditor, _: Cs
 
 
 @router.post("/articles/{slug}/attachments/{attachment_id}/delete")
-async def remove_attachment(request: Request, db: DbDep, editor: KbEditor, _: CsrfDep, slug: str, attachment_id: uuid.UUID):
+async def remove_attachment(request: Request, db: DbDep, editor: KbEditor, slug: str, attachment_id: uuid.UUID):
     article = await kb_service.get_article_by_slug(db, slug, editor)
     attachment = await kb_service.get_attachment(db, article, attachment_id)
     await kb_service.delete_attachment(db, editor, article, attachment)
@@ -244,7 +244,7 @@ async def remove_attachment(request: Request, db: DbDep, editor: KbEditor, _: Cs
 
 
 @router.post("/articles/{slug}/feedback")
-async def article_feedback(request: Request, db: DbDep, user: CurrentUser, _: CsrfDep, slug: str):
+async def article_feedback(request: Request, db: DbDep, user: CurrentUser, slug: str):
     article = await kb_service.get_article_by_slug(db, slug, user)
     form = await request.form()
     is_helpful = str(form.get("is_helpful", "1")) == "1"
@@ -262,7 +262,7 @@ async def article_feedback(request: Request, db: DbDep, user: CurrentUser, _: Cs
 
 
 @router.post("/articles/{slug}/status")
-async def article_status(request: Request, db: DbDep, editor: KbEditor, _: CsrfDep, slug: str):
+async def article_status(request: Request, db: DbDep, editor: KbEditor, slug: str):
     form = await request.form()
     target = _parse_status(form.get("status"))
     if target is None:
@@ -273,7 +273,7 @@ async def article_status(request: Request, db: DbDep, editor: KbEditor, _: CsrfD
 
 
 @router.post("/articles/{slug}/restore/{revision_id}")
-async def article_restore(request: Request, db: DbDep, editor: KbEditor, _: CsrfDep, slug: str, revision_id: uuid.UUID):
+async def article_restore(request: Request, db: DbDep, editor: KbEditor, slug: str, revision_id: uuid.UUID):
     article = await kb_service.get_article_by_slug(db, slug, editor)
     revision = await kb_service.get_revision(db, article, revision_id)
     await kb_service.restore_revision(db, editor, article, revision)
@@ -281,7 +281,7 @@ async def article_restore(request: Request, db: DbDep, editor: KbEditor, _: Csrf
 
 
 @router.post("/articles/{slug}")
-async def article_update(request: Request, db: DbDep, editor: KbEditor, _: CsrfDep, slug: str):
+async def article_update(request: Request, db: DbDep, editor: KbEditor, slug: str):
     form = await request.form()
     title = str(form.get("title", "")).strip()
     if not title:
@@ -327,7 +327,7 @@ async def tags_page(request: Request, db: DbDep, editor: KbEditor):
 
 
 @router.post("/tags/{tag_id}/delete")
-async def tag_delete(request: Request, db: DbDep, editor: KbEditor, _: CsrfDep, tag_id: uuid.UUID):
+async def tag_delete(request: Request, db: DbDep, editor: KbEditor, tag_id: uuid.UUID):
     tag = await kb_service.get_tag_by_id(db, tag_id)
     await kb_service.delete_tag(db, editor, tag)
     return RedirectResponse("/kb/tags", status_code=status.HTTP_303_SEE_OTHER)

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Form, Request, status
 from fastapi.responses import RedirectResponse
 
 from src.activity import service as activity_service
-from src.auth.dependencies import CsrfDep, CurrentUser, DbDep
+from src.auth.dependencies import CurrentUser, DbDep
 from src.exceptions import BadRequestError
 from src.pagination import Page, clamp_per_page, paginate
 from src.templating import templates
@@ -86,7 +86,6 @@ async def update_role(
     request: Request,
     db: DbDep,
     admin: AdminUser,
-    _: CsrfDep,
     user_id: uuid.UUID,
     role: Annotated[str, Form()],
 ):
@@ -114,7 +113,6 @@ async def toggle_active(
     request: Request,
     db: DbDep,
     admin: AdminUser,
-    _: CsrfDep,
     user_id: uuid.UUID,
 ):
     user = await users_service.get_user_by_id(db, user_id)
@@ -143,7 +141,6 @@ async def profile_update(
     request: Request,
     db: DbDep,
     user: CurrentUser,
-    _: CsrfDep,
     name: Annotated[str, Form()] = "",
 ):
     name = name.strip()

@@ -6,7 +6,7 @@ import pytest
 from starlette.requests import Request
 
 from src.auth.config import auth_settings
-from src.auth.dependencies import csrf_guard, get_current_user, optional_user
+from src.auth.dependencies import get_current_user, optional_user
 from src.auth.exceptions import NotAuthenticated
 from src.auth.utils import create_session_token
 from src.exceptions import ForbiddenError
@@ -58,22 +58,3 @@ async def test_get_current_user_rejects_unknown_user(db) -> None:
 
 async def test_optional_user_returns_none(db) -> None:
     assert await optional_user(_request(), db) is None
-
-
-async def test_csrf_guard_paths() -> None:
-    ok = _request([(b"x-csrf-token", b"tok")])
-    ok.state.csrf = "tok"
-    assert await csrf_guard(ok) is None
-
-    mismatch = _request([(b"x-csrf-token", b"bad")])
-    mismatch.state.csrf = "tok"
-    with pytest.raises(ForbiddenError):
-        await csrf_guard(mismatch)
-
-    missing = _request([(b"content-type", b"application/json")])
-    missing.state.csrf = "tok"
-    with pytest.raises(ForbiddenError):
-        await csrf_guard(missing)
-
-    anonymous = _request()
-    assert await csrf_guard(anonymous) is None
