@@ -39,6 +39,22 @@ async def test_create_and_update_category(client: AsyncClient, db) -> None:
     assert category.slug == "payments"
 
 
+async def test_categories_page_renders_table_and_dialog(client: AsyncClient, db) -> None:
+    editor = await make_editor(db, "editor@example.com")
+    category = await kb_service.create_category(db, editor, name="Billing", description="Money")
+
+    await login(client, "editor@example.com")
+    resp = await client.get("/kb/categories")
+    assert resp.status_code == 200
+
+    body = resp.text
+    assert "Billing" in body
+    assert "Money" in body
+    assert f"/kb/categories/{category.id}" in body
+    assert f"/kb/categories/{category.id}/delete" in body
+    assert 'role="dialog"' in body
+
+
 async def test_delete_blocked_when_articles_exist(client: AsyncClient, db) -> None:
     editor = await make_editor(db, "editor@example.com")
     category = await kb_service.create_category(db, editor, name="Docs")
