@@ -1,41 +1,54 @@
 {% extends "base.html" %}
+{% from "partials/icons.html" import icon with context %}
 {% from "partials/macros.html" import csrf_input with context %}
 {% block title %}{{ t("tickets.categories") }} · {{ t("brand.name") }}{% endblock %}
 {% block content %}
-<div class="mb-4 flex items-center justify-between">
-  <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ t("tickets.categories") }}</h1>
-  <a href="/tickets" class="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400">{{ t("tickets.back") }}</a>
-</div>
+<div x-data="{
+       open: false,
+       editing: false,
+       action: '/tickets/categories',
+       name: '',
+       position: 0
+     }"
+     @keydown.escape.window="open = false">
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ t("tickets.categories") }}</h1>
+    <div class="flex items-center gap-2">
+      <a href="/tickets" class="btn btn-secondary">{{ t("tickets.back") }}</a>
+      <button type="button" class="btn btn-primary"
+              @click="editing = false; action = '/tickets/categories'; name = ''; position = 0; open = true">
+        {{ icon("plus", "w-4 h-4") }} {{ t("tickets.new_category") }}
+      </button>
+    </div>
+  </div>
 
-<div class="grid gap-4 lg:grid-cols-3">
-  <div class="card overflow-hidden lg:col-span-2">
+  <div class="card overflow-hidden">
     <table class="w-full text-sm">
       <thead class="table-head">
         <tr>
-          <th scope="col" class="px-3 py-2">{{ t("tickets.category_name") }}</th>
+          <th scope="col" class="w-full px-3 py-2">{{ t("tickets.category_name") }}</th>
           <th scope="col" class="px-3 py-2">{{ t("tickets.ticket_count") }}</th>
           <th scope="col" class="px-3 py-2">{{ t("tickets.position") }}</th>
-          <th scope="col" class="px-3 py-2 text-right">{{ t("tickets.delete") }}</th>
+          <th scope="col" class="px-3 py-2 text-right">{{ t("tickets.actions") }}</th>
         </tr>
       </thead>
       <tbody>
         {% for category in categories %}
-        <tr class="border-t border-slate-100 dark:border-slate-700">
-          <td class="px-3 py-2">
-            <form method="post" action="/tickets/categories/{{ category.id }}" class="flex items-center gap-2">
-              {{ csrf_input() }}
-              <input type="text" name="name" value="{{ category.name }}" class="input mt-0">
-              <input type="number" name="position" value="{{ category.position }}" class="input mt-0 w-20">
-              <button type="submit" class="btn btn-secondary">{{ t("tickets.save") }}</button>
-            </form>
-          </td>
+        <tr class="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/40">
+          <td class="w-full px-3 py-2 font-medium text-slate-900 dark:text-slate-100">{{ category.name }}</td>
           <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ category.ticket_count }}</td>
           <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ category.position }}</td>
-          <td class="px-3 py-2 text-right">
-            <form method="post" action="/tickets/categories/{{ category.id }}/delete" data-confirm="{{ t('tickets.confirm_delete') }}">
-              {{ csrf_input() }}
-              <button type="submit" class="text-red-600 hover:text-red-700 dark:text-red-400">{{ t("tickets.delete") }}</button>
-            </form>
+          <td class="px-3 py-2">
+            <div class="flex items-center justify-end gap-3">
+              <button type="button" class="text-brand-600 hover:text-brand-700 dark:text-brand-400"
+                      @click='editing = true; action = "/tickets/categories/{{ category.id }}"; name = {{ category.name | tojson }}; position = {{ category.position }}; open = true'>
+                {{ t("tickets.edit") }}
+              </button>
+              <form method="post" action="/tickets/categories/{{ category.id }}/delete" data-confirm="{{ t('tickets.confirm_delete') }}">
+                {{ csrf_input() }}
+                <button type="submit" class="text-red-600 hover:text-red-700 dark:text-red-400">{{ t("tickets.delete") }}</button>
+              </form>
+            </div>
           </td>
         </tr>
         {% else %}
@@ -45,20 +58,28 @@
     </table>
   </div>
 
-  <div class="card p-4">
-    <h2 class="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{{ t("tickets.new_category") }}</h2>
-    <form method="post" action="/tickets/categories" class="space-y-3">
-      {{ csrf_input() }}
-      <div>
-        <label class="label" for="name">{{ t("tickets.category_name") }}</label>
-        <input type="text" id="name" name="name" required class="input">
-      </div>
-      <div>
-        <label class="label" for="position">{{ t("tickets.position") }}</label>
-        <input type="number" id="position" name="position" value="0" class="input">
-      </div>
-      <button type="submit" class="btn btn-primary w-full justify-center">{{ t("tickets.create") }}</button>
-    </form>
+  <div x-show="open" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
+       role="dialog" aria-modal="true" aria-labelledby="ticket-category-dialog-title">
+    <div class="absolute inset-0 bg-slate-900/50" @click="open = false"></div>
+    <div class="relative w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-slate-800 dark:shadow-black/40">
+      <h2 id="ticket-category-dialog-title" class="mb-4 text-lg font-semibold text-slate-900 dark:text-white"
+          x-text='editing ? {{ t("tickets.edit_category") | tojson }} : {{ t("tickets.new_category") | tojson }}'></h2>
+      <form method="post" :action="action" class="space-y-3">
+        {{ csrf_input() }}
+        <div>
+          <label class="label" for="ticket-category-name">{{ t("tickets.category_name") }}</label>
+          <input type="text" id="ticket-category-name" name="name" x-model="name" required class="input">
+        </div>
+        <div>
+          <label class="label" for="ticket-category-position">{{ t("tickets.position") }}</label>
+          <input type="number" id="ticket-category-position" name="position" x-model="position" class="input">
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" class="btn btn-secondary" @click="open = false">{{ t("tickets.cancel") }}</button>
+          <button type="submit" class="btn btn-primary">{{ t("tickets.save") }}</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 {% endblock %}

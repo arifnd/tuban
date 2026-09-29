@@ -30,6 +30,21 @@ async def test_category_crud_and_delete_guard(client: AsyncClient, db) -> None:
     assert resp.status_code == 409
 
 
+async def test_categories_page_renders_table_and_dialog(client: AsyncClient, db) -> None:
+    editor = await make_user(db, "agent@example.com", UserRole.AGENT)
+    category = await ticket_service.create_category(db, editor, name="Billing", position=1)
+
+    await login(client, "agent@example.com")
+    resp = await client.get("/tickets/categories")
+    assert resp.status_code == 200
+
+    body = resp.text
+    assert "Billing" in body
+    assert f"/tickets/categories/{category.id}" in body
+    assert f"/tickets/categories/{category.id}/delete" in body
+    assert 'role="dialog"' in body
+
+
 async def test_delete_empty_category(client: AsyncClient, db) -> None:
     await make_user(db, "agent@example.com", UserRole.AGENT)
     await login(client, "agent@example.com")
