@@ -28,6 +28,7 @@ make dev                                # http://localhost:8000
 `make env` copies `.env.example` and fills in a strong `AUTH_SESSION_SECRET`; `make dev`,
 `make migrate`, `make revision`, `make downgrade`, `make seed` and `make seed-reset` run
 it automatically when `.env` is missing, so a fresh checkout starts without manual setup.
+For local sign-in without Google credentials, set `AUTH_DEV_LOGIN_ENABLED=true` in `.env`.
 
 `ENVIRONMENT` is required (`local`, `test`, `staging`, or `production`) and the app
 refuses to start without a strong `AUTH_SESSION_SECRET` (except in `test`). `local`

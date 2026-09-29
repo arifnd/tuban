@@ -105,16 +105,15 @@ def test_test_environment_tolerates_weak_secret(monkeypatch) -> None:
     assert config.SESSION_SECRET == "change-me-in-production"
 
 
-def test_production_disables_dev_login(monkeypatch) -> None:
+def test_dev_login_forced_off_outside_local(monkeypatch) -> None:
     from src import config as config_module
     from src.auth.config import AuthConfig
 
-    monkeypatch.setattr(config_module.settings, "ENVIRONMENT", "production")
-    try:
-        AuthConfig(SESSION_SECRET="a-strong-secret-that-is-long-enough", DEV_LOGIN_ENABLED=True)
-    except RuntimeError:
-        return
-    raise AssertionError("AuthConfig should reject dev login in production")
+    for env in ("staging", "production"):
+        monkeypatch.setattr(config_module.settings, "ENVIRONMENT", env)
+        config = AuthConfig(SESSION_SECRET="a-strong-secret-that-is-long-enough", DEV_LOGIN_ENABLED=True)
+        assert config.DEV_LOGIN_ENABLED is False
+        assert config.dev_login_enabled is False
 
 
 def test_dev_login_off_by_default(monkeypatch) -> None:

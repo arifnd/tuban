@@ -1,8 +1,11 @@
+import logging
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from src.config import settings
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_SESSION_SECRET = "change-me-in-production-change-me-in-production"
 MIN_SESSION_SECRET_LENGTH = 32
@@ -32,7 +35,8 @@ class AuthConfig(BaseSettings):
         if env not in LOCAL_ENVIRONMENTS:
             self.SECURE_COOKIES = True
         if env not in LOCAL_ENVIRONMENTS and self.DEV_LOGIN_ENABLED:
-            raise RuntimeError("Dev login (AUTH_DEV_LOGIN_ENABLED) must not be enabled outside local/test environments.")
+            logger.warning("AUTH_DEV_LOGIN_ENABLED is set but ignored outside local/test environments; forcing it off.")
+            self.DEV_LOGIN_ENABLED = False
 
     def _validate_session_secret(self) -> None:
         secret = self.SESSION_SECRET
