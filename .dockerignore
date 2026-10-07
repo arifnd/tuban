@@ -1,13 +1,32 @@
+# Version control / environments
 .git
+.github
 .venv
+.python-version
+
+# Python caches and tooling
 __pycache__
 *.pyc
 .pytest_cache
 .ruff_cache
 .coverage
+htmlcov/
+
+# Local runtime data
 instance/
 media/
+.env
+
+# Frontend toolchain (assets are prebuilt and committed)
 node_modules/
+resources/
+package.json
+package-lock.json
+tailwind.config.js
+
+# Source-only, not needed in the image
+tests/
+docs/
+docker/
 tasks/
 example
-.env
