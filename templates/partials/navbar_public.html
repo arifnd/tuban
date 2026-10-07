@@ -15,6 +15,7 @@
     </a>
 
     <div class="flex items-center gap-2">
+      {% include "partials/theme_toggle.html" %}
       <a href="/tickets/new" class="btn btn-primary hidden md:flex">{{ t("landing.create_ticket") }}</a>
       <a href="/auth/login" class="btn btn-secondary hidden md:flex">{{ t("auth.signin") }}</a>
       <button type="button" class="rounded-md p-2 text-slate-500 hover:bg-slate-50 md:hidden dark:text-slate-400 dark:hover:bg-slate-800"
