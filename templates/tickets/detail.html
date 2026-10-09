@@ -6,8 +6,8 @@
 <a href="/tickets" class="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400">&larr; {{ t("tickets.back") }}</a>
 
 <div class="mt-3 flex flex-wrap items-center gap-3">
-  <span class="font-mono text-sm text-slate-500 dark:text-slate-400">{{ ticket.ticket_number }}</span>
-  <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ ticket.subject }}</h1>
+  <span class="font-mono text-sm text-muted-foreground">{{ ticket.ticket_number }}</span>
+  <h1 class="text-xl font-semibold text-foreground">{{ ticket.subject }}</h1>
   {{ status_badge(ticket.status) }}
   {{ priority_badge(ticket.priority) }}
   {{ sla_badge(sla) }}
@@ -16,7 +16,7 @@
 <div class="mt-4 grid gap-4 lg:grid-cols-3">
   <div class="lg:col-span-2">
     <div class="card p-4">
-      <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+      <div class="flex items-center justify-between text-xs text-muted-foreground">
         <span>{{ ticket.requester.name if ticket.requester else "—" }}</span>
         <span>{{ ticket.created_at | dtf }}</span>
       </div>

@@ -3,7 +3,7 @@
 {% block title %}{{ t("tickets.title") }} · {{ t("brand.name") }}{% endblock %}
 {% block content %}
 <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-  <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ t("tickets.title") }}</h1>
+  <h1 class="text-xl font-semibold text-foreground">{{ t("tickets.title") }}</h1>
   <div class="flex items-center gap-2">
     {% if is_editor %}<a href="/tickets/categories" class="btn btn-secondary">{{ t("tickets.categories") }}</a>{% endif %}
     <a href="/tickets/new" class="btn btn-primary">{{ icon("plus", "w-4 h-4") }} {{ t("tickets.new") }}</a>
@@ -54,7 +54,7 @@
     </select>
   </div>
   {% if is_editor %}
-  <label class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+  <label class="flex items-center gap-2 text-sm text-muted-foreground">
     <input type="checkbox" name="mine" value="1" {% if mine %}checked{% endif %} class="h-4 w-4">
     {{ t("tickets.mine") }}
   </label>

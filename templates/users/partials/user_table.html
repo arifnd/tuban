@@ -14,7 +14,7 @@
         </thead>
         <tbody>
           {% for item in users %}
-          <tr class="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/40">
+          <tr class="border-t border-border hover:bg-accent">
             <td class="px-3 py-2">
               <div class="flex items-center gap-2">
                 {% if item.avatar %}
@@ -22,10 +22,10 @@
                 {% else %}
                 <span class="avatar h-7 w-7 text-xs">{{ item.name[0]|upper }}</span>
                 {% endif %}
-                <span class="font-medium text-slate-900 dark:text-white">{{ item.name }}</span>
+                <span class="font-medium text-foreground">{{ item.name }}</span>
               </div>
             </td>
-            <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ item.email }}</td>
+            <td class="px-3 py-2 text-muted-foreground">{{ item.email }}</td>
             <td class="px-3 py-2">
               <span class="badge badge-slate">{{ t("users.role_" ~ item.role.value) }}</span>
             </td>
@@ -42,7 +42,7 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="5" class="px-3 py-10 text-center text-slate-500 dark:text-slate-400">{{ t("users.empty") }}</td>
+            <td colspan="5" class="px-3 py-10 text-center text-muted-foreground">{{ t("users.empty") }}</td>
           </tr>
           {% endfor %}
         </tbody>

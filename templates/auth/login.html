@@ -11,11 +11,11 @@
         </svg>
       </span>
       <div>
-        <h1 class="text-lg font-semibold text-slate-900 dark:text-white">{{ t("brand.name") }}</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400">{{ t("brand.tagline") }}</p>
+        <h1 class="text-lg font-semibold text-foreground">{{ t("brand.name") }}</h1>
+        <p class="text-xs text-muted-foreground">{{ t("brand.tagline") }}</p>
       </div>
     </div>
-    <p class="mt-6 text-sm text-slate-600 dark:text-slate-300">{{ t("auth.signin_continue") }}</p>
+    <p class="mt-6 text-sm text-muted-foreground">{{ t("auth.signin_continue") }}</p>
 
     {% if error %}
     <div class="alert alert-error mt-4">{{ error }}</div>

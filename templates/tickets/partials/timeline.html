@@ -4,7 +4,7 @@
       {% set comment = event.comment %}
       {% include "tickets/partials/comment.html" %}
     {% else %}
-      <div class="flex items-center gap-2 px-1 text-xs text-slate-400 dark:text-slate-500">
+      <div class="flex items-center gap-2 px-1 text-xs text-muted-foreground">
         <span>{{ event.actor }} · {{ event.entry.action }} {{ event.entry.entity_type }}</span>
         <span>{{ event.entry.created_at | dtf }}</span>
       </div>

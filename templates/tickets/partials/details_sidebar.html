@@ -24,16 +24,16 @@
   </div>
 
   <div class="card space-y-2 p-4 text-sm">
-    <div class="flex justify-between gap-3"><span class="text-slate-500 dark:text-slate-400">{{ t("tickets.category") }}</span><span class="text-slate-900 dark:text-white">{{ ticket.category.name if ticket.category else "—" }}</span></div>
-    <div class="flex justify-between gap-3"><span class="text-slate-500 dark:text-slate-400">{{ t("tickets.requester") }}</span><span class="text-slate-900 dark:text-white">{{ ticket.requester.name if ticket.requester else "—" }}</span></div>
-    <div class="flex justify-between gap-3"><span class="text-slate-500 dark:text-slate-400">{{ t("tickets.created") }}</span><span class="text-slate-900 dark:text-white">{{ ticket.created_at | dtf }}</span></div>
-    {% if ticket.sla_due_at %}<div class="flex justify-between gap-3"><span class="text-slate-500 dark:text-slate-400">{{ t("tickets.sla_due") }}</span><span class="text-slate-900 dark:text-white">{{ ticket.sla_due_at | dtf }}</span></div>{% endif %}
-    {% if ticket.resolved_at %}<div class="flex justify-between gap-3"><span class="text-slate-500 dark:text-slate-400">{{ t("tickets.resolved") }}</span><span class="text-slate-900 dark:text-white">{{ ticket.resolved_at | dtf }}</span></div>{% endif %}
+    <div class="flex justify-between gap-3"><span class="text-muted-foreground">{{ t("tickets.category") }}</span><span class="text-foreground">{{ ticket.category.name if ticket.category else "—" }}</span></div>
+    <div class="flex justify-between gap-3"><span class="text-muted-foreground">{{ t("tickets.requester") }}</span><span class="text-foreground">{{ ticket.requester.name if ticket.requester else "—" }}</span></div>
+    <div class="flex justify-between gap-3"><span class="text-muted-foreground">{{ t("tickets.created") }}</span><span class="text-foreground">{{ ticket.created_at | dtf }}</span></div>
+    {% if ticket.sla_due_at %}<div class="flex justify-between gap-3"><span class="text-muted-foreground">{{ t("tickets.sla_due") }}</span><span class="text-foreground">{{ ticket.sla_due_at | dtf }}</span></div>{% endif %}
+    {% if ticket.resolved_at %}<div class="flex justify-between gap-3"><span class="text-muted-foreground">{{ t("tickets.resolved") }}</span><span class="text-foreground">{{ ticket.resolved_at | dtf }}</span></div>{% endif %}
   </div>
 
   {% if related %}
   <div class="card p-4">
-    <h2 class="mb-2 text-sm font-semibold text-slate-900 dark:text-white">{{ t("tickets.related") }}</h2>
+    <h2 class="mb-2 text-sm font-semibold text-foreground">{{ t("tickets.related") }}</h2>
     <ul class="space-y-1 text-sm">
       {% for article in related %}
       <li><a href="/kb/articles/{{ article.slug }}" class="text-brand-600 hover:text-brand-700 dark:text-brand-400">{{ article.title }}</a></li>

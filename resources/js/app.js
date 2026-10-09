@@ -20,15 +20,15 @@ function showConfirmDialog(message, confirmLabel, danger) {
     }
 
     var overlay = document.createElement("div");
-    overlay.className = "fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4";
+    overlay.className = "fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4";
 
     var card = document.createElement("div");
-    card.className = "w-full max-w-sm rounded-lg bg-white p-6 shadow-xl dark:bg-slate-800 dark:shadow-black/40";
+    card.className = "w-full max-w-sm rounded-lg border border-border bg-card p-6 text-card-foreground shadow-xl dark:shadow-black/50";
     card.setAttribute("role", "dialog");
     card.setAttribute("aria-modal", "true");
 
     var text = document.createElement("p");
-    text.className = "text-sm text-slate-700 dark:text-slate-200";
+    text.className = "text-sm text-muted-foreground";
     text.textContent = message;
 
     var actions = document.createElement("div");

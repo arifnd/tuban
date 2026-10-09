@@ -2,7 +2,7 @@
    "mobile" and optionally `close_expr` (an Alpine expression to run on click). #}
 {% from "partials/icons.html" import icon with context %}
 {% set active_class = "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-white" %}
-{% set inactive_class = "text-slate-600 hover:bg-slate-50 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white" %}
+{% set inactive_class = "text-muted-foreground hover:bg-accent hover:text-foreground" %}
 {% for item in navigation %}
   {% if variant == "sidebar" %}
   <a href="{{ item.href }}"{% if close_expr %} @click="{{ close_expr }}"{% endif %} class="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium {{ active_class if item.active else inactive_class }}"{% if item.active %} aria-current="page"{% endif %}>

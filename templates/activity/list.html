@@ -2,7 +2,7 @@
 {% from "partials/pagination.html" import pagination with context %}
 {% block title %}{{ t("activity.title") }} · {{ t("brand.name") }}{% endblock %}
 {% block content %}
-<h1 class="mb-4 text-xl font-semibold text-slate-900 dark:text-white">{{ t("activity.title") }}</h1>
+<h1 class="mb-4 text-xl font-semibold text-foreground">{{ t("activity.title") }}</h1>
 
 <form method="get" action="/activity" class="card mb-4 flex flex-wrap items-end gap-3 p-4">
   <div>
@@ -42,14 +42,14 @@
     </thead>
     <tbody>
       {% for row in logs %}
-      <tr class="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/40">
-        <td class="px-3 py-2 text-slate-500 dark:text-slate-400">{{ row.entry.created_at | dtf }}</td>
-        <td class="px-3 py-2 text-slate-900 dark:text-white">{{ row.actor or "—" }}</td>
-        <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ row.entry.action }}</td>
-        <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ row.entry.entity_type }}</td>
+      <tr class="border-t border-border hover:bg-accent">
+        <td class="px-3 py-2 text-muted-foreground">{{ row.entry.created_at | dtf }}</td>
+        <td class="px-3 py-2 text-foreground">{{ row.actor or "—" }}</td>
+        <td class="px-3 py-2 text-muted-foreground">{{ row.entry.action }}</td>
+        <td class="px-3 py-2 text-muted-foreground">{{ row.entry.entity_type }}</td>
       </tr>
       {% else %}
-      <tr><td colspan="4" class="px-3 py-10 text-center text-slate-500 dark:text-slate-400">{{ t("activity.empty") }}</td></tr>
+      <tr><td colspan="4" class="px-3 py-10 text-center text-muted-foreground">{{ t("activity.empty") }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

@@ -1,13 +1,13 @@
 {% from "partials/pagination.html" import pagination with context %}
 {% from "partials/macros.html" import csrf_input with context %}
 <div id="notifications-list">
-  <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+  <ul class="divide-y divide-border">
     {% for notification in notifications %}
     <li class="flex items-start justify-between gap-3 px-4 py-3 {% if not notification.is_read %}bg-brand-50/60 dark:bg-brand-900/20{% endif %}">
       <div class="min-w-0">
-        <a href="/notifications/{{ notification.id }}/open" class="block truncate text-sm font-medium text-slate-900 hover:text-brand-700 dark:text-slate-100 dark:hover:text-white">{{ notification.title }}</a>
-        {% if notification.body %}<p class="truncate text-xs text-slate-500 dark:text-slate-400">{{ notification.body }}</p>{% endif %}
-        <span class="text-xs text-slate-400">{{ notification.created_at | dtf }}</span>
+        <a href="/notifications/{{ notification.id }}/open" class="block truncate text-sm font-medium text-foreground hover:text-brand-700 dark:hover:text-white">{{ notification.title }}</a>
+        {% if notification.body %}<p class="truncate text-xs text-muted-foreground">{{ notification.body }}</p>{% endif %}
+        <span class="text-xs text-muted-foreground">{{ notification.created_at | dtf }}</span>
       </div>
       {% if not notification.is_read %}
       <form hx-post="/notifications/{{ notification.id }}/read" hx-target="#notifications-list" hx-swap="outerHTML">
@@ -17,7 +17,7 @@
       {% endif %}
     </li>
     {% else %}
-    <li class="px-4 py-10 text-center text-slate-500 dark:text-slate-400">{{ t("notifications.empty_title") }}</li>
+    <li class="px-4 py-10 text-center text-muted-foreground">{{ t("notifications.empty_title") }}</li>
     {% endfor %}
   </ul>
   {{ pagination(page, total_pages, "/notifications", target="#notifications-list", total=total, per_page=per_page) }}

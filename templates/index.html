@@ -26,11 +26,11 @@
     </div>
     {% if slides | length > 1 %}
     <button type="button" @click="prev()" aria-label="{{ t('landing.prev') }}"
-            class="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 text-slate-800 hover:bg-white dark:bg-slate-800/80 dark:text-white">
+            class="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-card/80 p-2 text-card-foreground hover:bg-card dark:text-white">
       {{ icon("chevron-left", "w-5 h-5") }}
     </button>
     <button type="button" @click="next()" aria-label="{{ t('landing.next') }}"
-            class="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 text-slate-800 hover:bg-white dark:bg-slate-800/80 dark:text-white">
+            class="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-card/80 p-2 text-card-foreground hover:bg-card dark:text-white">
       {{ icon("chevron-right", "w-5 h-5") }}
     </button>
     <div class="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2">
@@ -45,14 +45,14 @@
 {% endif %}
 
 <section class="text-center">
-  <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{{ t("landing.heading") }}</h1>
-  <p class="mx-auto mt-3 max-w-xl text-slate-600 dark:text-slate-300">{{ t("landing.subheading") }}</p>
+  <h1 class="text-3xl font-bold tracking-tight text-foreground">{{ t("landing.heading") }}</h1>
+  <p class="mx-auto mt-3 max-w-xl text-muted-foreground">{{ t("landing.subheading") }}</p>
 
   <form action="/search" method="get" class="relative mx-auto mt-6 max-w-xl">
-    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">{{ icon("search", "w-5 h-5") }}</span>
+    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">{{ icon("search", "w-5 h-5") }}</span>
     <input type="search" name="q" placeholder="{{ t('nav.search_placeholder') }}" autocomplete="off"
            class="input mt-0 pl-10" hx-get="/search/partials/dropdown" hx-trigger="keyup changed delay:300ms" hx-target="#landing-results" hx-swap="innerHTML">
-    <div id="landing-results" class="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-lg border border-slate-200 bg-white text-left shadow-lg empty:hidden dark:border-slate-700 dark:bg-slate-800"></div>
+    <div id="landing-results" class="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-lg border border-border bg-card text-left shadow-lg empty:hidden"></div>
   </form>
 
   <div class="mt-6 flex items-center justify-center gap-2">
@@ -63,7 +63,7 @@
 
 <section>
   <div class="mb-3 flex items-center justify-between">
-    <h2 class="text-sm font-semibold text-slate-900 dark:text-white">{{ t("kb.categories") }}</h2>
+    <h2 class="text-sm font-semibold text-foreground">{{ t("kb.categories") }}</h2>
     <a href="/kb" class="text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400">{{ t("landing.browse_kb") }}</a>
   </div>
   <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -71,52 +71,52 @@
     <div class="card p-4">
       <div class="flex items-center gap-2">
         <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-white">{{ icon("folder", "w-5 h-5") }}</span>
-        <span class="font-medium text-slate-900 dark:text-white">{{ category.name }}</span>
+        <span class="font-medium text-foreground">{{ category.name }}</span>
         <span class="ml-auto flex h-6 w-6 items-center justify-center rounded-full bg-brand-50 text-xs font-semibold text-brand-700 dark:bg-brand-900/30 dark:text-white">{{ category.article_count }}</span>
       </div>
-      {% if category.description %}<p class="mt-2 line-clamp-2 text-sm text-slate-500 dark:text-slate-400">{{ category.description }}</p>{% endif %}
+      {% if category.description %}<p class="mt-2 line-clamp-2 text-sm text-muted-foreground">{{ category.description }}</p>{% endif %}
     </div>
     {% else %}
-    <p class="text-sm text-slate-500 dark:text-slate-400">{{ t("kb.categories_empty") }}</p>
+    <p class="text-sm text-muted-foreground">{{ t("kb.categories_empty") }}</p>
     {% endfor %}
   </div>
 </section>
 
 <div class="grid gap-4 lg:grid-cols-2">
   <section class="card p-4">
-    <h2 class="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{{ t("kb.recent") }}</h2>
-    <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+    <h2 class="mb-3 text-sm font-semibold text-foreground">{{ t("kb.recent") }}</h2>
+    <ul class="divide-y divide-border">
       {% for article in recent %}
       {% include "kb/articles/partials/article_card.html" %}
       {% else %}
-      <li class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">{{ t("kb.no_articles") }}</li>
+      <li class="py-6 text-center text-sm text-muted-foreground">{{ t("kb.no_articles") }}</li>
       {% endfor %}
     </ul>
   </section>
   <section class="card p-4">
-    <h2 class="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{{ t("kb.popular") }}</h2>
-    <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+    <h2 class="mb-3 text-sm font-semibold text-foreground">{{ t("kb.popular") }}</h2>
+    <ul class="divide-y divide-border">
       {% for article in popular %}
       {% include "kb/articles/partials/article_card.html" %}
       {% else %}
-      <li class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">{{ t("kb.no_articles") }}</li>
+      <li class="py-6 text-center text-sm text-muted-foreground">{{ t("kb.no_articles") }}</li>
       {% endfor %}
     </ul>
   </section>
 </div>
 
 <section class="card p-6 text-center">
-  <h2 class="text-lg font-semibold text-slate-900 dark:text-white">{{ t("landing.not_found_title") }}</h2>
-  <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">{{ t("landing.not_found_desc") }}</p>
+  <h2 class="text-lg font-semibold text-foreground">{{ t("landing.not_found_title") }}</h2>
+  <p class="mt-1 text-sm text-muted-foreground">{{ t("landing.not_found_desc") }}</p>
   <div class="mt-4 flex justify-center">
     <a href="/tickets/new" class="btn btn-primary">{{ t("landing.create_ticket") }}</a>
   </div>
 </section>
 
 {% if contact_email or contact_phone or contact_address %}
-<section class="border-t border-slate-200 pt-8 dark:border-slate-800">
-  <h2 class="text-lg font-semibold text-slate-900 dark:text-white">{{ t("landing.contact_title") }}</h2>
-  <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">{{ t("landing.contact_desc") }}</p>
+<section class="border-t border-border pt-8">
+  <h2 class="text-lg font-semibold text-foreground">{{ t("landing.contact_title") }}</h2>
+  <p class="mt-1 text-sm text-muted-foreground">{{ t("landing.contact_desc") }}</p>
   <div class="mt-4 grid gap-4 sm:grid-cols-3">
     {% if contact_email %}
     <div class="flex items-start gap-3">
@@ -124,8 +124,8 @@
         {{ icon("mail", "w-4 h-4") }}
       </span>
       <div>
-        <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t("landing.contact_email") }}</p>
-        <a href="mailto:{{ contact_email }}" class="text-sm text-slate-900 hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300">{{ contact_email }}</a>
+        <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ t("landing.contact_email") }}</p>
+        <a href="mailto:{{ contact_email }}" class="text-sm text-foreground hover:text-brand-700 dark:hover:text-brand-300">{{ contact_email }}</a>
       </div>
     </div>
     {% endif %}
@@ -135,8 +135,8 @@
         {{ icon("phone", "w-4 h-4") }}
       </span>
       <div>
-        <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t("landing.contact_phone") }}</p>
-        <a href="tel:{{ contact_phone }}" class="text-sm text-slate-900 hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-300">{{ contact_phone }}</a>
+        <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ t("landing.contact_phone") }}</p>
+        <a href="tel:{{ contact_phone }}" class="text-sm text-foreground hover:text-brand-700 dark:hover:text-brand-300">{{ contact_phone }}</a>
       </div>
     </div>
     {% endif %}
@@ -146,8 +146,8 @@
         {{ icon("map-pin", "w-4 h-4") }}
       </span>
       <div>
-        <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t("landing.contact_address") }}</p>
-        <p class="text-sm text-slate-900 dark:text-slate-100">{{ contact_address }}</p>
+        <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ t("landing.contact_address") }}</p>
+        <p class="text-sm text-foreground">{{ contact_address }}</p>
       </div>
     </div>
     {% endif %}

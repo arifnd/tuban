@@ -2,9 +2,9 @@
 <div class="card p-4 {% if comment.is_internal %}border-l-4 border-amber-400 bg-amber-50 dark:bg-amber-900/20{% endif %}">
   <div class="flex flex-wrap items-center justify-between gap-2">
     <div class="flex items-center gap-2">
-      <span class="font-medium text-slate-900 dark:text-white">{{ comment.author.name if comment.author else "—" }}</span>
+      <span class="font-medium text-foreground">{{ comment.author.name if comment.author else "—" }}</span>
       {% if comment.is_internal %}<span class="badge badge-amber">{{ t("tickets.internal") }}</span>{% endif %}
-      <span class="text-xs text-slate-400">{{ comment.created_at | dtf }}</span>
+      <span class="text-xs text-muted-foreground">{{ comment.created_at | dtf }}</span>
     </div>
     {% if is_editor or comment.author_id == current_user.id %}
     <form method="post" action="/tickets/{{ ticket.id }}/comments/{{ comment.id }}/delete" data-confirm="{{ t('tickets.confirm_delete') }}">

@@ -3,7 +3,7 @@
 {% from "partials/icons.html" import icon with context %}
 {% block title %}{{ t("settings.title") }} · {{ t("brand.name") }}{% endblock %}
 {% block content %}
-<h1 class="mb-4 text-xl font-semibold text-slate-900 dark:text-white">{{ t("settings.title") }}</h1>
+<h1 class="mb-4 text-xl font-semibold text-foreground">{{ t("settings.title") }}</h1>
 
 {% if saved %}
 <div class="alert alert-success mb-4 flex items-center gap-2" role="status">
@@ -16,7 +16,7 @@
   {{ csrf_input() }}
 
   <section class="card p-6">
-    <h2 class="mb-4 text-sm font-semibold text-slate-900 dark:text-white">{{ t("settings.general") }}</h2>
+    <h2 class="mb-4 text-sm font-semibold text-foreground">{{ t("settings.general") }}</h2>
     <div class="grid gap-4 sm:grid-cols-2">
       <div>
         <label class="label" for="app_name">{{ t("settings.app_name") }}</label>
@@ -36,19 +36,19 @@
           {% for color in brand_colors %}
           <label class="cursor-pointer" title="{{ color.name }}">
             <input type="radio" name="theme_color" value="{{ color.name }}" aria-label="{{ color.name }}" class="peer sr-only" {% if values.theme_color == color.name %}checked{% endif %}>
-            <span class="block h-9 w-9 rounded-lg ring-2 ring-transparent ring-offset-2 transition peer-checked:ring-slate-900 peer-focus-visible:ring-slate-400 dark:ring-offset-slate-800 dark:peer-checked:ring-white"
+            <span class="block h-9 w-9 rounded-lg ring-2 ring-transparent ring-offset-2 transition peer-checked:ring-primary peer-focus-visible:ring-ring dark:ring-offset-slate-800 dark:peer-checked:ring-white"
                   style="background-color: {{ color.hex }}"></span>
           </label>
           {% endfor %}
         </div>
-        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ t("settings.theme_color_help") }}</p>
+        <p class="mt-2 text-xs text-muted-foreground">{{ t("settings.theme_color_help") }}</p>
       </div>
     </div>
   </section>
 
   <section class="card p-6">
-    <h2 class="mb-1 text-sm font-semibold text-slate-900 dark:text-white">{{ t("settings.sla") }}</h2>
-    <p class="mb-4 text-xs text-slate-500 dark:text-slate-400">{{ t("settings.sla_help") }}</p>
+    <h2 class="mb-1 text-sm font-semibold text-foreground">{{ t("settings.sla") }}</h2>
+    <p class="mb-4 text-xs text-muted-foreground">{{ t("settings.sla_help") }}</p>
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {% for field in [("sla_urgent_hours", "settings.sla_urgent"), ("sla_high_hours", "settings.sla_high"), ("sla_normal_hours", "settings.sla_normal"), ("sla_low_hours", "settings.sla_low")] %}
       <div>
@@ -59,18 +59,18 @@
       <div class="sm:col-span-2">
         <label class="label" for="ticket_number_prefix">{{ t("settings.ticket_number_prefix") }}</label>
         <input type="text" id="ticket_number_prefix" name="ticket_number_prefix" maxlength="10" value="{{ values.ticket_number_prefix }}" class="input">
-        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t("settings.ticket_number_prefix_help") }}</p>
+        <p class="mt-1 text-xs text-muted-foreground">{{ t("settings.ticket_number_prefix_help") }}</p>
       </div>
     </div>
   </section>
 
   <section class="card p-6">
-    <h2 class="mb-4 text-sm font-semibold text-slate-900 dark:text-white">{{ t("settings.storage") }}</h2>
+    <h2 class="mb-4 text-sm font-semibold text-foreground">{{ t("settings.storage") }}</h2>
     <div class="grid gap-4 sm:grid-cols-2">
       <div>
         <label class="label" for="storage_backend">{{ t("settings.storage_backend") }}</label>
         <input type="text" id="storage_backend" value="{{ storage_backend }}" disabled class="input opacity-60">
-        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t("settings.storage_backend_help") }}</p>
+        <p class="mt-1 text-xs text-muted-foreground">{{ t("settings.storage_backend_help") }}</p>
       </div>
       <div>
         <label class="label" for="upload_max_size_mb">{{ t("settings.upload_max_size") }}</label>
@@ -79,34 +79,34 @@
       <div class="sm:col-span-2">
         <label class="label" for="allowed_extensions">{{ t("settings.allowed_extensions") }}</label>
         <input type="text" id="allowed_extensions" name="allowed_extensions" value="{{ values.allowed_extensions | join(', ') }}" class="input">
-        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t("settings.allowed_extensions_help") }}</p>
+        <p class="mt-1 text-xs text-muted-foreground">{{ t("settings.allowed_extensions_help") }}</p>
       </div>
     </div>
   </section>
 
   <section class="card p-6">
-    <h2 class="mb-4 text-sm font-semibold text-slate-900 dark:text-white">{{ t("settings.registration") }}</h2>
+    <h2 class="mb-4 text-sm font-semibold text-foreground">{{ t("settings.registration") }}</h2>
     <div class="space-y-4">
       <label class="flex items-start gap-3">
         <input type="checkbox" name="open_registration" value="1" {% if values.open_registration %}checked{% endif %} class="mt-1 h-4 w-4">
         <span>
-          <span class="block text-sm font-medium text-slate-900 dark:text-white">{{ t("settings.open_registration") }}</span>
-          <span class="block text-xs text-slate-500 dark:text-slate-400">{{ t("settings.open_registration_help") }}</span>
+          <span class="block text-sm font-medium text-foreground">{{ t("settings.open_registration") }}</span>
+          <span class="block text-xs text-muted-foreground">{{ t("settings.open_registration_help") }}</span>
         </span>
       </label>
       <label class="flex items-start gap-3">
         <input type="checkbox" name="require_approval" value="1" {% if values.require_approval %}checked{% endif %} class="mt-1 h-4 w-4">
         <span>
-          <span class="block text-sm font-medium text-slate-900 dark:text-white">{{ t("settings.require_approval") }}</span>
-          <span class="block text-xs text-slate-500 dark:text-slate-400">{{ t("settings.require_approval_help") }}</span>
+          <span class="block text-sm font-medium text-foreground">{{ t("settings.require_approval") }}</span>
+          <span class="block text-xs text-muted-foreground">{{ t("settings.require_approval_help") }}</span>
         </span>
       </label>
     </div>
   </section>
 
   <section class="card p-6">
-    <h2 class="mb-1 text-sm font-semibold text-slate-900 dark:text-white">{{ t("settings.contact") }}</h2>
-    <p class="mb-4 text-xs text-slate-500 dark:text-slate-400">{{ t("settings.contact_help") }}</p>
+    <h2 class="mb-1 text-sm font-semibold text-foreground">{{ t("settings.contact") }}</h2>
+    <p class="mb-4 text-xs text-muted-foreground">{{ t("settings.contact_help") }}</p>
     <div class="grid gap-4 sm:grid-cols-2">
       <div>
         <label class="label" for="contact_email">{{ t("settings.contact_email") }}</label>
@@ -124,8 +124,8 @@
   </section>
 
   <section class="card p-6">
-    <h2 class="mb-1 text-sm font-semibold text-slate-900 dark:text-white">{{ t("settings.social") }}</h2>
-    <p class="mb-4 text-xs text-slate-500 dark:text-slate-400">{{ t("settings.social_help") }}</p>
+    <h2 class="mb-1 text-sm font-semibold text-foreground">{{ t("settings.social") }}</h2>
+    <p class="mb-4 text-xs text-muted-foreground">{{ t("settings.social_help") }}</p>
     <div class="grid gap-4 sm:grid-cols-2">
       {% for field in [("social_facebook", "settings.social_facebook"), ("social_instagram", "settings.social_instagram"), ("social_x", "settings.social_x"), ("social_linkedin", "settings.social_linkedin"), ("social_youtube", "settings.social_youtube")] %}
       <div>

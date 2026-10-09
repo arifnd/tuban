@@ -5,8 +5,8 @@
 {% block content %}
 <div class="mb-4 flex items-center justify-between">
   <div>
-    <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ t("carousel.title") }}</h1>
-    <p class="text-sm text-slate-500 dark:text-slate-400">{{ t("carousel.help") }}</p>
+    <h1 class="text-xl font-semibold text-foreground">{{ t("carousel.title") }}</h1>
+    <p class="text-sm text-muted-foreground">{{ t("carousel.help") }}</p>
   </div>
   <button type="button" @click="openPreview()" class="btn btn-secondary">
     {{ icon("eye", "w-4 h-4") }} {{ t("carousel.preview") }}
@@ -33,7 +33,7 @@
                 <img :src="slide.preview" alt="" class="h-28 w-full rounded-lg object-cover">
               </template>
               <template x-if="!slide.preview">
-                <div class="flex h-28 w-full items-center justify-center rounded-lg bg-slate-100 text-slate-400 dark:bg-slate-800">
+                <div class="flex h-28 w-full items-center justify-center rounded-lg bg-muted text-muted-foreground">
                   {{ icon("image", "w-6 h-6") }}
                 </div>
               </template>
@@ -43,7 +43,7 @@
               <div>
                 <label class="label">{{ t("carousel.image") }}</label>
                 <input type="file" :name="'file_' + index" accept="image/png,image/jpeg,image/gif,image/webp" @change="onFile(index, $event)" class="input">
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t("carousel.image_help") }} {{ max_upload_size_mb }} MB</p>
+                <p class="mt-1 text-xs text-muted-foreground">{{ t("carousel.image_help") }} {{ max_upload_size_mb }} MB</p>
               </div>
               <div>
                 <label class="label">{{ t("carousel.slide_title") }}</label>
@@ -55,7 +55,7 @@
               </div>
             </div>
             <div class="sm:pt-6">
-              <button type="button" @click="removeSlide(index)" class="rounded-md p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40" aria-label="{{ t('carousel.remove') }}">
+              <button type="button" @click="removeSlide(index)" class="rounded-md p-2 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40" aria-label="{{ t('carousel.remove') }}">
                 {{ icon("trash", "w-5 h-5") }}
               </button>
             </div>
@@ -64,7 +64,7 @@
       </template>
 
       <template x-if="slides.length === 0">
-        <p class="card p-8 text-center text-sm text-slate-500 dark:text-slate-400">{{ t("carousel.empty") }}</p>
+        <p class="card p-8 text-center text-sm text-muted-foreground">{{ t("carousel.empty") }}</p>
       </template>
     </div>
 
@@ -91,14 +91,14 @@
               </div>
             </div>
           </template>
-          <p x-show="slides.length === 0" class="flex h-full items-center justify-center text-sm text-slate-400">{{ t("carousel.empty") }}</p>
+          <p x-show="slides.length === 0" class="flex h-full items-center justify-center text-sm text-muted-foreground">{{ t("carousel.empty") }}</p>
         </div>
         <button type="button" @click="prev()" aria-label="{{ t('landing.prev') }}"
-                class="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 text-slate-800 hover:bg-white dark:bg-slate-800/80 dark:text-white">
+                class="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-card/80 p-2 text-card-foreground hover:bg-card dark:text-white">
           {{ icon("chevron-left", "w-5 h-5") }}
         </button>
         <button type="button" @click="next()" aria-label="{{ t('landing.next') }}"
-                class="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 text-slate-800 hover:bg-white dark:bg-slate-800/80 dark:text-white">
+                class="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-card/80 p-2 text-card-foreground hover:bg-card dark:text-white">
           {{ icon("chevron-right", "w-5 h-5") }}
         </button>
       </div>

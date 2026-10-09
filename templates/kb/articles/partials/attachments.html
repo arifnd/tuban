@@ -2,15 +2,15 @@
 {% from "partials/icons.html" import icon with context %}
 {% set can_edit = current_user and current_user.role in ("admin", "agent") %}
 <section class="card mt-4 p-4">
-  <h2 class="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{{ t("kb.attachments") }}</h2>
-  <ul class="divide-y divide-slate-100 text-sm dark:divide-slate-700">
+  <h2 class="mb-3 text-sm font-semibold text-foreground">{{ t("kb.attachments") }}</h2>
+  <ul class="divide-y divide-border text-sm divide-border">
     {% for attachment in article.attachments %}
     <li class="flex items-center justify-between gap-3 py-2">
       <a href="/media/{{ attachment.file_path }}" target="_blank" rel="noopener" class="flex items-center gap-2 text-brand-600 hover:text-brand-700 dark:text-brand-400">
         {{ icon("paperclip", "w-4 h-4") }} {{ attachment.file_name }}
       </a>
       <div class="flex items-center gap-3">
-        {% if attachment.size_bytes %}<span class="text-xs text-slate-400">{{ (attachment.size_bytes / 1024) | round(1) }} KB</span>{% endif %}
+        {% if attachment.size_bytes %}<span class="text-xs text-muted-foreground">{{ (attachment.size_bytes / 1024) | round(1) }} KB</span>{% endif %}
         {% if can_edit %}
         <form method="post" action="/kb/articles/{{ article.slug }}/attachments/{{ attachment.id }}/delete" data-confirm="{{ t('kb.delete_confirm') }}">
           {{ csrf_input() }}
@@ -20,7 +20,7 @@
       </div>
     </li>
     {% else %}
-    <li class="py-3 text-slate-500 dark:text-slate-400">{{ t("kb.attachments") }}: 0</li>
+    <li class="py-3 text-muted-foreground">{{ t("kb.attachments") }}: 0</li>
     {% endfor %}
   </ul>
 

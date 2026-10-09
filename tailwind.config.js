@@ -32,8 +32,20 @@ module.exports = {
     "mt-5",
     "justify-end",
     "gap-2",
+    "btn",
     "btn-primary",
+    "btn-secondary",
     "btn-danger",
+    // Token-based classes referenced from JS/Alpine strings rather than
+    // templates (e.g. the confirm dialog in resources/js/app.js).
+    "bg-card",
+    "text-card-foreground",
+    "bg-background",
+    "text-foreground",
+    "text-muted-foreground",
+    "border-border",
+    "bg-slate-900/60",
+    "dark:shadow-black/50",
   ],
   theme: {
     extend: {
@@ -51,6 +63,45 @@ module.exports = {
           900: "rgb(var(--brand-900) / <alpha-value>)",
           950: "rgb(var(--brand-950) / <alpha-value>)",
         },
+        // shadcn/ui semantic tokens (see resources/css/input.css).
+        background: "rgb(var(--background) / <alpha-value>)",
+        foreground: "rgb(var(--foreground) / <alpha-value>)",
+        card: {
+          DEFAULT: "rgb(var(--card) / <alpha-value>)",
+          foreground: "rgb(var(--card-foreground) / <alpha-value>)",
+        },
+        popover: {
+          DEFAULT: "rgb(var(--popover) / <alpha-value>)",
+          foreground: "rgb(var(--popover-foreground) / <alpha-value>)",
+        },
+        primary: {
+          DEFAULT: "rgb(var(--primary) / <alpha-value>)",
+          foreground: "rgb(var(--primary-foreground) / <alpha-value>)",
+        },
+        secondary: {
+          DEFAULT: "rgb(var(--secondary) / <alpha-value>)",
+          foreground: "rgb(var(--secondary-foreground) / <alpha-value>)",
+        },
+        muted: {
+          DEFAULT: "rgb(var(--muted) / <alpha-value>)",
+          foreground: "rgb(var(--muted-foreground) / <alpha-value>)",
+        },
+        accent: {
+          DEFAULT: "rgb(var(--accent) / <alpha-value>)",
+          foreground: "rgb(var(--accent-foreground) / <alpha-value>)",
+        },
+        destructive: {
+          DEFAULT: "rgb(var(--destructive) / <alpha-value>)",
+          foreground: "rgb(var(--destructive-foreground) / <alpha-value>)",
+        },
+        border: "rgb(var(--border) / <alpha-value>)",
+        input: "rgb(var(--input) / <alpha-value>)",
+        ring: "rgb(var(--ring) / <alpha-value>)",
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
     },
   },

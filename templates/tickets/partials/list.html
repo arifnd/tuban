@@ -18,21 +18,21 @@
         </thead>
         <tbody>
           {% for ticket in tickets %}
-          <tr class="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/40">
-            <td class="px-3 py-2 font-mono text-xs text-slate-500 dark:text-slate-400">{{ ticket.ticket_number }}</td>
+          <tr class="border-t border-border hover:bg-accent">
+            <td class="px-3 py-2 font-mono text-xs text-muted-foreground">{{ ticket.ticket_number }}</td>
             <td class="px-3 py-2">
-              <a href="/tickets/{{ ticket.id }}" class="font-medium text-slate-900 hover:text-brand-700 dark:text-slate-100 dark:hover:text-white">{{ ticket.subject }}</a>
-              {% if ticket.category %}<span class="ml-1 text-xs text-slate-400">{{ ticket.category.name }}</span>{% endif %}
+              <a href="/tickets/{{ ticket.id }}" class="font-medium text-foreground hover:text-brand-700 dark:hover:text-white">{{ ticket.subject }}</a>
+              {% if ticket.category %}<span class="ml-1 text-xs text-muted-foreground">{{ ticket.category.name }}</span>{% endif %}
             </td>
             <td class="px-3 py-2">{{ status_badge(ticket.status) }}</td>
             <td class="px-3 py-2">{{ priority_badge(ticket.priority) }}</td>
-            <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ ticket.requester.name if ticket.requester else "—" }}</td>
-            <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ ticket.assignee.name if ticket.assignee else t("tickets.unassigned") }}</td>
+            <td class="px-3 py-2 text-muted-foreground">{{ ticket.requester.name if ticket.requester else "—" }}</td>
+            <td class="px-3 py-2 text-muted-foreground">{{ ticket.assignee.name if ticket.assignee else t("tickets.unassigned") }}</td>
             <td class="px-3 py-2">{{ sla_badge(sla_states.get(ticket.id, "ok")) }}</td>
-            <td class="px-3 py-2 text-slate-500 dark:text-slate-400">{{ ticket.updated_at | dtf }}</td>
+            <td class="px-3 py-2 text-muted-foreground">{{ ticket.updated_at | dtf }}</td>
           </tr>
           {% else %}
-          <tr><td colspan="8" class="px-3 py-10 text-center text-slate-500 dark:text-slate-400">{{ t("tickets.empty") }}</td></tr>
+          <tr><td colspan="8" class="px-3 py-10 text-center text-muted-foreground">{{ t("tickets.empty") }}</td></tr>
           {% endfor %}
         </tbody>
       </table>

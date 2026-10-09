@@ -1,0 +1,57 @@
+{# Reusable shadcn/ui-style component primitives for the Jinja + HTMX + Alpine
+   stack. All styling comes from the semantic tokens in `resources/css/input.css`
+   (`bg-card`, `bg-popover`, `border-border`, `text-muted-foreground`, ...), so the
+   components follow the active theme and light/dark automatically.
+
+   Usage (import once per template):
+     {% from "partials/components.html" import dialog, dropdown, tablist, tooltip with context %}
+
+   Interactive macros use Alpine state from an ancestor `x-data` scope and must be
+   called with a body:
+     <div x-data="{ open: false }">
+       {% call dialog('open', t('dialog.confirm')) %}
+         ...body...
+       {% endcall %}
+     </div> #}
+
+{% macro dialog(show, title="", max_width="max-w-lg") -%}
+<div x-show="{{ show }}" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     @keydown.escape.window="{{ show }} = false">
+  <div class="absolute inset-0 bg-slate-900/60" @click="{{ show }} = false"></div>
+  <div role="dialog" aria-modal="true"
+       class="card relative z-10 w-full {{ max_width }} p-6 shadow-xl"
+       x-transition:enter="transition ease-out duration-150"
+       x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+    {% if title %}
+    <h2 class="mb-3 text-lg font-semibold text-foreground">{{ title }}</h2>
+    {% endif %}
+    {{ caller() }}
+  </div>
+</div>
+{%- endmacro %}
+
+{% macro dropdown(show, align="right", width="w-52") -%}
+<div x-show="{{ show }}" x-cloak x-transition
+     class="absolute {{ 'right-0' if align == 'right' else 'left-0' }} z-50 mt-2 {{ width }} overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-lg">
+  {{ caller() }}
+</div>
+{%- endmacro %}
+
+{% macro tablist(name, tabs) -%}
+<div role="tablist" aria-label="{{ name }}" class="inline-flex items-center gap-1 rounded-md bg-muted p-1 text-sm">
+  {% for tab in tabs %}
+  <button type="button" role="tab"
+          :aria-selected="tab === '{{ tab.id }}'"
+          :class="tab === '{{ tab.id }}' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'"
+          class="rounded px-3 py-1" @click="tab = '{{ tab.id }}'">{{ tab.label }}</button>
+  {% endfor %}
+</div>
+{%- endmacro %}
+
+{% macro tooltip(text) -%}
+<span class="group relative inline-flex">
+  {{ caller() }}
+  <span role="tooltip"
+        class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1 -translate-x-1/2 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs text-popover-foreground opacity-0 shadow-md transition-opacity group-hover:opacity-100">{{ text }}</span>
+</span>
+{%- endmacro %}

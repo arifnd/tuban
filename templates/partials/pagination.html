@@ -11,25 +11,26 @@
     {% endfor %}
   {% endif %}
   {% set qs = extra.qs %}
+  {% set page_link = "rounded-md border border-input bg-background px-3 py-1.5 text-foreground hover:bg-accent hover:text-accent-foreground" %}
   <nav class="mt-4 flex items-center justify-between text-sm" aria-label="{{ t('pagination.aria') }}">
-    <span class="text-slate-500 dark:text-slate-400">
+    <span class="text-muted-foreground">
       {% if total is not none %}{{ total }} {{ t("pagination.total") }} · {% endif %}{{ t("pagination.page_of").format(page=page, total=total_pages) }}
     </span>
     <div class="flex items-center gap-1">
       {% if page > 1 %}
       {% set url = endpoint ~ "?page=" ~ (page - 1) ~ qs %}
       <a href="{{ url }}" {% if target %}hx-get="{{ url }}" hx-target="{{ target }}" hx-swap="outerHTML"{% endif %}
-         class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">{{ t("pagination.previous") }}</a>
+         class="{{ page_link }}">{{ t("pagination.previous") }}</a>
       {% endif %}
       {% for p in range(start, end + 1) %}
       {% set url = endpoint ~ "?page=" ~ p ~ qs %}
       <a href="{{ url }}" {% if target %}hx-get="{{ url }}" hx-target="{{ target }}" hx-swap="outerHTML"{% endif %}
-         class="rounded-md border px-3 py-1.5 {% if p == page %}border-brand-600 bg-brand-600 text-white{% else %}border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700{% endif %}">{{ p }}</a>
+         class="rounded-md border px-3 py-1.5 {% if p == page %}border-primary bg-primary text-primary-foreground{% else %}{{ page_link }}{% endif %}">{{ p }}</a>
       {% endfor %}
       {% if page < total_pages %}
       {% set url = endpoint ~ "?page=" ~ (page + 1) ~ qs %}
       <a href="{{ url }}" {% if target %}hx-get="{{ url }}" hx-target="{{ target }}" hx-swap="outerHTML"{% endif %}
-         class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">{{ t("pagination.next") }}</a>
+         class="{{ page_link }}">{{ t("pagination.next") }}</a>
       {% endif %}
     </div>
   </nav>

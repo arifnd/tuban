@@ -4,8 +4,8 @@
 {% block content %}
 <div class="mb-4 flex items-center justify-between">
   <div>
-    <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ t("dashboard.title") }}</h1>
-    <p class="text-sm text-slate-500 dark:text-slate-400">{{ t("dashboard.welcome") }}, {{ current_user.name }}</p>
+    <h1 class="text-xl font-semibold text-foreground">{{ t("dashboard.title") }}</h1>
+    <p class="text-sm text-muted-foreground">{{ t("dashboard.welcome") }}, {{ current_user.name }}</p>
   </div>
   <a href="/tickets/new" class="btn btn-primary">{{ t("dashboard.new_ticket") }}</a>
 </div>
@@ -14,13 +14,13 @@
   {% if not is_admin %}
   <div class="card p-4" x-data="{ q_open: false }" @click.outside="q_open = false">
     <form action="/search" method="get" class="relative">
-      <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">{{ icon("search", "w-4 h-4") }}</span>
+      <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">{{ icon("search", "w-4 h-4") }}</span>
       <input type="search" name="q" placeholder="{{ t('nav.search_placeholder') }}" autocomplete="off"
              class="input mt-0 pl-9"
              hx-get="/search/partials/dropdown" hx-trigger="keyup changed delay:300ms" hx-target="#dashboard-search-results" hx-swap="innerHTML"
              @focus="q_open = true" @keyup="q_open = true">
     </form>
-    <div x-show="q_open" x-cloak x-transition class="mt-2 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
+    <div x-show="q_open" x-cloak x-transition class="mt-2 overflow-hidden rounded-lg border border-border">
       <div id="dashboard-search-results"></div>
     </div>
   </div>
@@ -30,7 +30,7 @@
 
   {% if is_staff %}
   <div class="card p-4">
-    <h2 class="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{{ t("dashboard.ticket_trend") }}</h2>
+    <h2 class="mb-3 text-sm font-semibold text-foreground">{{ t("dashboard.ticket_trend") }}</h2>
     <canvas data-chart="line" data-label="{{ t('dashboard.ticket_trend') }}"
             data-labels="{{ trend_labels | attrjson }}" data-values="{{ trend_values | attrjson }}" height="90"></canvas>
   </div>

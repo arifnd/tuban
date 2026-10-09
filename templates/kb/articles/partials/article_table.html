@@ -14,22 +14,22 @@
       </thead>
       <tbody>
         {% for article in articles %}
-        <tr class="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/40">
+        <tr class="border-t border-border hover:bg-accent">
           <td class="px-3 py-2">
-            <a href="/kb/articles/{{ article.slug }}" class="font-medium text-slate-900 hover:text-brand-700 dark:text-slate-100 dark:hover:text-white">{{ article.title }}</a>
+            <a href="/kb/articles/{{ article.slug }}" class="font-medium text-foreground hover:text-brand-700 dark:hover:text-white">{{ article.title }}</a>
             {% if article.tags %}
-            <span class="ml-1 text-xs text-slate-400">{% for tag in article.tags %}#{{ tag.name }}{% if not loop.last %} {% endif %}{% endfor %}</span>
+            <span class="ml-1 text-xs text-muted-foreground">{% for tag in article.tags %}#{{ tag.name }}{% if not loop.last %} {% endif %}{% endfor %}</span>
             {% endif %}
           </td>
-          <td class="px-3 py-2 text-slate-600 dark:text-slate-300">{{ article.category.name if article.category else "—" }}</td>
+          <td class="px-3 py-2 text-muted-foreground">{{ article.category.name if article.category else "—" }}</td>
           {% if can_edit %}
           <td class="px-3 py-2"><span class="badge badge-slate">{{ t("kb.status_" ~ article.status.value) }}</span></td>
           {% endif %}
-          <td class="px-3 py-2 text-slate-500 dark:text-slate-400">{{ article.updated_at | dtf }}</td>
-          <td class="px-3 py-2 text-right text-slate-500 dark:text-slate-400">{{ article.view_count }}</td>
+          <td class="px-3 py-2 text-muted-foreground">{{ article.updated_at | dtf }}</td>
+          <td class="px-3 py-2 text-right text-muted-foreground">{{ article.view_count }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="5" class="px-3 py-10 text-center text-slate-500 dark:text-slate-400">{{ t("kb.no_articles") }}</td></tr>
+        <tr><td colspan="5" class="px-3 py-10 text-center text-muted-foreground">{{ t("kb.no_articles") }}</td></tr>
         {% endfor %}
       </tbody>
     </table>

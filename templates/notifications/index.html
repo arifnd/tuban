@@ -3,7 +3,7 @@
 {% block title %}{{ t("notifications.title") }} · {{ t("brand.name") }}{% endblock %}
 {% block content %}
 <div class="mb-4 flex items-center justify-between">
-  <h1 class="text-xl font-semibold text-slate-900 dark:text-white">{{ t("notifications.title") }}</h1>
+  <h1 class="text-xl font-semibold text-foreground">{{ t("notifications.title") }}</h1>
   <form method="post" action="/notifications/read-all">
     {{ csrf_input() }}
     <button type="submit" class="btn btn-secondary">{{ t("notifications.mark_all_read") }}</button>
