@@ -40,6 +40,8 @@ def defaults() -> dict[str, Any]:
         "contact_email": "",
         "contact_phone": "",
         "contact_address": "",
+        "landing_heading": "",
+        "landing_subheading": "",
         "social_facebook": "",
         "social_instagram": "",
         "social_x": "",

@@ -45,8 +45,8 @@
 {% endif %}
 
 <section class="text-center">
-  <h1 class="text-3xl font-bold tracking-tight text-foreground">{{ t("landing.heading") }}</h1>
-  <p class="mx-auto mt-3 max-w-xl text-muted-foreground">{{ t("landing.subheading") }}</p>
+  <h1 class="text-3xl font-bold tracking-tight text-foreground">{{ landing_heading or t("landing.heading") }}</h1>
+  <p class="mx-auto mt-3 max-w-xl text-muted-foreground">{{ landing_subheading or t("landing.subheading") }}</p>
 
   <form action="/search" method="get" class="relative mx-auto mt-6 max-w-xl">
     <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">{{ icon("search", "w-5 h-5") }}</span>
@@ -54,11 +54,6 @@
            class="input mt-0 pl-10" hx-get="/search/partials/dropdown" hx-trigger="keyup changed delay:300ms" hx-target="#landing-results" hx-swap="innerHTML">
     <div id="landing-results" class="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-lg border border-border bg-card text-left shadow-lg empty:hidden"></div>
   </form>
-
-  <div class="mt-6 flex items-center justify-center gap-2">
-    <a href="/kb" class="btn btn-secondary">{{ t("landing.browse_kb") }}</a>
-    <a href="/auth/login" class="btn btn-primary">{{ t("landing.signin") }}</a>
-  </div>
 </section>
 
 <section>

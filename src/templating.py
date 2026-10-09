@@ -89,6 +89,8 @@ def _context(request: Request) -> dict[str, Any]:
         "contact_email": settings_service.get("contact_email") or "",
         "contact_phone": settings_service.get("contact_phone") or "",
         "contact_address": settings_service.get("contact_address") or "",
+        "landing_heading": settings_service.get("landing_heading") or "",
+        "landing_subheading": settings_service.get("landing_subheading") or "",
         "social_links": [
             {"name": name, "label": label, "url": settings_service.get(f"social_{name}")}
             for name, label in SOCIAL_PLATFORMS

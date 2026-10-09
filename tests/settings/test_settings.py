@@ -135,6 +135,41 @@ async def test_contact_info_saved_and_shown_on_landing(client: AsyncClient, db) 
     assert "text-[#E4405F]" in resp.text
 
 
+async def test_landing_copy_saved_and_shown_on_landing(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(
+        BASE_FORM,
+        _csrf=csrf(client.cookies),
+        landing_heading="Selamat datang di Tuban",
+        landing_subheading="Temukan bantuan dengan cepat.",
+    )
+    assert (await client.post("/settings", data=form)).status_code == 303
+    assert settings_service.get("landing_heading") == "Selamat datang di Tuban"
+    assert settings_service.get("landing_subheading") == "Temukan bantuan dengan cepat."
+
+    client.cookies.clear()
+    resp = await client.get("/")
+    assert resp.status_code == 200
+    assert "Selamat datang di Tuban" in resp.text
+    assert "Temukan bantuan dengan cepat." in resp.text
+
+
+async def test_landing_uses_default_copy_when_blank(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(BASE_FORM, _csrf=csrf(client.cookies), landing_heading="", landing_subheading="")
+    assert (await client.post("/settings", data=form)).status_code == 303
+
+    client.cookies.clear()
+    resp = await client.get("/")
+    assert resp.status_code == 200
+    assert "Basis pengetahuan dan dukungan dalam satu tempat" in resp.text
+    assert "Masuk untuk memulai" not in resp.text
+
+
 async def test_carousel_slides_shown_on_landing(client: AsyncClient, db) -> None:
     admin = await make_user(db, "admin@example.com", UserRole.ADMIN)
     await settings_service.update(

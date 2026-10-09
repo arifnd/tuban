@@ -124,6 +124,23 @@
   </section>
 
   <section class="card p-6">
+    <h2 class="mb-1 text-sm font-semibold text-foreground">{{ t("settings.landing") }}</h2>
+    <p class="mb-4 text-xs text-muted-foreground">{{ t("settings.landing_help") }}</p>
+    <div class="grid gap-4">
+      <div>
+        <label class="label" for="landing_heading">{{ t("settings.landing_heading") }}</label>
+        <input type="text" id="landing_heading" name="landing_heading" maxlength="200"
+               value="{{ values.landing_heading }}" placeholder="{{ t('landing.heading') }}" class="input">
+      </div>
+      <div>
+        <label class="label" for="landing_subheading">{{ t("settings.landing_subheading") }}</label>
+        <textarea id="landing_subheading" name="landing_subheading" rows="2" maxlength="500"
+                  placeholder="{{ t('landing.subheading') }}" class="input">{{ values.landing_subheading }}</textarea>
+      </div>
+    </div>
+  </section>
+
+  <section class="card p-6">
     <h2 class="mb-1 text-sm font-semibold text-foreground">{{ t("settings.social") }}</h2>
     <p class="mb-4 text-xs text-muted-foreground">{{ t("settings.social_help") }}</p>
     <div class="grid gap-4 sm:grid-cols-2">

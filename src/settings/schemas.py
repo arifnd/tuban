@@ -20,6 +20,8 @@ class SettingsUpdate(BaseModel):
     contact_email: str = Field(default="", max_length=200)
     contact_phone: str = Field(default="", max_length=50)
     contact_address: str = Field(default="", max_length=300)
+    landing_heading: str = Field(default="", max_length=200)
+    landing_subheading: str = Field(default="", max_length=500)
     social_facebook: str = Field(default="", max_length=300)
     social_instagram: str = Field(default="", max_length=300)
     social_x: str = Field(default="", max_length=300)
