@@ -3,6 +3,15 @@
 {% from "partials/icons.html" import icon with context %}
 {% block title %}{{ t("settings.title") }} · {{ t("brand.name") }}{% endblock %}
 {% block content %}
+{% set sections = [
+  ("general", "settings.general"),
+  ("sla", "settings.sla"),
+  ("storage", "settings.storage"),
+  ("registration", "settings.registration"),
+  ("contact", "settings.contact"),
+  ("landing", "settings.landing"),
+  ("social", "settings.social"),
+] %}
 <h1 class="mb-4 text-xl font-semibold text-foreground">{{ t("settings.title") }}</h1>
 
 {% if saved %}
@@ -12,148 +21,196 @@
 </div>
 {% endif %}
 
-<form method="post" action="/settings" class="space-y-4">
+<form method="post" action="/settings"
+      x-data="{
+        tab: '{{ active_section }}',
+        sections: ['general', 'sla', 'storage', 'registration', 'contact', 'landing', 'social'],
+        move(step) {
+          const i = this.sections.indexOf(this.tab);
+          const next = (i + step + this.sections.length) % this.sections.length;
+          this.tab = this.sections[next];
+          const el = document.getElementById('settings-tab-' + this.sections[next]);
+          if (el) el.focus();
+        }
+      }">
   {{ csrf_input() }}
+  <input type="hidden" name="section" :value="tab" value="{{ active_section }}">
 
-  <section class="card p-6">
-    <h2 class="mb-4 text-sm font-semibold text-foreground">{{ t("settings.general") }}</h2>
-    <div class="grid gap-4 sm:grid-cols-2">
-      <div>
-        <label class="label" for="app_name">{{ t("settings.app_name") }}</label>
-        <input type="text" id="app_name" name="app_name" value="{{ values.app_name }}" required class="input">
-      </div>
-      <div>
-        <label class="label" for="default_language">{{ t("settings.default_language") }}</label>
-        <select id="default_language" name="default_language" class="input">
-          {% for code, label in languages %}
-          <option value="{{ code }}" {% if values.default_language == code %}selected{% endif %}>{{ label }}</option>
+  <div class="mb-4 lg:hidden">
+    <label class="label" for="settings-section">{{ t("settings.sections") }}</label>
+    <select id="settings-section" x-model="tab" class="input">
+      {% for id, key in sections %}
+      <option value="{{ id }}" {% if id == active_section %}selected{% endif %}>{{ t(key) }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="lg:grid lg:grid-cols-[16rem_1fr] lg:items-start lg:gap-6">
+    <nav class="hidden lg:sticky lg:top-3 lg:block" role="tablist" aria-orientation="vertical" aria-label="{{ t('settings.sections') }}">
+      <ul class="space-y-1">
+        {% for id, key in sections %}
+        <li>
+          <button type="button" id="settings-tab-{{ id }}" role="tab"
+                  aria-controls="settings-panel-{{ id }}"
+                  :aria-selected="tab === '{{ id }}'"
+                  :class="tab === '{{ id }}' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground'"
+                  class="flex w-full items-center rounded-md px-3 py-2 text-left text-sm font-medium"
+                  @click="tab = '{{ id }}'"
+                  @keydown.arrow-down.prevent="move(1)"
+                  @keydown.arrow-up.prevent="move(-1)"
+                  @keydown.arrow-right.prevent="move(1)"
+                  @keydown.arrow-left.prevent="move(-1)"
+                  @keydown.home.prevent="tab = sections[0]"
+                  @keydown.end.prevent="tab = sections[sections.length - 1]">
+            {{ t(key) }}
+          </button>
+        </li>
+        {% endfor %}
+      </ul>
+    </nav>
+
+    <div class="space-y-4">
+      <section id="settings-panel-general" role="tabpanel" aria-labelledby="settings-tab-general" x-show="tab === 'general'" {% if active_section != 'general' %}style="display:none"{% endif %} class="card p-6">
+        <h2 class="mb-4 text-sm font-semibold text-foreground">{{ t("settings.general") }}</h2>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="label" for="app_name">{{ t("settings.app_name") }}</label>
+            <input type="text" id="app_name" name="app_name" value="{{ values.app_name }}" required class="input">
+          </div>
+          <div>
+            <label class="label" for="default_language">{{ t("settings.default_language") }}</label>
+            <select id="default_language" name="default_language" class="input">
+              {% for code, label in languages %}
+              <option value="{{ code }}" {% if values.default_language == code %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <span class="label">{{ t("settings.theme_color") }}</span>
+            <div class="mt-2 flex flex-wrap gap-3">
+              {% for color in brand_colors %}
+              <label class="cursor-pointer" title="{{ color.name }}">
+                <input type="radio" name="theme_color" value="{{ color.name }}" aria-label="{{ color.name }}" class="peer sr-only" {% if values.theme_color == color.name %}checked{% endif %}>
+                <span class="block h-9 w-9 rounded-lg ring-2 ring-transparent ring-offset-2 transition peer-checked:ring-primary peer-focus-visible:ring-ring dark:ring-offset-slate-800 dark:peer-checked:ring-white"
+                      style="background-color: {{ color.hex }}"></span>
+              </label>
+              {% endfor %}
+            </div>
+            <p class="mt-2 text-xs text-muted-foreground">{{ t("settings.theme_color_help") }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="settings-panel-sla" role="tabpanel" aria-labelledby="settings-tab-sla" x-show="tab === 'sla'" {% if active_section != 'sla' %}style="display:none"{% endif %} class="card p-6">
+        <h2 class="mb-1 text-sm font-semibold text-foreground">{{ t("settings.sla") }}</h2>
+        <p class="mb-4 text-xs text-muted-foreground">{{ t("settings.sla_help") }}</p>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {% for field in [("sla_urgent_hours", "settings.sla_urgent"), ("sla_high_hours", "settings.sla_high"), ("sla_normal_hours", "settings.sla_normal"), ("sla_low_hours", "settings.sla_low")] %}
+          <div>
+            <label class="label" for="{{ field[0] }}">{{ t(field[1]) }}</label>
+            <input type="number" id="{{ field[0] }}" name="{{ field[0] }}" min="1" max="1000" value="{{ values[field[0]] }}" class="input">
+          </div>
           {% endfor %}
-        </select>
-      </div>
-      <div class="sm:col-span-2">
-        <span class="label">{{ t("settings.theme_color") }}</span>
-        <div class="mt-2 flex flex-wrap gap-3">
-          {% for color in brand_colors %}
-          <label class="cursor-pointer" title="{{ color.name }}">
-            <input type="radio" name="theme_color" value="{{ color.name }}" aria-label="{{ color.name }}" class="peer sr-only" {% if values.theme_color == color.name %}checked{% endif %}>
-            <span class="block h-9 w-9 rounded-lg ring-2 ring-transparent ring-offset-2 transition peer-checked:ring-primary peer-focus-visible:ring-ring dark:ring-offset-slate-800 dark:peer-checked:ring-white"
-                  style="background-color: {{ color.hex }}"></span>
+          <div class="sm:col-span-2">
+            <label class="label" for="ticket_number_prefix">{{ t("settings.ticket_number_prefix") }}</label>
+            <input type="text" id="ticket_number_prefix" name="ticket_number_prefix" maxlength="10" value="{{ values.ticket_number_prefix }}" class="input">
+            <p class="mt-1 text-xs text-muted-foreground">{{ t("settings.ticket_number_prefix_help") }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="settings-panel-storage" role="tabpanel" aria-labelledby="settings-tab-storage" x-show="tab === 'storage'" {% if active_section != 'storage' %}style="display:none"{% endif %} class="card p-6">
+        <h2 class="mb-4 text-sm font-semibold text-foreground">{{ t("settings.storage") }}</h2>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="label" for="storage_backend">{{ t("settings.storage_backend") }}</label>
+            <input type="text" id="storage_backend" value="{{ storage_backend }}" disabled class="input opacity-60">
+            <p class="mt-1 text-xs text-muted-foreground">{{ t("settings.storage_backend_help") }}</p>
+          </div>
+          <div>
+            <label class="label" for="upload_max_size_mb">{{ t("settings.upload_max_size") }}</label>
+            <input type="number" id="upload_max_size_mb" name="upload_max_size_mb" min="1" max="10240" value="{{ upload_max_size_mb }}" class="input">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="label" for="allowed_extensions">{{ t("settings.allowed_extensions") }}</label>
+            <input type="text" id="allowed_extensions" name="allowed_extensions" value="{{ values.allowed_extensions | join(', ') }}" class="input">
+            <p class="mt-1 text-xs text-muted-foreground">{{ t("settings.allowed_extensions_help") }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="settings-panel-registration" role="tabpanel" aria-labelledby="settings-tab-registration" x-show="tab === 'registration'" {% if active_section != 'registration' %}style="display:none"{% endif %} class="card p-6">
+        <h2 class="mb-4 text-sm font-semibold text-foreground">{{ t("settings.registration") }}</h2>
+        <div class="space-y-4">
+          <label class="flex items-start gap-3">
+            <input type="checkbox" name="open_registration" value="1" {% if values.open_registration %}checked{% endif %} class="mt-1 h-4 w-4">
+            <span>
+              <span class="block text-sm font-medium text-foreground">{{ t("settings.open_registration") }}</span>
+              <span class="block text-xs text-muted-foreground">{{ t("settings.open_registration_help") }}</span>
+            </span>
           </label>
+          <label class="flex items-start gap-3">
+            <input type="checkbox" name="require_approval" value="1" {% if values.require_approval %}checked{% endif %} class="mt-1 h-4 w-4">
+            <span>
+              <span class="block text-sm font-medium text-foreground">{{ t("settings.require_approval") }}</span>
+              <span class="block text-xs text-muted-foreground">{{ t("settings.require_approval_help") }}</span>
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <section id="settings-panel-contact" role="tabpanel" aria-labelledby="settings-tab-contact" x-show="tab === 'contact'" {% if active_section != 'contact' %}style="display:none"{% endif %} class="card p-6">
+        <h2 class="mb-1 text-sm font-semibold text-foreground">{{ t("settings.contact") }}</h2>
+        <p class="mb-4 text-xs text-muted-foreground">{{ t("settings.contact_help") }}</p>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="label" for="contact_email">{{ t("settings.contact_email") }}</label>
+            <input type="email" id="contact_email" name="contact_email" value="{{ values.contact_email }}" class="input">
+          </div>
+          <div>
+            <label class="label" for="contact_phone">{{ t("settings.contact_phone") }}</label>
+            <input type="text" id="contact_phone" name="contact_phone" value="{{ values.contact_phone }}" class="input">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="label" for="contact_address">{{ t("settings.contact_address") }}</label>
+            <textarea id="contact_address" name="contact_address" rows="2" class="input">{{ values.contact_address }}</textarea>
+          </div>
+        </div>
+      </section>
+
+      <section id="settings-panel-landing" role="tabpanel" aria-labelledby="settings-tab-landing" x-show="tab === 'landing'" {% if active_section != 'landing' %}style="display:none"{% endif %} class="card p-6">
+        <h2 class="mb-1 text-sm font-semibold text-foreground">{{ t("settings.landing") }}</h2>
+        <p class="mb-4 text-xs text-muted-foreground">{{ t("settings.landing_help") }}</p>
+        <div class="grid gap-4">
+          <div>
+            <label class="label" for="landing_heading">{{ t("settings.landing_heading") }}</label>
+            <input type="text" id="landing_heading" name="landing_heading" maxlength="200"
+                   value="{{ values.landing_heading }}" placeholder="{{ t('landing.heading') }}" class="input">
+          </div>
+          <div>
+            <label class="label" for="landing_subheading">{{ t("settings.landing_subheading") }}</label>
+            <textarea id="landing_subheading" name="landing_subheading" rows="2" maxlength="500"
+                      placeholder="{{ t('landing.subheading') }}" class="input">{{ values.landing_subheading }}</textarea>
+          </div>
+        </div>
+      </section>
+
+      <section id="settings-panel-social" role="tabpanel" aria-labelledby="settings-tab-social" x-show="tab === 'social'" {% if active_section != 'social' %}style="display:none"{% endif %} class="card p-6">
+        <h2 class="mb-1 text-sm font-semibold text-foreground">{{ t("settings.social") }}</h2>
+        <p class="mb-4 text-xs text-muted-foreground">{{ t("settings.social_help") }}</p>
+        <div class="grid gap-4 sm:grid-cols-2">
+          {% for field in [("social_facebook", "settings.social_facebook"), ("social_instagram", "settings.social_instagram"), ("social_x", "settings.social_x"), ("social_linkedin", "settings.social_linkedin"), ("social_youtube", "settings.social_youtube")] %}
+          <div>
+            <label class="label" for="{{ field[0] }}">{{ t(field[1]) }}</label>
+            <input type="url" id="{{ field[0] }}" name="{{ field[0] }}" value="{{ values[field[0]] }}" placeholder="https://" class="input">
+          </div>
           {% endfor %}
         </div>
-        <p class="mt-2 text-xs text-muted-foreground">{{ t("settings.theme_color_help") }}</p>
-      </div>
+      </section>
     </div>
-  </section>
+  </div>
 
-  <section class="card p-6">
-    <h2 class="mb-1 text-sm font-semibold text-foreground">{{ t("settings.sla") }}</h2>
-    <p class="mb-4 text-xs text-muted-foreground">{{ t("settings.sla_help") }}</p>
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {% for field in [("sla_urgent_hours", "settings.sla_urgent"), ("sla_high_hours", "settings.sla_high"), ("sla_normal_hours", "settings.sla_normal"), ("sla_low_hours", "settings.sla_low")] %}
-      <div>
-        <label class="label" for="{{ field[0] }}">{{ t(field[1]) }}</label>
-        <input type="number" id="{{ field[0] }}" name="{{ field[0] }}" min="1" max="1000" value="{{ values[field[0]] }}" class="input">
-      </div>
-      {% endfor %}
-      <div class="sm:col-span-2">
-        <label class="label" for="ticket_number_prefix">{{ t("settings.ticket_number_prefix") }}</label>
-        <input type="text" id="ticket_number_prefix" name="ticket_number_prefix" maxlength="10" value="{{ values.ticket_number_prefix }}" class="input">
-        <p class="mt-1 text-xs text-muted-foreground">{{ t("settings.ticket_number_prefix_help") }}</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="card p-6">
-    <h2 class="mb-4 text-sm font-semibold text-foreground">{{ t("settings.storage") }}</h2>
-    <div class="grid gap-4 sm:grid-cols-2">
-      <div>
-        <label class="label" for="storage_backend">{{ t("settings.storage_backend") }}</label>
-        <input type="text" id="storage_backend" value="{{ storage_backend }}" disabled class="input opacity-60">
-        <p class="mt-1 text-xs text-muted-foreground">{{ t("settings.storage_backend_help") }}</p>
-      </div>
-      <div>
-        <label class="label" for="upload_max_size_mb">{{ t("settings.upload_max_size") }}</label>
-        <input type="number" id="upload_max_size_mb" name="upload_max_size_mb" min="1" max="10240" value="{{ upload_max_size_mb }}" class="input">
-      </div>
-      <div class="sm:col-span-2">
-        <label class="label" for="allowed_extensions">{{ t("settings.allowed_extensions") }}</label>
-        <input type="text" id="allowed_extensions" name="allowed_extensions" value="{{ values.allowed_extensions | join(', ') }}" class="input">
-        <p class="mt-1 text-xs text-muted-foreground">{{ t("settings.allowed_extensions_help") }}</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="card p-6">
-    <h2 class="mb-4 text-sm font-semibold text-foreground">{{ t("settings.registration") }}</h2>
-    <div class="space-y-4">
-      <label class="flex items-start gap-3">
-        <input type="checkbox" name="open_registration" value="1" {% if values.open_registration %}checked{% endif %} class="mt-1 h-4 w-4">
-        <span>
-          <span class="block text-sm font-medium text-foreground">{{ t("settings.open_registration") }}</span>
-          <span class="block text-xs text-muted-foreground">{{ t("settings.open_registration_help") }}</span>
-        </span>
-      </label>
-      <label class="flex items-start gap-3">
-        <input type="checkbox" name="require_approval" value="1" {% if values.require_approval %}checked{% endif %} class="mt-1 h-4 w-4">
-        <span>
-          <span class="block text-sm font-medium text-foreground">{{ t("settings.require_approval") }}</span>
-          <span class="block text-xs text-muted-foreground">{{ t("settings.require_approval_help") }}</span>
-        </span>
-      </label>
-    </div>
-  </section>
-
-  <section class="card p-6">
-    <h2 class="mb-1 text-sm font-semibold text-foreground">{{ t("settings.contact") }}</h2>
-    <p class="mb-4 text-xs text-muted-foreground">{{ t("settings.contact_help") }}</p>
-    <div class="grid gap-4 sm:grid-cols-2">
-      <div>
-        <label class="label" for="contact_email">{{ t("settings.contact_email") }}</label>
-        <input type="email" id="contact_email" name="contact_email" value="{{ values.contact_email }}" class="input">
-      </div>
-      <div>
-        <label class="label" for="contact_phone">{{ t("settings.contact_phone") }}</label>
-        <input type="text" id="contact_phone" name="contact_phone" value="{{ values.contact_phone }}" class="input">
-      </div>
-      <div class="sm:col-span-2">
-        <label class="label" for="contact_address">{{ t("settings.contact_address") }}</label>
-        <textarea id="contact_address" name="contact_address" rows="2" class="input">{{ values.contact_address }}</textarea>
-      </div>
-    </div>
-  </section>
-
-  <section class="card p-6">
-    <h2 class="mb-1 text-sm font-semibold text-foreground">{{ t("settings.landing") }}</h2>
-    <p class="mb-4 text-xs text-muted-foreground">{{ t("settings.landing_help") }}</p>
-    <div class="grid gap-4">
-      <div>
-        <label class="label" for="landing_heading">{{ t("settings.landing_heading") }}</label>
-        <input type="text" id="landing_heading" name="landing_heading" maxlength="200"
-               value="{{ values.landing_heading }}" placeholder="{{ t('landing.heading') }}" class="input">
-      </div>
-      <div>
-        <label class="label" for="landing_subheading">{{ t("settings.landing_subheading") }}</label>
-        <textarea id="landing_subheading" name="landing_subheading" rows="2" maxlength="500"
-                  placeholder="{{ t('landing.subheading') }}" class="input">{{ values.landing_subheading }}</textarea>
-      </div>
-    </div>
-  </section>
-
-  <section class="card p-6">
-    <h2 class="mb-1 text-sm font-semibold text-foreground">{{ t("settings.social") }}</h2>
-    <p class="mb-4 text-xs text-muted-foreground">{{ t("settings.social_help") }}</p>
-    <div class="grid gap-4 sm:grid-cols-2">
-      {% for field in [("social_facebook", "settings.social_facebook"), ("social_instagram", "settings.social_instagram"), ("social_x", "settings.social_x"), ("social_linkedin", "settings.social_linkedin"), ("social_youtube", "settings.social_youtube")] %}
-      <div>
-        <label class="label" for="{{ field[0] }}">{{ t(field[1]) }}</label>
-        <input type="url" id="{{ field[0] }}" name="{{ field[0] }}" value="{{ values[field[0]] }}" placeholder="https://" class="input">
-      </div>
-      {% endfor %}
-    </div>
-  </section>
-
-  <div class="flex justify-end">
+  <div class="mt-4 flex justify-end">
     <button type="submit" class="btn btn-primary">{{ t("settings.save") }}</button>
   </div>
 </form>

@@ -345,6 +345,7 @@
   "nav.reports": "Reports",
 
   "settings.title": "Settings",
+  "settings.sections": "Settings sections",
   "settings.general": "General",
   "settings.app_name": "Application name",
   "settings.default_language": "Default language",

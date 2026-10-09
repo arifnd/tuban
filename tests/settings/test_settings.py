@@ -67,6 +67,47 @@ async def test_admin_can_view_and_update_settings(client: AsyncClient, db) -> No
     assert t("nav.dashboard") == "Dashboard"
 
 
+async def test_settings_page_has_section_menu(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    page = await client.get("/settings")
+    assert page.status_code == 200
+    assert 'role="tablist"' in page.text
+    assert 'id="settings-section"' in page.text
+    for section in ("general", "sla", "storage", "registration", "contact", "landing", "social"):
+        assert f'id="settings-panel-{section}"' in page.text
+
+
+async def test_settings_keeps_section_after_save(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(BASE_FORM, _csrf=csrf(client.cookies), section="contact")
+    resp = await client.post("/settings", data=form)
+    assert resp.status_code == 303
+    location = resp.headers["location"]
+    assert "section=contact" in location
+
+    page = await client.get(location)
+    assert page.status_code == 200
+    assert "tab: 'contact'" in page.text
+
+
+async def test_settings_unknown_section_falls_back_to_general(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(BASE_FORM, _csrf=csrf(client.cookies), section="bogus")
+    resp = await client.post("/settings", data=form)
+    assert resp.status_code == 303
+    assert "section=general" in resp.headers["location"]
+
+    page = await client.get("/settings?section=bogus")
+    assert page.status_code == 200
+    assert "tab: 'general'" in page.text
+
+
 async def test_invalid_settings_rejected(client: AsyncClient, db) -> None:
     await make_user(db, "admin@example.com", UserRole.ADMIN)
     await login(client, "admin@example.com")

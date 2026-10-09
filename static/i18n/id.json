@@ -343,6 +343,7 @@
   "reports.col_resolved": "Selesai",
 
   "settings.title": "Pengaturan",
+  "settings.sections": "Bagian pengaturan",
   "settings.general": "Umum",
   "settings.app_name": "Nama aplikasi",
   "settings.default_language": "Bahasa default",

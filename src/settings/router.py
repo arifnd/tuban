@@ -16,6 +16,14 @@ router = APIRouter(prefix="/settings", tags=["settings"])
 
 LANGUAGES = [("en", "English"), ("id", "Bahasa Indonesia")]
 
+# Section ids of the settings page menu, in display order.
+SETTINGS_SECTIONS = ("general", "sla", "storage", "registration", "contact", "landing", "social")
+
+
+def _section(value: str | None) -> str:
+    """Return a valid settings section id, falling back to the first one."""
+    return value if value in SETTINGS_SECTIONS else SETTINGS_SECTIONS[0]
+
 
 @router.get("")
 async def settings_page(request: Request, db: DbDep, _: AdminUser):
@@ -30,6 +38,7 @@ async def settings_page(request: Request, db: DbDep, _: AdminUser):
             "storage_backend": get_storage_settings().BACKEND,
             "upload_max_size_mb": round(int(values["upload_max_size"]) / (1024 * 1024)),
             "saved": request.query_params.get("saved") == "1",
+            "active_section": _section(request.query_params.get("section")),
         },
     )
 
@@ -37,6 +46,7 @@ async def settings_page(request: Request, db: DbDep, _: AdminUser):
 @router.post("")
 async def update_settings(request: Request, db: DbDep, admin: AdminUser):
     form = await request.form()
+    section = _section(form_str(form, "section", ""))
 
     payload = {
         "app_name": form_str(form, "app_name"),
@@ -95,4 +105,4 @@ async def update_settings(request: Request, db: DbDep, admin: AdminUser):
             "social_youtube": data.social_youtube,
         },
     )
-    return RedirectResponse("/settings?saved=1", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(f"/settings?saved=1&section={section}", status_code=status.HTTP_303_SEE_OTHER)
