@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.activity import service as activity_service
 from src.config import settings as config_settings
+from src.settings.crypto import decrypt_secret, encrypt_secret
 from src.settings.models import AppSetting
 from src.settings.theme import DEFAULT_COLOR
 from src.storage.config import get_storage_settings
@@ -15,12 +16,16 @@ from src.storage.constants import ALLOWED_EXTENSIONS
 DEFAULT_LANGUAGE = "id"
 DEFAULT_THEME_COLOR = DEFAULT_COLOR
 DEFAULT_TICKET_NUMBER_PREFIX = "TKT"
+DEFAULT_SMTP_PORT = 587
 DEFAULT_SLA_HOURS = {
     "sla_urgent_hours": 4,
     "sla_high_hours": 8,
     "sla_normal_hours": 24,
     "sla_low_hours": 72,
 }
+
+
+SMTP_SECRET_KEYS = ("smtp_password",)
 
 
 def defaults() -> dict[str, Any]:
@@ -47,6 +52,15 @@ def defaults() -> dict[str, Any]:
         "social_x": "",
         "social_linkedin": "",
         "social_youtube": "",
+        "smtp_enabled": False,
+        "smtp_host": "",
+        "smtp_port": DEFAULT_SMTP_PORT,
+        "smtp_username": "",
+        "smtp_password": "",
+        "smtp_use_tls": True,
+        "smtp_use_ssl": False,
+        "smtp_from_email": "",
+        "smtp_from_name": "",
         "carousel_slides": [],
     }
 
@@ -72,14 +86,30 @@ def all() -> dict[str, Any]:
     merged = defaults()
     if _cache is not None:
         merged.update(_cache)
-    return merged
+    # Secret settings are never exposed through the values/JSON surface; read them
+    # with get_secret() instead.
+    return {key: value for key, value in merged.items() if key not in SMTP_SECRET_KEYS}
 
 
 def get(key: str) -> Any:
+    if key in SMTP_SECRET_KEYS:
+        return None
     base = defaults()
     if _cache is None or key not in _cache:
         return base.get(key)
     return _cache[key]
+
+
+def _raw(key: str) -> Any:
+    base = defaults()
+    if _cache is None or key not in _cache:
+        return base.get(key)
+    return _cache[key]
+
+
+def get_secret(key: str) -> str:
+    """Return the decrypted value for a secret setting (plaintext), or ``""``."""
+    return decrypt_secret(str(_raw(key) or ""))
 
 
 def carousel_slides() -> list[dict[str, str]]:
@@ -100,16 +130,23 @@ def carousel_slides() -> list[dict[str, str]]:
     return cleaned
 
 
+def _redacted(values: dict[str, Any]) -> dict[str, Any]:
+    """Copy of ``values`` with secret settings masked for the activity audit."""
+    return {key: ("***" if key in SMTP_SECRET_KEYS else value) for key, value in values.items()}
+
+
 async def update(db: AsyncSession, actor, values: dict[str, Any]) -> dict[str, Any]:
     known = defaults()
     for key, value in values.items():
         if key not in known:
             continue
+        if key in SMTP_SECRET_KEYS and value:
+            value = encrypt_secret(str(value))
         row = await db.get(AppSetting, key)
         if row is None:
             db.add(AppSetting(key=key, value=value))
         else:
             row.value = value
-    await activity_service.log(db, user_id=actor.id, action="update", entity_type="app_settings", new_data=values)
+    await activity_service.log(db, user_id=actor.id, action="update", entity_type="app_settings", new_data=_redacted(values))
     await db.flush()
     return await load(db)

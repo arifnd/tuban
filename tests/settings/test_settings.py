@@ -1,8 +1,12 @@
+import json
+
 from httpx2 import AsyncClient
 from sqlalchemy import select
 
+from src.activity.models import ActivityLog
 from src.kb.models import KbArticleStatus, KbArticleVisibility
 from src.settings import service as settings_service
+from src.settings.models import AppSetting
 from src.users.models import User, UserRole
 from tests.helpers import csrf, login, make_user
 from tests.kb.helpers import make_article, make_editor
@@ -371,3 +375,182 @@ async def test_require_approval_creates_inactive_user(client: AsyncClient, db) -
     async with SessionFactory() as session:
         pending = (await session.execute(select(User).where(User.email == "pending@example.com"))).scalar_one()
     assert pending.is_active is False
+
+
+async def test_settings_page_has_email_section(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    page = await client.get("/settings")
+    assert page.status_code == 200
+    assert 'id="settings-panel-email"' in page.text
+    assert 'name="smtp_host"' in page.text
+    assert 'name="smtp_password"' in page.text
+    assert 'formaction="/settings/test-email"' in page.text
+
+
+async def test_smtp_settings_saved(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(
+        BASE_FORM,
+        _csrf=csrf(client.cookies),
+        section="email",
+        smtp_enabled="1",
+        smtp_host="smtp.example.com",
+        smtp_port="2525",
+        smtp_username="mailer",
+        smtp_password="s3cret",
+        smtp_use_tls="1",
+        smtp_from_email="no-reply@example.com",
+        smtp_from_name="Tuban",
+    )
+    resp = await client.post("/settings", data=form)
+    assert resp.status_code == 303
+    assert "section=email" in resp.headers["location"]
+
+    assert settings_service.get("smtp_enabled") is True
+    assert settings_service.get("smtp_host") == "smtp.example.com"
+    assert settings_service.get("smtp_port") == 2525
+    assert settings_service.get("smtp_username") == "mailer"
+    assert settings_service.get("smtp_use_tls") is True
+    assert settings_service.get("smtp_from_email") == "no-reply@example.com"
+    assert settings_service.get("smtp_from_name") == "Tuban"
+
+    # The secret is encrypted at rest and never surfaced through the values/JSON API.
+    assert settings_service.get_secret("smtp_password") == "s3cret"
+    assert "smtp_password" not in settings_service.all()
+    assert settings_service.get("smtp_password") is None
+    row = await db.get(AppSetting, "smtp_password")
+    assert row is not None
+    assert str(row.value).startswith("enc:v1:")
+    assert "s3cret" not in str(row.value)
+
+
+async def test_smtp_invalid_port_rejected(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(BASE_FORM, _csrf=csrf(client.cookies), smtp_port="70000")
+    assert (await client.post("/settings", data=form)).status_code == 400
+
+
+async def test_smtp_tls_and_ssl_conflict_rejected(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(BASE_FORM, _csrf=csrf(client.cookies), smtp_use_tls="1", smtp_use_ssl="1")
+    assert (await client.post("/settings", data=form)).status_code == 400
+
+
+async def test_smtp_invalid_from_email_rejected(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(BASE_FORM, _csrf=csrf(client.cookies), smtp_from_email="not-an-email")
+    assert (await client.post("/settings", data=form)).status_code == 400
+
+
+async def test_smtp_empty_password_keeps_existing(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+    token = csrf(client.cookies)
+
+    first = dict(BASE_FORM, _csrf=token, smtp_password="first-secret")
+    assert (await client.post("/settings", data=first)).status_code == 303
+    assert settings_service.get_secret("smtp_password") == "first-secret"
+
+    second = dict(BASE_FORM, _csrf=token, smtp_password="")
+    assert (await client.post("/settings", data=second)).status_code == 303
+    assert settings_service.get_secret("smtp_password") == "first-secret"
+
+
+async def test_smtp_password_redacted_from_activity_log(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    form = dict(BASE_FORM, _csrf=csrf(client.cookies), smtp_password="top-secret")
+    assert (await client.post("/settings", data=form)).status_code == 303
+
+    rows = (await db.execute(select(ActivityLog).where(ActivityLog.entity_type == "app_settings"))).scalars().all()
+    assert rows
+    for row in rows:
+        assert "top-secret" not in json.dumps(row.new_data or {})
+
+    # The value stored in the database is ciphertext, not plaintext.
+    stored = await db.get(AppSetting, "smtp_password")
+    assert stored is not None and str(stored.value).startswith("enc:v1:")
+
+
+def test_secret_encryption_roundtrip() -> None:
+    from src.settings import crypto
+
+    token = crypto.encrypt_secret("hello-secret")
+    assert token.startswith("enc:v1:")
+    assert "hello-secret" not in token
+    assert crypto.decrypt_secret(token) == "hello-secret"
+    # Legacy plaintext values keep working until they are re-saved.
+    assert crypto.decrypt_secret("legacy-plain") == "legacy-plain"
+    assert crypto.decrypt_secret("") == ""
+
+
+async def test_send_test_email(client: AsyncClient, db, monkeypatch) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+    token = csrf(client.cookies)
+
+    setup = dict(
+        BASE_FORM,
+        _csrf=token,
+        default_language="en",
+        smtp_enabled="1",
+        smtp_host="smtp.example.com",
+        smtp_from_email="no-reply@example.com",
+    )
+    assert (await client.post("/settings", data=setup)).status_code == 303
+
+    sent: dict = {}
+
+    class FakeSMTP:
+        def __init__(self, host, port, timeout=15):
+            sent["host"], sent["port"] = host, port
+
+        def starttls(self):
+            sent["starttls"] = True
+
+        def login(self, username, password):
+            sent["login"] = (username, password)
+
+        def send_message(self, message):
+            sent["message"] = message
+
+        def quit(self):
+            sent["quit"] = True
+
+    monkeypatch.setattr("src.settings.mailer.smtplib.SMTP", FakeSMTP)
+
+    resp = await client.post("/settings/test-email", data={"_csrf": token, "smtp_test_to": "someone@example.com"})
+    assert resp.status_code == 303
+    assert "email_test=sent" in resp.headers["location"]
+    assert sent["host"] == "smtp.example.com"
+    assert sent["message"]["To"] == "someone@example.com"
+    assert sent["message"]["Subject"] == "Tuban test email"
+    assert sent["quit"] is True
+
+
+async def test_send_test_email_fails_when_disabled(client: AsyncClient, db) -> None:
+    await make_user(db, "admin@example.com", UserRole.ADMIN)
+    await login(client, "admin@example.com")
+
+    resp = await client.post("/settings/test-email", data={"_csrf": csrf(client.cookies)})
+    assert resp.status_code == 303
+    assert "email_test=failed" in resp.headers["location"]
+
+
+async def test_send_test_email_requires_admin(client: AsyncClient, db) -> None:
+    await make_user(db, "user@example.com")
+    await login(client, "user@example.com")
+
+    resp = await client.post("/settings/test-email", data={"_csrf": csrf(client.cookies)})
+    assert resp.status_code == 403

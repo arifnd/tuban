@@ -62,6 +62,19 @@ Full ERD in [`erd.md`](erd.md). Tables: `users`, `kb_categories`, `kb_articles`,
 `kb_article_feedback`, `ticket_categories`, `tickets`, `ticket_comments`,
 `ticket_attachments`, `ticket_number_seq`, `notifications`, `activity_logs`.
 
+## Settings & email
+
+Runtime configuration (general, SLA, storage limits, registration, contact, landing,
+social, and SMTP email) is stored as key/value rows in `app_settings` and cached in
+memory by `src/settings/service.py`. The **Email (SMTP)** section configures outbound
+mail; `src/settings/mailer.py` sends plain-text messages with the standard library
+(`smtplib` + `EmailMessage`) off the event loop via `asyncio.to_thread`. Secret settings
+(the SMTP password) are encrypted at rest with Fernet — `src/settings/crypto.py` derives
+the key from `AUTH_SESSION_SECRET` via HKDF — are excluded from
+`settings_service.all()` (so they never appear in settings values/JSON), and are never
+echoed back to the form. The mailer reads the decrypted value only via
+`settings_service.get_secret()`; the activity audit records `"***"` for secrets.
+
 ## Async decisions
 
 - All routes are `async def` and use async ORM I/O. Blocking work (boto3, openpyxl,

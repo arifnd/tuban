@@ -9,6 +9,7 @@
   ("storage", "settings.storage"),
   ("registration", "settings.registration"),
   ("contact", "settings.contact"),
+  ("email", "settings.email"),
   ("landing", "settings.landing"),
   ("social", "settings.social"),
 ] %}
@@ -21,10 +22,22 @@
 </div>
 {% endif %}
 
+{% if email_test == "sent" %}
+<div class="alert alert-success mb-4 flex items-center gap-2" role="status">
+  {{ icon("mail", "w-4 h-4") }}
+  <span>{{ t("settings.smtp_test_sent") }}</span>
+</div>
+{% elif email_test == "failed" %}
+<div class="alert alert-error mb-4 flex items-center gap-2" role="alert">
+  {{ icon("x-circle", "w-4 h-4") }}
+  <span>{{ t("settings.smtp_test_failed") }}</span>
+</div>
+{% endif %}
+
 <form method="post" action="/settings"
       x-data="{
         tab: '{{ active_section }}',
-        sections: ['general', 'sla', 'storage', 'registration', 'contact', 'landing', 'social'],
+        sections: ['general', 'sla', 'storage', 'registration', 'contact', 'email', 'landing', 'social'],
         move(step) {
           const i = this.sections.indexOf(this.tab);
           const next = (i + step + this.sections.length) % this.sections.length;
@@ -174,6 +187,64 @@
           <div class="sm:col-span-2">
             <label class="label" for="contact_address">{{ t("settings.contact_address") }}</label>
             <textarea id="contact_address" name="contact_address" rows="2" class="input">{{ values.contact_address }}</textarea>
+          </div>
+        </div>
+      </section>
+
+      <section id="settings-panel-email" role="tabpanel" aria-labelledby="settings-tab-email" x-show="tab === 'email'" {% if active_section != 'email' %}style="display:none"{% endif %} class="card p-6">
+        <h2 class="mb-1 text-sm font-semibold text-foreground">{{ t("settings.email") }}</h2>
+        <p class="mb-4 text-xs text-muted-foreground">{{ t("settings.email_help") }}</p>
+        <div class="space-y-4">
+          <label class="flex items-start gap-3">
+            <input type="checkbox" name="smtp_enabled" value="1" {% if values.smtp_enabled %}checked{% endif %} class="mt-1 h-4 w-4">
+            <span class="text-sm font-medium text-foreground">{{ t("settings.smtp_enabled") }}</span>
+          </label>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="label" for="smtp_host">{{ t("settings.smtp_host") }}</label>
+              <input type="text" id="smtp_host" name="smtp_host" value="{{ values.smtp_host }}" placeholder="smtp.example.com" class="input">
+            </div>
+            <div>
+              <label class="label" for="smtp_port">{{ t("settings.smtp_port") }}</label>
+              <input type="number" id="smtp_port" name="smtp_port" min="1" max="65535" value="{{ values.smtp_port }}" class="input">
+            </div>
+            <div>
+              <label class="label" for="smtp_username">{{ t("settings.smtp_username") }}</label>
+              <input type="text" id="smtp_username" name="smtp_username" value="{{ values.smtp_username }}" autocomplete="off" class="input">
+            </div>
+            <div>
+              <label class="label" for="smtp_password">{{ t("settings.smtp_password") }}</label>
+              <input type="password" id="smtp_password" name="smtp_password" value="" placeholder="{{ '••••••••' if smtp_password_set else '' }}" autocomplete="new-password" class="input">
+              <p class="mt-1 text-xs text-muted-foreground">{{ t("settings.smtp_password_help") }}</p>
+            </div>
+            <div>
+              <label class="label" for="smtp_from_email">{{ t("settings.smtp_from_email") }}</label>
+              <input type="email" id="smtp_from_email" name="smtp_from_email" value="{{ values.smtp_from_email }}" class="input">
+            </div>
+            <div>
+              <label class="label" for="smtp_from_name">{{ t("settings.smtp_from_name") }}</label>
+              <input type="text" id="smtp_from_name" name="smtp_from_name" value="{{ values.smtp_from_name }}" class="input">
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-6">
+            <label class="flex items-start gap-3">
+              <input type="checkbox" name="smtp_use_tls" value="1" {% if values.smtp_use_tls %}checked{% endif %} class="mt-1 h-4 w-4">
+              <span class="text-sm font-medium text-foreground">{{ t("settings.smtp_use_tls") }}</span>
+            </label>
+            <label class="flex items-start gap-3">
+              <input type="checkbox" name="smtp_use_ssl" value="1" {% if values.smtp_use_ssl %}checked{% endif %} class="mt-1 h-4 w-4">
+              <span class="text-sm font-medium text-foreground">{{ t("settings.smtp_use_ssl") }}</span>
+            </label>
+          </div>
+          <div class="border-t border-border pt-4">
+            <label class="label" for="smtp_test_to">{{ t("settings.smtp_test_to") }}</label>
+            <div class="flex flex-wrap items-end gap-2">
+              <input type="email" id="smtp_test_to" name="smtp_test_to" placeholder="{{ current_user.email if current_user else '' }}" class="input sm:max-w-xs">
+              <button type="submit" formaction="/settings/test-email" formmethod="post" class="btn btn-secondary">
+                {{ icon("mail", "w-4 h-4") }} {{ t("settings.smtp_test") }}
+              </button>
+            </div>
+            <p class="mt-1 text-xs text-muted-foreground">{{ t("settings.smtp_test_help") }}</p>
           </div>
         </div>
       </section>

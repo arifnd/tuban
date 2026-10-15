@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from src.settings.theme import DEFAULT_COLOR, PALETTES
 from src.storage.constants import SAFE_EXTENSIONS
@@ -27,6 +27,21 @@ class SettingsUpdate(BaseModel):
     social_x: str = Field(default="", max_length=300)
     social_linkedin: str = Field(default="", max_length=300)
     social_youtube: str = Field(default="", max_length=300)
+    smtp_enabled: bool = False
+    smtp_host: str = Field(default="", max_length=255)
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    smtp_username: str = Field(default="", max_length=200)
+    smtp_password: str = Field(default="", max_length=500)
+    smtp_use_tls: bool = True
+    smtp_use_ssl: bool = False
+    smtp_from_email: str = Field(default="", max_length=200)
+    smtp_from_name: str = Field(default="", max_length=200)
+
+    @model_validator(mode="after")
+    def _validate_smtp_transport(self) -> "SettingsUpdate":
+        if self.smtp_use_tls and self.smtp_use_ssl:
+            raise ValueError("Enable either STARTTLS or SSL, not both")
+        return self
 
     @field_validator("theme_color")
     @classmethod
@@ -64,6 +79,13 @@ class SettingsUpdate(BaseModel):
     def _validate_contact_email(cls, value: str) -> str:
         if value and "@" not in value:
             raise ValueError("Enter a valid contact email address")
+        return value
+
+    @field_validator("smtp_from_email")
+    @classmethod
+    def _validate_smtp_from_email(cls, value: str) -> str:
+        if value and "@" not in value:
+            raise ValueError("Enter a valid from email address")
         return value
 
     @field_validator("social_facebook", "social_instagram", "social_x", "social_linkedin", "social_youtube")
