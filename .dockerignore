@@ -30,3 +30,8 @@ docs/
 docker/
 tasks/
 example
+
+# Docs toolchain (built on CI, not needed at runtime)
+mkdocs.yml
+site/
+.cache/

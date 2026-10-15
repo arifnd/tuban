@@ -15,6 +15,10 @@ wheels/
 .coverage
 htmlcov/
 
+# MkDocs build output & caches
+site/
+.cache/
+
 # Local data
 instance/
 media/

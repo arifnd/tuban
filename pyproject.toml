@@ -34,6 +34,10 @@ dev = [
     "pytest-xdist>=3.8.0",
     "ruff>=0.6",
 ]
+docs = [
+    "mkdocs-material>=9.5",
+    "mkdocs-minify-plugin>=0.8",
+]
 
 [build-system]
 requires = ["hatchling"]

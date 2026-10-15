@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 SHELL := /bin/sh
 
-.PHONY: help install env assets dev dev-css dev-js migrate revision downgrade seed seed-reset lint format check ci assets-check test coverage up down build logs ps restart clean
+.PHONY: help install env assets dev dev-css dev-js migrate revision downgrade seed seed-reset lint format check ci assets-check test coverage docs docs-serve docs-build up down build logs ps restart clean
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -64,6 +64,15 @@ check: ci ## CI-style check (alias for `make ci`)
 assets-check: ## Verify generated assets are committed and current
 	npm run build:assets
 	git diff --exit-code -- static/css/app.css static/js/app.min.js templates/partials/sprite.html templates/partials/icons.html
+
+## Documentation
+docs: ## Serve the MkDocs site with live reload (http://127.0.0.1:8001)
+	uv run --extra docs mkdocs serve --dev-addr 127.0.0.1:8001
+
+docs-serve: docs ## Alias for `make docs`
+
+docs-build: ## Build the static MkDocs site into site/
+	uv run --extra docs mkdocs build --strict
 
 test: ## Run the test suite
 	uv run pytest -n auto

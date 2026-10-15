@@ -4,6 +4,12 @@ A knowledge base + ticketing application: **FastAPI + SQLAlchemy 2.0 async + Jin
 HTMX / Alpine**, with Alembic migrations, Google (Gmail) OAuth2 SSO, and a pluggable
 storage layer. Runs on **SQLite (default)** or **PostgreSQL** via one `DATABASE_URL`.
 
+## About the name
+
+**Tuban** comes from *bantu* — Indonesian for *help* — by swapping its two syllables,
+*ban-tu* → *tu-ban*: a small nod to the app's helpdesk roots. (Tuban is also a regency
+in East Java.)
+
 ## Features
 
 - **Knowledge base** — categories, Markdown articles with revision history and restore,
@@ -50,6 +56,7 @@ and `test` additionally show an email dev-login on `/auth/login` when
 | `make seed` / `make seed-reset` | Demo data |
 | `make lint` / `make format` / `make check` | ruff + tests with coverage (`make check` == `make ci`) |
 | `make test` / `make coverage` | pytest |
+| `make docs` / `make docs-build` | Serve / build the MkDocs site |
 | `make assets-check` | Rebuild assets and fail on uncommitted drift |
 | `make up` / `make down` / `make logs` | Docker Compose |
 
@@ -85,6 +92,19 @@ image. Automated abuse is limited in-process (`RATE_LIMIT_*`); configure an addi
 rate limit at the reverse proxy, especially for `/auth/*`.
 
 ## Documentation
+
+Reference docs live in [`docs/`](docs/) and are published as a
+[Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) site at
+<https://arifnd.github.io/tuban/>. The site is configured in [`mkdocs.yml`](mkdocs.yml)
+and built from the `docs` optional-dependency group.
+
+```shell
+uv run --extra docs mkdocs serve --dev-addr 127.0.0.1:8001   # live-reload preview
+uv run --extra docs mkdocs build --strict                    # output in site/
+```
+
+Pushes to `main` under `docs/` or `mkdocs.yml` are built and deployed to GitHub Pages
+by [`.github/workflows/docs.yml`](.github/workflows/docs.yml).
 
 - [`docs/architecture.md`](docs/architecture.md)
 - [`docs/erd.md`](docs/erd.md)
