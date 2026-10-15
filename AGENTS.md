@@ -9,7 +9,7 @@ Tuban: server-rendered FastAPI + SQLAlchemy 2.0 async + Jinja2/HTMX/Alpine app. 
 - `make check` / `make ci` — exact CI pipeline: `ruff format --check` + `ruff check` + `pytest --cov -n auto` (coverage gate applies).
 - `make assets-check` — rebuild assets and fail if the committed files drift.
 - `make coverage` — `pytest --cov -n auto` then `coverage report -m`.
-- `make dev` — `uvicorn src.main:app --reload`.
+- `make dev` — `fastapi dev` (autoreload; entrypoint from `[tool.fastapi]`).
 - `uv run pytest tests/kb/test_articles.py::test_name -q` — single test (no `-n` needed).
 - Always run `uv run`, not bare `python`/`pytest` (deps live in `.venv`).
 

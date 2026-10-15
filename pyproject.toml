@@ -1,25 +1,20 @@
 [project]
 name = "tuban"
 dynamic = ["version"]
-description = "Tuban — knowledge base + ticketing"
+description = "A knowledge base and ticketing web application."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "fastapi>=0.115",
-    "uvicorn[standard]>=0.30",
+    "fastapi[standard]>=0.143.0",
     "sqlalchemy[asyncio]>=2.0.30",
     "aiosqlite>=0.20",
     "asyncpg>=0.29",
     "alembic>=1.13",
     "pydantic>=2.7",
-    "pydantic-settings>=2.4",
-    "email-validator>=2.1",
-    "jinja2>=3.1",
     "markdown-it-py>=3.0",
     "nh3>=0.2",
     "openpyxl>=3.1",
     "reportlab>=4.0",
-    "python-multipart>=0.0.9",
     "authlib>=1.8",
     "PyJWT>=2.9",
     "httpx2>=2.13",
@@ -48,6 +43,9 @@ packages = ["src"]
 
 [tool.hatch.version]
 path = "src/version.py"
+
+[tool.fastapi]
+entrypoint = "src.main:app"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

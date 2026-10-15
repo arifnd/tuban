@@ -51,7 +51,8 @@ and `test` additionally show an email dev-login on `/auth/login` when
 | `make install` | `uv sync` + `npm install` |
 | `make env` | Create `.env` with a generated secret (local dev) |
 | `make assets` | Build icons, CSS, and JS |
-| `make dev` | Run the app with autoreload |
+| `make dev` | Run the app with autoreload (`fastapi dev`) |
+| `make run` / `make deploy` | Production mode (`fastapi run`) / deploy to FastAPI Cloud (`fastapi deploy`) |
 | `make migrate` / `make revision m="..."` / `make downgrade` | Migrations |
 | `make seed` / `make seed-reset` | Demo data |
 | `make lint` / `make format` / `make check` | ruff + tests with coverage (`make check` == `make ci`) |
@@ -86,10 +87,10 @@ DATABASE_URL=postgresql+asyncpg://tuban:tuban@db:5432/tuban \
   docker compose -f docker/docker-compose.yml --profile postgres up -d
 ```
 
-The container runs `alembic upgrade head` before starting uvicorn, behind nginx, with
-`instance/` and `media/` on named volumes. Upgrade path: migrate before swapping the
-image. Automated abuse is limited in-process (`RATE_LIMIT_*`); configure an additional
-rate limit at the reverse proxy, especially for `/auth/*`.
+The container runs `alembic upgrade head` before starting the server (`fastapi run`),
+behind nginx, with `instance/` and `media/` on named volumes. Upgrade path: migrate
+before swapping the image. Automated abuse is limited in-process (`RATE_LIMIT_*`);
+configure an additional rate limit at the reverse proxy, especially for `/auth/*`.
 
 ## Documentation
 

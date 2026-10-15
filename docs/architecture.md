@@ -9,7 +9,7 @@ SQLite or PostgreSQL unchanged.
 | Layer         | Technology                                                        |
 |---------------|-------------------------------------------------------------------|
 | Language      | Python 3.12+                                                      |
-| Web framework | FastAPI (>=0.115)                                                 |
+| Web framework | FastAPI (>=0.143.0, `standard` extra: CLI, OTel, FastAPI Cloud)      |
 | Templates     | Jinja2, server-rendered, HTMX + Alpine.js                         |
 | ORM           | SQLAlchemy 2.0 async (`AsyncSession`)                             |
 | Migrations    | Alembic (async template, batch mode for SQLite)                   |
@@ -24,7 +24,8 @@ SQLite or PostgreSQL unchanged.
 
 ## Runtime flow
 
-1. `uvicorn src.main:app` loads `src/main.py`, registers domain routers and the
+1. `fastapi run` (uvicorn under the hood, app resolved via the `[tool.fastapi]`
+   entrypoint) loads `src.main:app`, registers domain routers and the
    `SecurityHeadersMiddleware`.
 2. The middleware decodes the signed session JWT into `request.state`, enforces
    double-submit CSRF on non-GET requests, rejects oversized bodies, and sets security
@@ -67,3 +68,24 @@ Full ERD in [`erd.md`](erd.md). Tables: `users`, `kb_categories`, `kb_articles`,
   reportlab, file writes) runs via `asyncio.to_thread`.
 - Notifications and activity rows are flushed with the triggering request and committed
   atomically — no queue/worker.
+
+## FastAPI CLI, telemetry & FastAPI Cloud
+
+The app depends on `fastapi[standard]` (>=0.143.0). The `standard` extra bundles more
+than the base package: uvicorn, jinja2, python-multipart, email-validator,
+pydantic-settings, httpx, the OpenTelemetry SDK + OTLP exporter, `fastapi-cli`, and
+`fastapi-cloud-cli`. So the project does not list those packages individually, and is
+ready for FastAPI Cloud.
+
+- **Run**: `make dev` (`fastapi dev`) and `make run` (`fastapi run`) use the CLI provided
+  by the extra; `fastapi run` is uvicorn under the hood with reload disabled.
+- **Telemetry**: FastAPI 0.143.0 ships built-in OpenTelemetry support. Automatic
+  exporter setup is opt-in — set `FASTAPI_OTEL_AUTO_CONFIGURE=true` or
+  `FastAPI(telemetry={"auto_configure": True})`. FastAPI Cloud enables it automatically.
+- **FastAPI Cloud**: deploy with `make deploy` (`fastapi deploy`). The CLI resolves the
+  app from `[tool.fastapi] entrypoint = "src.main:app"` in `pyproject.toml` — its
+  auto-discovery would otherwise only look for `main.py` / `app/main.py`, never
+  `src/main.py`.
+- **httpx2** stays a direct dependency: it is used at runtime (`src/auth/service.py`)
+  and across the test suite. `standard` installs `httpx`, not `httpx2`, so it must be
+  listed explicitly.

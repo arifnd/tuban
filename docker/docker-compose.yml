@@ -27,7 +27,7 @@ services:
       - ../:/app
       - tuban_data:/app/instance
       - tuban_media:/app/media
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    command: fastapi dev --host 0.0.0.0 --port 8000
 
   nginx:
     image: nginx:alpine

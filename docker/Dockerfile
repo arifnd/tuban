@@ -14,12 +14,16 @@ ENV UV_COMPILE_BYTECODE=1 \
 WORKDIR /app
 
 # Install dependencies only, so this layer is cached unless pyproject/uv.lock change.
+# This resolves the full `fastapi[standard]` set (uvicorn, jinja2, python-multipart,
+# httpx, the OpenTelemetry SDK/exporter, and fastapi-cloud-cli).
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --locked --no-install-project
 
 # Copy the project and install it (editable) into the virtualenv.
+# Editable is required: PROJECT_ROOT / logging.ini are resolved relative to
+# src/, so a non-editable install would look for templates under site-packages.
 COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
@@ -29,7 +33,13 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # interpreter path baked into the virtualenv stays valid.
 FROM python:3.12-slim-trixie
 
+LABEL org.opencontainers.image.title="Tuban" \
+      org.opencontainers.image.description="A knowledge base and ticketing web application." \
+      org.opencontainers.image.source="https://github.com/arifnd/tuban" \
+      org.opencontainers.image.url="https://arifnd.github.io/tuban/"
+
 ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
     VIRTUAL_ENV=/opt/venv \
     PATH="/opt/venv/bin:$PATH"
 
@@ -41,8 +51,8 @@ WORKDIR /app
 
 # Virtualenv from the builder, then the application code. Everything that is
 # not needed at runtime is kept out via .dockerignore.
-COPY --from=builder --chown=nonroot:nonroot /opt/venv /opt/venv
-COPY --chown=nonroot:nonroot . /app
+COPY --link --from=builder --chown=nonroot:nonroot /opt/venv /opt/venv
+COPY --link --chown=nonroot:nonroot . /app
 
 RUN mkdir -p /app/instance /app/media \
  && chown -R nonroot:nonroot /app/instance /app/media
@@ -51,7 +61,12 @@ USER nonroot
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+# start-period is generous: importing the app also loads the OpenTelemetry
+# instrumentation that `fastapi[standard]` brings in.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD ["/opt/venv/bin/python", "-c", "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health', timeout=3).status == 200 else 1)"]
 
-CMD ["sh", "-c", "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000 --proxy-headers"]
+# `fastapi run` is uvicorn under the hood (reload off, 0.0.0.0), and resolves the
+# app via the [tool.fastapi] entrypoint in pyproject.toml. `exec` so it becomes
+# PID 1 and receives SIGTERM for a graceful shutdown.
+CMD ["sh", "-c", "alembic upgrade head && exec fastapi run --host 0.0.0.0 --port 8000"]

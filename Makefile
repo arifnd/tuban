@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 SHELL := /bin/sh
 
-.PHONY: help install env assets dev dev-css dev-js migrate revision downgrade seed seed-reset lint format check ci assets-check test coverage docs docs-serve docs-build up down build logs ps restart clean
+.PHONY: help install env assets dev dev-css dev-js run deploy migrate revision downgrade seed seed-reset lint format check ci assets-check test coverage docs docs-serve docs-build up down build logs ps restart clean
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -21,8 +21,14 @@ assets: ## Build frontend assets (icons + CSS + JS)
 	npm run build:assets
 
 ## Development
-dev: env ## Run the dev server with autoreload
-	uv run uvicorn src.main:app --reload
+dev: env ## Run the dev server with autoreload (fastapi dev)
+	uv run fastapi dev
+
+run: env ## Run the app in production mode (fastapi run, no reload)
+	uv run fastapi run
+
+deploy: env ## Deploy the app to FastAPI Cloud (fastapi deploy)
+	uv run fastapi deploy
 
 dev-css: ## Rebuild CSS in watch mode
 	npm run watch:css
